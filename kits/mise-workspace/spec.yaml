@@ -1,0 +1,96 @@
+schemaVersion: "1"
+kind: mixin
+name: mise-workspace
+displayName: Mise workspace
+description: >
+  Network allowlist and mise env for projects that pin tools via mise.toml /
+  .tool-versions. Does not run mise install at create time (install cwd /
+  WORKDIR is unreliable in commands.install). The agent (or a one-shot
+  sbx exec) installs tools. Never sets environment.variables.PATH.
+  Runtime-agnostic mixin (cursor, opencode, shell, Pi, Hermes, …).
+
+network:
+  allowedDomains:
+    - github.com
+    - "**.github.com"
+    - objects.githubusercontent.com
+    - release-assets.githubusercontent.com
+    - "**.githubusercontent.com"
+    - codeload.github.com
+    - ghcr.io
+    - "**.ghcr.io"
+    - go.dev
+    - golang.org
+    - proxy.golang.org
+    - sum.golang.org
+    - storage.googleapis.com
+    - static.rust-lang.org
+    - forge.rust-lang.org
+    - crates.io
+    - index.crates.io
+    - static.crates.io
+    - nodejs.org
+    - "**.nodejs.org"
+    - registry.npmjs.org
+    - "**.npmjs.org"
+    - registry.yarnpkg.com
+    - pypi.org
+    - files.pythonhosted.org
+    - index.docker.io
+    - mise.jdx.dev
+    - "**.jdx.dev"
+
+environment:
+  variables:
+    MISE_DATA_DIR: /mise
+    MISE_CONFIG_DIR: /mise
+    MISE_CACHE_DIR: /mise/cache
+
+commands:
+  startup:
+    - description: Ensure mise dirs and persistent activate (no completions)
+      command:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+          mkdir -p /mise/cache /mise/shims /mise/installs
+          touch /etc/sandbox-persistent.sh
+          if ! grep -qF '# sbx-mise-workspace' /etc/sandbox-persistent.sh; then
+            printf '%s\n' \
+              '# sbx-mise-workspace' \
+              'export MISE_DATA_DIR=/mise' \
+              'export MISE_CONFIG_DIR=/mise' \
+              'export MISE_CACHE_DIR=/mise/cache' \
+              'export PATH="/mise/shims:${PATH}"' \
+              'if [ -x /usr/local/bin/mise ]; then eval "$(/usr/local/bin/mise activate bash)"; fi' \
+              >> /etc/sandbox-persistent.sh
+          fi
+
+agentContext: |
+  ## Tooling (mise)
+
+  This sandbox uses **mise** for language runtimes when the project has
+  `mise.toml`, `.mise.toml`, or `.tool-versions`. The kit is runtime-agnostic
+  (Cursor, OpenCode, shell/Pi/Hermes, etc.).
+
+  **First session (required once per new sandbox):**
+  1. `cd` to the project workspace (the mounted host project path).
+  2. `mise trust` the config file if prompted / needed.
+  3. Run `mise install`.
+  4. Confirm with `mise ls` and `which go` / `node` / etc. (shims under `/mise/shims`).
+
+  **After changing pins in mise.toml:**
+  1. `mise install`
+  2. `mise prune -y` so removed tools are uninstalled (installs + cache).
+  3. Prefer a fresh login shell (`bash -l -c '…'`) if `GOROOT`/`GOBIN` or similar look stale.
+
+  **Ongoing:**
+  - Prefer mise-managed tools (`mise exec -- <cmd>` or shims). Do **not**
+    `apt-get install` Go, Node, Rust, or Python toolchains for this project.
+  - Match versions to the project pins; do not upgrade casually.
+  - Docker Engine inside the sandbox is fine for compose/build when using a `-docker` template.
+  - VCS is **git + gh** (non-interactive). Do not introduce jj unless a dedicated kit is loaded.
+
+  If tools are still missing after create, the human can run once:
+  `sbx exec -it <sandbox> -- bash -lc 'cd <workspace> && mise trust mise.toml; mise install'`.

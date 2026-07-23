@@ -1,0 +1,16 @@
+schemaVersion: "1"
+kind: mixin
+name: agent-workspace
+displayName: Agent workplace
+description: >
+  Sandbox-first conventions for MCP, skills, and plugins. Runtime-agnostic
+  mixin. Does not mount host ~/.cursor — projects should carry their own
+  config (see sbx-kit init). Stub: fill allowlists and shared skills later.
+
+# TODO: network.allowedDomains for common MCP hosts
+# TODO: optional files drop for shared skills under /opt/sbx/skills
+# TODO: agentContext for project .cursor / MCP / skills discovery
+
+environment:
+  variables:
+    SBX_AGENT_WORKSPACE: "1"

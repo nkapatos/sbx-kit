@@ -1,0 +1,11 @@
+[core]
+	pager = cat
+	editor = true
+[sequence]
+	editor = true
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[rebase]
+	autoStash = true

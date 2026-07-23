@@ -1,0 +1,36 @@
+# Agent catalog for sbx-kit (see docs/cli-tooling.md).
+
+defaults:
+  resources: remote-llm
+  kits:
+    - mise-workspace
+
+agents:
+  cursor:
+    sbx_agent: cursor
+    image_name: sbx-cursor-mise-docker
+    template_fallback: local/sbx-cursor-mise-docker:latest
+    kits:
+      - mise-workspace
+  opencode:
+    sbx_agent: opencode
+    image_name: sbx-opencode-mise-docker
+    template_fallback: local/sbx-opencode-mise-docker:latest
+    kits:
+      - mise-workspace
+  hermes:
+    sbx_agent: hermes
+    image_name: sbx-shell-mise-docker
+    template_fallback: local/sbx-shell-mise-docker:latest
+    kits:
+      - mise-workspace
+      - hermes
+    stub: true
+  pi:
+    sbx_agent: pi
+    image_name: sbx-shell-mise-docker
+    template_fallback: local/sbx-shell-mise-docker:latest
+    kits:
+      - mise-workspace
+      - pi
+    stub: true

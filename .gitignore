@@ -1,0 +1,54 @@
+# OS / editor
+.DS_Store
+**/.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Go
+bin/sbx-kit
+cli/bin/
+*.exe
+*.test
+*.out
+coverage.out
+coverage.html
+vendor/
+
+# Build / release artifacts
+dist/
+/tmp/
+*.tar
+*.tar.gz
+*.zip
+
+# Env & secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+.secrets/
+
+# Node / misc (if added later)
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Mise / local tool caches (project pins in mise.toml are fine to commit)
+.mise/
+.local/
+
+# OS package / container noise
+*.log
+.docker/

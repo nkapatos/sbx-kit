@@ -1,0 +1,22 @@
+schemaVersion: "1"
+kind: sandbox
+name: hermes
+displayName: Hermes
+description: >
+  Hermes agent on the shared shell-mise workplace. Stub — fill entrypoint,
+  install, network, and secrets later (step 4).
+
+sandbox:
+  # Prefer the custom bake once imported; falls back conceptually to official shell-docker.
+  image: "local/sbx-shell-mise-docker:latest"
+  aiFilename: AGENTS.md
+  entrypoint:
+    run:
+      - echo
+      - "TODO: hermes entrypoint (kit stub)"
+
+# TODO: commands.install for hermes (user: "1000")
+# TODO: network.allowedDomains / serviceDomains / serviceAuth
+# TODO: agentContext
+
+# Until filled, prefer: sbx run shell --template local/sbx-shell-mise-docker:latest --kit ../mise-workspace .

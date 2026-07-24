@@ -53,11 +53,11 @@ Host vault (created on demand):
 
 Day-to-day:
   sbx-kit agents
-  sbx-kit run cursor .
-  sbx-kit run cursor . --clone
-  sbx-kit run cursor . --restore-state
-  sbx-kit rm cursor . --keep-state
-  sbx-kit upgrade cursor .
+  sbx-kit run --agent cursor
+  sbx-kit run --agent cursor --path ~/proj --yes
+  sbx-kit run --name sbxk-cursor-deadbeef
+  sbx-kit rm --agent cursor --keep-state
+  sbx-kit upgrade --agent cursor
   sbx-kit status
   sbx-kit init --agent cursor .
   sbx-kit template load --engine docker cursor-mise-docker`

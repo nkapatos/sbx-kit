@@ -5,7 +5,7 @@
 **Bake:** [`templates/_bake`](../_bake/)  
 **Agent:** `cursor`  
 **Kits:** [`mise-workspace`](../../kits/mise-workspace/) + [`agent-workspace`](../../kits/agent-workspace/)  
-**CLI:** `sbx-kit run cursor`
+**CLI:** `sbx-kit run --agent cursor`
 
 ## Guarantees
 
@@ -21,7 +21,7 @@ sbx-kit template load --engine docker cursor-mise-docker
 
 sbx template ls   # expect *sbx-cursor-mise-docker*
 
-sbx-kit run cursor /path/to/project
+sbx-kit run --agent cursor --path /path/to/project --yes
 ```
 
 After create, once per sandbox:

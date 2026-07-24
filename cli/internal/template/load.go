@@ -65,7 +65,7 @@ func Load(o LoadOpts) error {
 
 	fmt.Println()
 	fmt.Println("Done. Use the exact REPOSITORY:TAG from sbx template ls with --template if needed.")
-	fmt.Printf("Typical next step:\n  sbx-kit run cursor .\n")
+	fmt.Printf("Typical next step:\n  sbx-kit run --agent cursor --yes\n")
 	fmt.Printf("(image tag used for build: %s)\n", b.ImageTag)
 	return nil
 }

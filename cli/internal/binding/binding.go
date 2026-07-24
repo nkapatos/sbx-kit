@@ -142,6 +142,37 @@ func List() ([]Record, error) {
 	return out, nil
 }
 
+// ListForProject returns bindings for an absolute (or resolvable) project path.
+func ListForProject(projectDir string) ([]Record, error) {
+	abs, err := filepath.Abs(projectDir)
+	if err != nil {
+		return nil, err
+	}
+	s, err := load()
+	if err != nil {
+		return nil, err
+	}
+	var out []Record
+	for _, r := range s.Bindings {
+		if r.ProjectDir == abs {
+			out = append(out, r)
+		}
+	}
+	return out, nil
+}
+
+// Label is a human-friendly name derived from the project directory basename.
+func Label(rec *Record) string {
+	if rec == nil || rec.ProjectDir == "" {
+		return ""
+	}
+	base := filepath.Base(rec.ProjectDir)
+	if base == "." || base == string(filepath.Separator) {
+		return rec.SandboxName
+	}
+	return base
+}
+
 // Delete removes a binding for (projectDir, agent).
 func Delete(projectDir, agent string) error {
 	abs, err := filepath.Abs(projectDir)

@@ -17,7 +17,7 @@ They are **not** images — pass them with `sbx run … --kit /path/to/kit`.
 | [hermes](hermes/) | sandbox | `local/sbx-shell-mise-docker` | **Stub.** Entrypoint/install/auth TBD. |
 | [pi](pi/) | sandbox | `local/sbx-shell-mise-docker` | **Stub.** Entrypoint/install/auth TBD. |
 
-There is **no** cursor-mise kit — Cursor specificity is the thin template (`sbx-kit run cursor`). Language tooling is always the `mise-workspace` mixin.
+There is **no** cursor-mise kit — Cursor specificity is the thin template (`sbx-kit run --agent cursor`). Language tooling is always the `mise-workspace` mixin.
 
 ## Planned
 

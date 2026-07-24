@@ -45,9 +45,10 @@ __pycache__/
 .venv/
 venv/
 
-# Mise / local tool caches (project pins in mise.toml are fine to commit)
+# Mise / local tool caches at repo root (project pins in mise.toml are fine).
+# Do not use a bare ".local/" — that would hide kit payloads under files/home/.local/.
+/.local/
 .mise/
-.local/
 
 # OS package / container noise
 *.log

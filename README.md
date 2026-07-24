@@ -27,7 +27,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Status | Name | Notes |
 | --- | --- | --- |
 | Shipped | [`templates/_bake`](templates/_bake/) | Shared agent bake (strip languages, CLIs, mise binary, UX) |
-| Shipped | [`templates/cursor-mise-docker`](templates/cursor-mise-docker/) | Thin: cursor-agent-docker + bake; `sbx-kit run cursor` |
+| Shipped | [`templates/cursor-mise-docker`](templates/cursor-mise-docker/) | Thin: cursor-agent-docker + bake; `sbx-kit run --agent cursor` |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Stub | [`templates/opencode-mise-docker`](templates/opencode-mise-docker/) | Same bake on opencode-docker |
 | Stub | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Same bake on shell-docker (Pi/Hermes image) |
@@ -76,8 +76,8 @@ sbx template ls
 ```bash
 cd ~/my-project
 sbx-kit init --agent cursor .   # optional README stamp
-sbx-kit run cursor .
-# parallel / isolated: sbx-kit run cursor . --clone
+sbx-kit run --agent cursor --yes
+# parallel / isolated: sbx-kit run --agent cursor --yes --clone
 ```
 
 ### Git workspace modes

@@ -12,28 +12,27 @@ import (
 
 func newRmCmd() *cobra.Command {
 	var (
+		agent     string
+		path      string
+		name      string
 		keepState bool
 		force     bool
 	)
 
 	cmd := &cobra.Command{
-		Use:   "rm <agent|sandbox-name> [project-dir]",
+		Use:   "rm",
 		Short: "Remove an sbx sandbox (optionally export portable state first)",
-		Long: `Resolve the sandbox from a catalog agent + project binding (or an explicit
-sbx name), optionally pack state to ~/.local/share/sbx-kit/profiles/<id>/,
-then run sbx rm.
+		Long: `Resolve the sandbox from --agent/--path binding or --name, optionally pack
+state to ~/.local/share/sbx-kit/profiles/<id>/, then run sbx rm.
 
-Without --keep-state, warns that /home/agent workplace state will be lost.`,
-		Example: `  sbx-kit rm cursor .
-  sbx-kit rm cursor . --keep-state
-  sbx-kit rm sbxk-cursor-deadbeef --keep-state --force`,
-		Args: cobra.RangeArgs(1, 2),
+Without --keep-state, warns that /home/agent workplace state will be lost.
+Export waits for the sandbox to leave "running" so SQLite WALs can flush.`,
+		Example: `  sbx-kit rm --agent cursor
+  sbx-kit rm --agent cursor --path ~/proj --keep-state
+  sbx-kit rm --name sbxk-cursor-deadbeef --keep-state --force`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			projectDir := "."
-			if len(args) > 1 {
-				projectDir = args[1]
-			}
-			rs, err := resolveSandboxArg(args[0], projectDir)
+			rs, err := resolveFlags(agent, path, name)
 			if err != nil {
 				return err
 			}
@@ -44,7 +43,7 @@ Without --keep-state, warns that /home/agent workplace state will be lost.`,
 				return err
 			}
 			if !exists {
-				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?)", rs.SandboxName)
+				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?); try: sbx-kit status", rs.SandboxName)
 			}
 
 			if keepState {
@@ -62,11 +61,14 @@ Without --keep-state, warns that /home/agent workplace state will be lost.`,
 			if rs.AgentName != "" && rs.ProjectDir != "" {
 				_ = binding.Delete(rs.ProjectDir, rs.AgentName)
 			}
-			fmt.Printf("==> removed %s\n", rs.SandboxName)
+			fmt.Printf("==> removed %s (%s)\n", rs.SandboxName, binding.Label(&binding.Record{ProjectDir: rs.ProjectDir, SandboxName: rs.SandboxName}))
 			return nil
 		},
 	}
 
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&path, "path", ".", "project directory")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host XDG profile before rm")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd

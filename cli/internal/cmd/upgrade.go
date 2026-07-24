@@ -13,10 +13,14 @@ import (
 )
 
 func newUpgradeCmd() *cobra.Command {
-	var force bool
+	var (
+		agent string
+		path  string
+		force bool
+	)
 
 	cmd := &cobra.Command{
-		Use:   "upgrade <agent> [project-dir]",
+		Use:   "upgrade",
 		Short: "Export state, recreate sandbox with current catalog kits/template, restore",
 		Long: `Blessed path when templates/kits change:
 
@@ -27,16 +31,17 @@ func newUpgradeCmd() *cobra.Command {
   5. sbx run --name (attach)
 
 Requires agent-workspace kit so sbx-kit-state is available.`,
-		Example: `  sbx-kit upgrade cursor .
-  sbx-kit upgrade cursor . --force`,
-		Args: cobra.RangeArgs(1, 2),
+		Example: `  sbx-kit upgrade --agent cursor
+  sbx-kit upgrade --agent cursor --path ~/proj --force`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			agentName := args[0]
-			projectDir := "."
-			if len(args) > 1 {
-				projectDir = args[1]
+			if agent == "" {
+				return fmt.Errorf("--agent is required")
 			}
-			rs, err := resolveFromAgent(agentName, projectDir)
+			if path == "" {
+				path = "."
+			}
+			rs, err := resolveFromAgent(agent, path)
 			if err != nil {
 				return err
 			}
@@ -58,13 +63,12 @@ Requires agent-workspace kit so sbx-kit-state is available.`,
 			}
 
 			extra := extractPassthrough(os.Args)
-			// Force the same name through passthrough.
 			extra = append([]string{"--name", rs.SandboxName}, stripName(extra)...)
 
-			overrideKey := "SBX_" + strings.ToUpper(agentName) + "_TEMPLATE"
+			overrideKey := "SBX_" + strings.ToUpper(agent) + "_TEMPLATE"
 			_, err = run.Sbx(run.Opts{
 				Root:             rs.Root,
-				AgentCatalogName: agentName,
+				AgentCatalogName: agent,
 				SbxAgent:         rs.SbxAgent,
 				ImageName:        rs.ImageName,
 				TemplateFallback: rs.TemplateFB,
@@ -75,14 +79,17 @@ Requires agent-workspace kit so sbx-kit-state is available.`,
 				Resources:        rs.Resources,
 				ResourcesProfile: rs.ResProfile,
 				RestoreState:     true,
+				ConfirmCreate:    false,
 				Runner:           r,
 			})
 			return err
 		},
 	}
 
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent recipe (required)")
+	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
-	cmd.Flags().SetInterspersed(false)
+	_ = cmd.MarkFlagRequired("agent")
 	return cmd
 }
 

@@ -52,7 +52,8 @@ agentContext: |
   included in exports; caches are excluded and rebuild on a fresh sandbox.
 
   The human can preserve this across sandbox recreate with:
-  - `sbx-kit rm --keep-state` (export to host `~/.local/share/sbx-kit/profiles/…`)
-  - `sbx-kit run … --restore-state` or `sbx-kit upgrade`
+  - `sbx-kit rm --agent <name> --keep-state` (export to host XDG profiles)
+  - `sbx-kit run --agent <name> --restore-state` or `sbx-kit upgrade --agent <name>`
 
+  Detach the agent session before export so SQLite WAL files can checkpoint.
   In-VM helper: `sbx-kit-state check|pack|unpack` (installed by this kit).

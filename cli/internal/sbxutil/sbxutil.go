@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // Runner executes sbx subcommands. Tests can substitute a fake.
@@ -151,14 +152,48 @@ func (r *Runner) Ls() ([]Sandbox, error) {
 
 // Exists reports whether a sandbox name appears in sbx ls.
 func (r *Runner) Exists(name string) (bool, error) {
-	rows, err := r.Ls()
+	s, err := r.Get(name)
 	if err != nil {
 		return false, err
 	}
-	for _, s := range rows {
-		if s.Name == name {
-			return true, nil
+	return s != nil, nil
+}
+
+// Get returns one sandbox by name, or nil if missing.
+func (r *Runner) Get(name string) (*Sandbox, error) {
+	rows, err := r.Ls()
+	if err != nil {
+		return nil, err
+	}
+	for i := range rows {
+		if rows[i].Name == name {
+			s := rows[i]
+			return &s, nil
 		}
 	}
-	return false, nil
+	return nil, nil
+}
+
+// WaitNotRunning polls sbx ls until the sandbox is absent or not "running".
+// Returns nil on success; on timeout returns the last known status error.
+func (r *Runner) WaitNotRunning(name string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	var last string
+	for {
+		s, err := r.Get(name)
+		if err != nil {
+			return err
+		}
+		if s == nil {
+			return nil
+		}
+		last = s.Status
+		if !strings.EqualFold(s.Status, "running") {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("sandbox %s still running after %s (status=%s); detach the agent session and retry", name, timeout, last)
+		}
+		time.Sleep(2 * time.Second)
+	}
 }

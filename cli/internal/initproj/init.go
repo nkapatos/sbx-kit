@@ -87,9 +87,9 @@ func buildSection(name string, a catalog.Agent) string {
 	}
 	blurb := fmt.Sprintf("the `%s` agent recipe (`%s` + kits)%s", name, a.ImageName, stubNote)
 
-	runBlock := fmt.Sprintf("sbx-kit run %s .", name)
+	runBlock := fmt.Sprintf("sbx-kit run --agent %s --yes", name)
 	if a.Stub {
-		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run %s .", name)
+		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run --agent %s --yes", name)
 	}
 
 	return strings.TrimSpace(fmt.Sprintf(`

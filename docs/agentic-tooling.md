@@ -168,8 +168,8 @@ sbx does not bake CPU/memory/disk into the image. `sbx-kit run` loads [`config/r
 | Docker data | `25g` | `SBX_DOCKER_SIZE` / `DOCKER_SANDBOXES_DOCKER_SIZE` |
 
 ```bash
-SBX_RESOURCES_PROFILE=local-llm sbx-kit run cursor .   # follow-up
-SBX_MEMORY=8g sbx-kit run cursor .
+SBX_RESOURCES_PROFILE=local-llm sbx-kit run --agent cursor --yes   # follow-up
+SBX_MEMORY=8g sbx-kit run --agent cursor --yes
 ```
 
 Recreate sandboxes to pick up new disk/memory defaults.
@@ -186,8 +186,8 @@ Recreate sandboxes to pick up new disk/memory defaults.
 **Host worktrees** (`git worktree add <host-path>`) create extra checkouts on the **host** mount — useful so a human and an agent (or two host-visible trees) work in parallel. They are not sandbox-private storage. Do not use `git worktree add /tmp/…` inside the VM expecting isolation from the host `.git`.
 
 ```bash
-sbx-kit run cursor . -- --clone
-# or: sbx-kit run cursor . --clone
+sbx-kit run --agent cursor --clone
+# or: sbx-kit run --agent cursor -- --clone
 ```
 
 ## Status

@@ -24,8 +24,8 @@ The template must provide the **mise** binary at `/usr/local/bin/mise` (see `tem
 Prefer the catalog CLI (pulls this kit automatically):
 
 ```bash
-sbx-kit run cursor .
-sbx-kit run opencode .
+sbx-kit run --agent cursor --yes
+sbx-kit run --agent opencode --yes
 ```
 
 Long form:

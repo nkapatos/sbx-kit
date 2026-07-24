@@ -1,0 +1,17 @@
+# Portable agent workplace state for sbx-kit (host vault via sbx cp).
+# Paths are absolute inside the sandbox. Caches/indexes are excluded.
+#
+# INCLUDE <path>
+# EXCLUDE <tar --exclude pattern relative to archive members, or path prefix>
+
+# Agent-local docs / refs / portable material (not the git project tree)
+INCLUDE /home/agent/.local/share/sbx-kit/portable
+
+# Cursor agent home (sessions, CLI config). Rebuild caches on fresh boot.
+INCLUDE /home/agent/.cursor
+EXCLUDE home/agent/.cursor/**/cache
+EXCLUDE home/agent/.cursor/**/CachedData
+EXCLUDE home/agent/.cursor/**/CachedProfilesData
+EXCLUDE home/agent/.cursor/**/GPUCache
+EXCLUDE home/agent/.cursor/**/Code Cache
+EXCLUDE home/agent/.cursor/ai-tracking

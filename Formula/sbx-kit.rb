@@ -53,7 +53,7 @@ class SbxKit < Formula
 
       You still need the Docker `sbx` CLI. Until images are on a registry:
         sbx-kit template load --engine docker cursor-mise-docker
-        sbx-kit run cursor .
+        sbx-kit run --agent cursor --yes
     EOS
   end
 

@@ -48,7 +48,7 @@ sbx template ls
 
 cd ~/my-project
 sbx-kit init --agent cursor .    # optional
-sbx-kit run cursor .
+sbx-kit run --agent cursor --yes
 ```
 
 Until images are published to a registry, `template load` is the local import path. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`).

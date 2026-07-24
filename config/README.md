@@ -11,14 +11,14 @@ the template image. `sbx-kit run` loads one of these files (see also
 
 ```bash
 # default (remote)
-sbx-kit run cursor .
+sbx-kit run --agent cursor --yes
 
 # opt into local-LLM profile
-sbx-kit run cursor . --resources local-llm
-# or: SBX_RESOURCES_PROFILE=local-llm sbx-kit run cursor .
+sbx-kit run --agent cursor --yes --resources local-llm
+# or: SBX_RESOURCES_PROFILE=local-llm sbx-kit run --agent cursor --yes
 
 # one-off overrides
-SBX_MEMORY=8g SBX_CPUS=6 sbx-kit run cursor .
+SBX_MEMORY=8g SBX_CPUS=6 sbx-kit run --agent cursor --yes
 ```
 
 Existing sandboxes keep the resources they were created with; recreate to pick up new defaults.

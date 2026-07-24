@@ -23,16 +23,13 @@ func newStateCmd() *cobra.Command {
 }
 
 func newStateExportCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "export <agent|sandbox-name> [project-dir]",
+	var agent, path, name string
+	cmd := &cobra.Command{
+		Use:   "export",
 		Short: "Pack VM state and copy to ~/.local/share/sbx-kit/profiles/<id>/",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			projectDir := "."
-			if len(args) > 1 {
-				projectDir = args[1]
-			}
-			rs, err := resolveSandboxArg(args[0], projectDir)
+			rs, err := resolveFlags(agent, path, name)
 			if err != nil {
 				return err
 			}
@@ -47,19 +44,20 @@ func newStateExportCmd() *cobra.Command {
 			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&path, "path", ".", "project directory")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
+	return cmd
 }
 
 func newStateImportCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "import <agent|sandbox-name> [project-dir]",
+	var agent, path, name string
+	cmd := &cobra.Command{
+		Use:   "import",
 		Short: "Copy host profile archive into the sandbox and unpack",
-		Args:  cobra.RangeArgs(1, 2),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			projectDir := "."
-			if len(args) > 1 {
-				projectDir = args[1]
-			}
-			rs, err := resolveSandboxArg(args[0], projectDir)
+			rs, err := resolveFlags(agent, path, name)
 			if err != nil {
 				return err
 			}
@@ -74,13 +72,18 @@ func newStateImportCmd() *cobra.Command {
 			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&path, "path", ".", "project directory")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
+	return cmd
 }
 
 func newStatusCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "status [project-dir]",
+	var path string
+	cmd := &cobra.Command{
+		Use:   "status",
 		Short: "Show sbx-kit bindings and whether sandboxes still exist",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := xdg.Ensure(); err != nil {
 				return err
@@ -90,8 +93,8 @@ func newStatusCmd() *cobra.Command {
 			fmt.Printf("share: %s\nstate: %s\n\n", share, state)
 
 			projectFilter := ""
-			if len(args) == 1 {
-				abs, err := filepath.Abs(args[0])
+			if cmd.Flags().Changed("path") {
+				abs, err := filepath.Abs(path)
 				if err != nil {
 					return err
 				}
@@ -104,10 +107,10 @@ func newStatusCmd() *cobra.Command {
 			}
 			r := sbxutil.Default()
 			rows, lsErr := r.Ls()
-			alive := map[string]bool{}
+			alive := map[string]string{}
 			if lsErr == nil {
 				for _, s := range rows {
-					alive[s.Name] = true
+					alive[s.Name] = s.Status
 				}
 			} else {
 				fmt.Printf("warning: sbx ls failed: %v\n\n", lsErr)
@@ -119,11 +122,15 @@ func newStatusCmd() *cobra.Command {
 					continue
 				}
 				status := "missing"
-				if alive[rec.SandboxName] {
-					status = "present"
+				if st, ok := alive[rec.SandboxName]; ok {
+					if st == "" {
+						status = "present"
+					} else {
+						status = st
+					}
 				}
-				fmt.Printf("%s  agent=%s  sandbox=%s  profile=%s  sbx=%s\n",
-					rec.ProjectDir, rec.Agent, rec.SandboxName, rec.ProfileID, status)
+				fmt.Printf("%s  label=%s  agent=%s  sandbox=%s  profile=%s  sbx=%s\n",
+					rec.ProjectDir, binding.Label(&rec), rec.Agent, rec.SandboxName, rec.ProfileID, status)
 				shown++
 			}
 			if shown == 0 {
@@ -132,4 +139,37 @@ func newStatusCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&path, "path", ".", "filter bindings to this project directory")
+	return cmd
+}
+
+// resolveFlags picks a sandbox from --name or --agent/--path.
+func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
+	if name != "" && agent != "" {
+		return nil, fmt.Errorf("use either --name or --agent, not both")
+	}
+	if name != "" {
+		return resolveSandboxArg(name, path)
+	}
+	if agent == "" {
+		if path == "" {
+			path = "."
+		}
+		recs, err := binding.ListForProject(path)
+		if err != nil {
+			return nil, err
+		}
+		switch len(recs) {
+		case 0:
+			return nil, fmt.Errorf("no binding for path %s; pass --agent or --name (see sbx-kit status)", path)
+		case 1:
+			agent = recs[0].Agent
+		default:
+			return nil, fmt.Errorf("multiple agents bound to %s; pass --agent explicitly", path)
+		}
+	}
+	if path == "" {
+		path = "."
+	}
+	return resolveFromAgent(agent, path)
 }

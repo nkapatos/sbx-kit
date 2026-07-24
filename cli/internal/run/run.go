@@ -27,7 +27,11 @@ type Opts struct {
 	Resources        *resources.Profile
 	ResourcesProfile string
 	RestoreState     bool
-	Runner           *sbxutil.Runner
+	// ConfirmCreate prompts before creating a new sandbox when true.
+	ConfirmCreate bool
+	// ConfirmFn asks whether to create; required when ConfirmCreate is true.
+	ConfirmFn func(agent, path, name string) (bool, error)
+	Runner    *sbxutil.Runner
 }
 
 // Result is returned after argv is prepared (and after create/restore when applicable).
@@ -35,6 +39,7 @@ type Result struct {
 	SandboxName string
 	ProfileID   string
 	ProjectDir  string
+	Label       string
 }
 
 func Sbx(o Opts) (*Result, error) {
@@ -59,11 +64,24 @@ func Sbx(o Opts) (*Result, error) {
 	}
 
 	generated := sbxname.FromProject(o.AgentCatalogName, absProject)
-	name, extra := sbxname.Inject(o.Extra, generated)
+	passthroughName, restExtra, passthroughHasName := sbxname.ExtractFromArgs(o.Extra)
+
+	name := generated
+	profileID := generated
+	if passthroughHasName {
+		name = passthroughName
+		profileID = passthroughName
+	} else if rec, err := binding.Get(absProject, o.AgentCatalogName); err == nil && rec != nil {
+		name = rec.SandboxName
+		profileID = rec.ProfileID
+	}
+
 	if !sbxname.Valid(name) {
 		return nil, fmt.Errorf("invalid sandbox name %q", name)
 	}
-	profileID := name
+
+	extra := append([]string{"--name", name}, restExtra...)
+	extra = appendResourceFlags(extra, o.Resources)
 
 	if err := binding.Put(binding.Record{
 		ProjectDir:  absProject,
@@ -75,7 +93,6 @@ func Sbx(o Opts) (*Result, error) {
 	}
 
 	template := resolveTemplate(r, o.ImageName, o.TemplateFallback, o.TemplateOverride)
-	extra = appendResourceFlags(extra, o.Resources)
 
 	env := os.Environ()
 	if o.Resources.RootSize != "" {
@@ -85,11 +102,12 @@ func Sbx(o Opts) (*Result, error) {
 		env = setEnv(env, "DOCKER_SANDBOXES_DOCKER_SIZE", o.Resources.DockerSize)
 	}
 
+	label := filepath.Base(absProject)
 	fmt.Printf("==> resources profile=%s memory=%s cpus=%s root=%s docker=%s\n",
 		o.ResourcesProfile, o.Resources.Memory, o.Resources.CPUs, o.Resources.RootSize, o.Resources.DockerSize)
-	fmt.Printf("==> sandbox name=%s profile=%s\n", name, profileID)
+	fmt.Printf("==> sandbox name=%s  label=%s  profile=%s\n", name, label, profileID)
 
-	res := &Result{SandboxName: name, ProfileID: profileID, ProjectDir: absProject}
+	res := &Result{SandboxName: name, ProfileID: profileID, ProjectDir: absProject, Label: label}
 
 	exists, err := r.Exists(name)
 	if err != nil {
@@ -107,6 +125,13 @@ func Sbx(o Opts) (*Result, error) {
 		}
 
 		if !exists {
+			ok, err := confirmCreate(o, absProject, name)
+			if err != nil {
+				return res, err
+			}
+			if !ok {
+				return res, fmt.Errorf("create cancelled")
+			}
 			createArgs := buildArgs("create", o.SbxAgent, template, o.KitPaths, extra, absProject)
 			if err := r.RunEnv(env, createArgs...); err != nil {
 				return res, err
@@ -122,12 +147,30 @@ func Sbx(o Opts) (*Result, error) {
 
 	// Re-attach must not pass --kit/--template (sbx rejects those on existing sandboxes).
 	if exists {
-		fmt.Printf("==> re-attaching existing sandbox %s\n", name)
+		fmt.Printf("==> re-attaching existing sandbox %s (%s)\n", name, label)
 		return res, r.RunEnv(env, "run", "--name", name)
+	}
+
+	ok, err := confirmCreate(o, absProject, name)
+	if err != nil {
+		return res, err
+	}
+	if !ok {
+		return res, fmt.Errorf("create cancelled")
 	}
 
 	runArgs := buildArgs("run", o.SbxAgent, template, o.KitPaths, extra, absProject)
 	return res, r.RunEnv(env, runArgs...)
+}
+
+func confirmCreate(o Opts, absProject, name string) (bool, error) {
+	if !o.ConfirmCreate {
+		return true, nil
+	}
+	if o.ConfirmFn == nil {
+		return false, fmt.Errorf("create confirmation required but no prompt configured (pass --yes)")
+	}
+	return o.ConfirmFn(o.AgentCatalogName, absProject, name)
 }
 
 func buildArgs(verb, sbxAgent, template string, kits, extra []string, project string) []string {

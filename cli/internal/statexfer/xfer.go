@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/xdg"
@@ -14,9 +16,13 @@ const (
 	RemoteArchive = "/tmp/sbx-kit-state.tgz"
 	// Helper is installed by the agent-workspace kit.
 	Helper = "sbx-kit-state"
+	// DefaultStopWait is a short grace period when export sees status=running.
+	DefaultStopWait = 15 * time.Second
 )
 
 // Export packs VM portable state and copies it to the host profile archive.
+// If the sandbox is still "running", waits for it to stop so agent SQLite WALs
+// can checkpoint cleanly inside sbx-kit-state pack.
 func Export(r *sbxutil.Runner, sandbox, profileID string) error {
 	if err := xdg.Ensure(); err != nil {
 		return err
@@ -27,6 +33,13 @@ func Export(r *sbxutil.Runner, sandbox, profileID string) error {
 	}
 	if err := os.MkdirAll(filepath.Dir(hostArch), 0o755); err != nil {
 		return err
+	}
+
+	if s, err := r.Get(sandbox); err == nil && s != nil && strings.EqualFold(s.Status, "running") {
+		fmt.Printf("==> sandbox %s is running; waiting briefly for detach before packing (best-effort)\n", sandbox)
+		if err := r.WaitNotRunning(sandbox, 15*time.Second); err != nil {
+			fmt.Printf("==> warning: %v\n==> packing anyway; prefer detach so SQLite WALs can flush\n", err)
+		}
 	}
 
 	fmt.Printf("==> packing state in %s via %s\n", sandbox, Helper)

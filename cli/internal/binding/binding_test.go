@@ -32,6 +32,14 @@ func TestPutGetRoundTrip(t *testing.T) {
 		t.Fatalf("byName=%v err=%v", byName, err)
 	}
 
+	forProj, err := ListForProject(project)
+	if err != nil || len(forProj) != 1 {
+		t.Fatalf("ListForProject=%v err=%v", forProj, err)
+	}
+	if Label(&forProj[0]) != "proj" {
+		t.Fatalf("Label=%q", Label(&forProj[0]))
+	}
+
 	if err := Delete(project, "cursor"); err != nil {
 		t.Fatal(err)
 	}

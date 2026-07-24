@@ -57,7 +57,7 @@ Day-to-day:
   sbx-kit agents
   sbx-kit run --agent cursor --yes
   sbx-kit run
-  sbx-kit run --name sbxk-cursor-deadbeef
+  sbx-kit run --name my-project
   sbx-kit rm --agent cursor --keep-state
   sbx-kit upgrade --agent cursor
   sbx-kit status

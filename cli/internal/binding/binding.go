@@ -116,19 +116,45 @@ func Get(projectDir, agent string) (*Record, error) {
 	return nil, nil
 }
 
-// GetBySandbox finds a binding by sandbox name.
+// GetBySandbox finds a binding by friendly sandbox name or opaque profile id.
 func GetBySandbox(name string) (*Record, error) {
 	s, err := load()
 	if err != nil {
 		return nil, err
 	}
+	var matches []Record
 	for i := range s.Bindings {
-		if s.Bindings[i].SandboxName == name {
-			rec := s.Bindings[i]
-			return &rec, nil
+		if s.Bindings[i].SandboxName == name || s.Bindings[i].ProfileID == name {
+			matches = append(matches, s.Bindings[i])
 		}
 	}
-	return nil, nil
+	switch len(matches) {
+	case 0:
+		return nil, nil
+	case 1:
+		rec := matches[0]
+		return &rec, nil
+	default:
+		return nil, fmt.Errorf("multiple bindings match %q; fix ~/.local/state/sbx-kit/bindings.json", name)
+	}
+}
+
+// Label is the friendly sbx sandbox name (falls back to project basename).
+func Label(rec *Record) string {
+	if rec == nil {
+		return ""
+	}
+	if rec.SandboxName != "" {
+		return rec.SandboxName
+	}
+	if rec.ProjectDir == "" {
+		return ""
+	}
+	base := filepath.Base(rec.ProjectDir)
+	if base == "." || base == string(filepath.Separator) {
+		return rec.ProfileID
+	}
+	return base
 }
 
 // List returns all bindings.
@@ -159,18 +185,6 @@ func ListForProject(projectDir string) ([]Record, error) {
 		}
 	}
 	return out, nil
-}
-
-// Label is a human-friendly name derived from the project directory basename.
-func Label(rec *Record) string {
-	if rec == nil || rec.ProjectDir == "" {
-		return ""
-	}
-	base := filepath.Base(rec.ProjectDir)
-	if base == "." || base == string(filepath.Separator) {
-		return rec.SandboxName
-	}
-	return base
 }
 
 // Delete removes a binding for (projectDir, agent).

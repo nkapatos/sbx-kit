@@ -4,24 +4,68 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 var (
 	validName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,62}$`)
 )
 
-// FromProject builds a stable sbx --name for agent + absolute project path.
-func FromProject(agent, absProject string) string {
+// NewProfileID builds a stable opaque vault id for recipe + absolute project path.
+// Used under ~/.local/share/sbx-kit/profiles/<id>/ — not as the sbx --name.
+func NewProfileID(recipe, absProject string) string {
 	sum := sha256.Sum256([]byte(absProject))
 	short := hex.EncodeToString(sum[:])[:8]
-	agent = sanitizeToken(agent)
-	if agent == "" {
-		agent = "agent"
+	recipe = sanitizeToken(recipe)
+	if recipe == "" {
+		recipe = "agent"
 	}
-	name := fmt.Sprintf("sbxk-%s-%s", agent, short)
-	return truncate(name, 63)
+	return truncate(fmt.Sprintf("sbxk-%s-%s", recipe, short), 63)
+}
+
+// FromProject is an alias for NewProfileID (legacy name).
+func FromProject(agent, absProject string) string {
+	return NewProfileID(agent, absProject)
+}
+
+// FromDir returns a friendly sbx sandbox name from the project directory basename.
+func FromDir(absProject string) (string, error) {
+	base := filepath.Base(absProject)
+	if base == "" || base == "." || base == string(filepath.Separator) {
+		return "", fmt.Errorf("cannot derive sandbox name from path %q", absProject)
+	}
+	name := Sanitize(base)
+	if !Valid(name) {
+		return "", fmt.Errorf("derived sandbox name %q is invalid for sbx (from %q); pass --sandbox-name", name, base)
+	}
+	return name, nil
+}
+
+// Sanitize maps an arbitrary string to an sbx-safe name (keeps letters, digits, _ . -).
+func Sanitize(s string) string {
+	s = strings.TrimSpace(s)
+	var b strings.Builder
+	lastDash := false
+	for _, r := range s {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			b.WriteRune(r)
+			lastDash = false
+		case r == '_' || r == '.' || r == '-':
+			b.WriteRune(r)
+			lastDash = false
+		default:
+			if !lastDash && b.Len() > 0 {
+				b.WriteByte('-')
+				lastDash = true
+			}
+		}
+	}
+	out := strings.Trim(b.String(), "-._")
+	return truncate(out, 63)
 }
 
 // ExtractFromArgs returns --name value from sbx passthrough args, if present.

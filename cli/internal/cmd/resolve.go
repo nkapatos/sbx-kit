@@ -49,11 +49,18 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		return nil, err
 	}
 
-	name := sbxname.FromProject(agentName, abs)
-	profileID := name
+	name := ""
+	profileID := sbxname.NewProfileID(agentName, abs)
 	if rec, err := binding.Get(abs, agentName); err == nil && rec != nil {
 		name = rec.SandboxName
 		profileID = rec.ProfileID
+	}
+	if name == "" {
+		var err error
+		name, err = sbxname.FromDir(abs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	kits := agent.Kits

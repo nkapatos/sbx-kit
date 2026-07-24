@@ -99,3 +99,17 @@ func HasArchive(profileID string) (bool, error) {
 	}
 	return st.Size() > 0, nil
 }
+
+// DiscardArchive removes the host profile archive (and empty parent dir) if present.
+func DiscardArchive(profileID string) error {
+	hostArch, err := xdg.ProfileArchive(profileID)
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(hostArch); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	_ = os.Remove(filepath.Dir(hostArch)) // best-effort remove profiles/<id>/
+	fmt.Printf("==> discarded archive for profile %s\n", profileID)
+	return nil
+}

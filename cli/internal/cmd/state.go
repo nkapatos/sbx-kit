@@ -129,8 +129,8 @@ func newStatusCmd() *cobra.Command {
 						status = st
 					}
 				}
-				fmt.Printf("%s  label=%s  recipe=%s  sandbox=%s  profile=%s  sbx=%s\n",
-					rec.ProjectDir, binding.Label(&rec), rec.Agent, rec.SandboxName, rec.ProfileID, status)
+				fmt.Printf("%s  name=%s  recipe=%s  profile=%s  sbx=%s\n",
+					rec.ProjectDir, rec.SandboxName, rec.Agent, rec.ProfileID, status)
 				shown++
 			}
 			if shown == 0 {

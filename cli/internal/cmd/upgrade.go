@@ -63,9 +63,8 @@ Requires the agent-workspace kit so sbx-kit-state is available.`,
 			}
 
 			extra := extractPassthrough(os.Args)
-			extra = append([]string{"--name", rs.SandboxName}, stripName(extra)...)
-
 			overrideKey := "SBX_" + strings.ToUpper(agent) + "_TEMPLATE"
+			// Reuse the same friendly name + profile id from the binding.
 			_, err = run.Sbx(run.Opts{
 				Root:             rs.Root,
 				AgentCatalogName: agent,
@@ -75,12 +74,14 @@ Requires the agent-workspace kit so sbx-kit-state is available.`,
 				TemplateOverride: os.Getenv(overrideKey),
 				KitPaths:         rs.KitPaths,
 				ProjectDir:       rs.ProjectDir,
-				Extra:            extra,
+				Extra:            stripName(extra),
 				Resources:        rs.Resources,
 				ResourcesProfile: rs.ResProfile,
 				RestoreState:     true,
 				CreateOnly:       true,
 				ConfirmCreate:    false,
+				SandboxName:      rs.SandboxName,
+				ProfileID:        rs.ProfileID,
 				Runner:           r,
 			})
 			return err

@@ -17,7 +17,7 @@ agents work fine with plain `sbx`.
 ```text
 sbx-kit agents
 sbx-kit run                                      # attach sole binding for cwd
-sbx-kit run --agent <recipe> [--path <dir>] [--yes] [--clone] [--restore-state] [-- sbx-args...]
+sbx-kit run --agent <recipe> [--path <dir>] [--sandbox-name <name>] [--yes] [--clone] [--restore-state] [-- sbx-args...]
 sbx-kit run --name <sandbox> [--restore-state]   # attach only
 sbx-kit rm --agent <recipe> [--path <dir>] [--keep-state] [--force]
 sbx-kit rm --name <sandbox> [--keep-state] [--force]
@@ -43,24 +43,27 @@ Honor `XDG_DATA_HOME` / `XDG_STATE_HOME` when set.
 
 ## Sandbox identity
 
-Each project+recipe binding gets a stable opaque `sbx --name`
-(`sbxk-<recipe>-<hash>`) so two checkouts with the same directory basename do
-not collide. Humans see a **label** (project basename) via `sbx-kit status`.
+Friendly **sbx name** (what `sbx ls` shows) defaults to the project directory
+basename — same idea as stock sbx. An opaque **profile id**
+(`sbxk-<recipe>-<hash>`) keys the host vault only; users rarely type it.
 
 | Flag | Intent |
 | --- | --- |
-| `--agent <recipe>` | **Create** from catalog recipe (template + kits + `sbx_agent`) |
+| `--agent <recipe>` | **Create** from catalog recipe |
 | `--path` | Project directory for create / bare-run attach |
-| `--name` | **Attach** (or rm/state) by sandbox id — no create |
+| `--sandbox-name` | Create-time friendly sbx name (default: dirname; `--yes` skips prompt) |
+| `--name` | **Attach** (or rm/state) by friendly sbx name — no create |
 
 ```bash
-sbx-kit run --agent cursor --yes     # create (prompts without --yes)
-sbx-kit run                          # re-attach sole cwd binding
-sbx-kit run --name sbxk-cursor-…     # attach from anywhere
+sbx-kit run --agent cursor --yes          # create; name = dirname
+sbx-kit run --agent cursor                # interactive: name? then create?
+sbx-kit run                               # re-attach sole cwd binding
+sbx-kit run --name my-project             # attach from anywhere
 ```
 
-If `--agent` is used and the sandbox already exists, the CLI errors and points
-you at `--name` / bare `run` / `upgrade`.
+If `--agent` is used and that sbx name already exists, the CLI errors (sbx
+owns uniqueness). To “rename”: `rm --keep-state`, recreate with a new
+`--sandbox-name`, `--restore-state`.
 
 ## Portable state
 

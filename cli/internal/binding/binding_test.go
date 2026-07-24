@@ -13,7 +13,7 @@ func TestPutGetRoundTrip(t *testing.T) {
 	if err := Put(Record{
 		ProjectDir:  project,
 		Agent:       "cursor",
-		SandboxName: "sbxk-cursor-abc12345",
+		SandboxName: "proj",
 		ProfileID:   "sbxk-cursor-abc12345",
 	}); err != nil {
 		t.Fatal(err)
@@ -23,13 +23,17 @@ func TestPutGetRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got == nil || got.SandboxName != "sbxk-cursor-abc12345" {
+	if got == nil || got.SandboxName != "proj" || got.ProfileID != "sbxk-cursor-abc12345" {
 		t.Fatalf("got %+v", got)
 	}
 
-	byName, err := GetBySandbox("sbxk-cursor-abc12345")
+	byName, err := GetBySandbox("proj")
 	if err != nil || byName == nil {
 		t.Fatalf("byName=%v err=%v", byName, err)
+	}
+	byProfile, err := GetBySandbox("sbxk-cursor-abc12345")
+	if err != nil || byProfile == nil {
+		t.Fatalf("byProfile=%v err=%v", byProfile, err)
 	}
 
 	forProj, err := ListForProject(project)

@@ -6,7 +6,7 @@ import (
 )
 
 func TestFromProjectStable(t *testing.T) {
-	a := FromProject("cursor", "/Users/me/proj")
+	a := NewProfileID("cursor", "/Users/me/proj")
 	b := FromProject("cursor", "/Users/me/proj")
 	if a != b {
 		t.Fatalf("unstable: %s vs %s", a, b)
@@ -19,9 +19,26 @@ func TestFromProjectStable(t *testing.T) {
 	}
 }
 
+func TestFromDir(t *testing.T) {
+	got, err := FromDir("/Users/me/posselt.studio")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "posselt.studio" {
+		t.Fatalf("got %q", got)
+	}
+	got, err = FromDir("/tmp/My App!")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "My-App" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestInjectAndExtract(t *testing.T) {
-	name, args := Inject([]string{"--clone", "--memory", "8g"}, "sbxk-cursor-deadbeef")
-	if name != "sbxk-cursor-deadbeef" {
+	name, args := Inject([]string{"--clone", "--memory", "8g"}, "my-project")
+	if name != "my-project" {
 		t.Fatalf("name=%s", name)
 	}
 	if args[0] != "--name" || args[1] != name {

@@ -2,7 +2,7 @@
 
 Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): reusable **templates** (sandbox images), **kits** (create-time YAML), and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace.** Heavy tooling is baked into shared templates; kits are mixins (or BYO sandbox agents). There is no Cursor-specific mise kit — only thin per-agent images plus agnostic mixins.
+**Sandbox = agent workplace; host = human workplace.** This repo ships a few **example** recipes (lean images + mise mixins + portable state). Bring your own templates/kits/catalog when you want a different stack — sbx-kit is the helper for composing them and surviving teardown without losing agent home state.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 

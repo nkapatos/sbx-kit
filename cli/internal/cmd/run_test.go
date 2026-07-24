@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -11,5 +12,16 @@ func TestExtractPassthrough(t *testing.T) {
 	}
 	if extractPassthrough([]string{"sbx-kit", "run", "--agent", "cursor"}) != nil {
 		t.Fatal("expected nil")
+	}
+}
+
+func TestSoleBindingRecordErrors(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	t.Setenv("XDG_STATE_HOME", t.TempDir())
+
+	dir := t.TempDir()
+	_, err := soleBindingRecord(dir)
+	if err == nil || !strings.Contains(err.Error(), "no sandbox bound") {
+		t.Fatalf("expected no binding error, got %v", err)
 	}
 }

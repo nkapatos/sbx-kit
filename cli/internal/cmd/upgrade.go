@@ -79,6 +79,7 @@ Requires agent-workspace kit so sbx-kit-state is available.`,
 				Resources:        rs.Resources,
 				ResourcesProfile: rs.ResProfile,
 				RestoreState:     true,
+				CreateOnly:       true,
 				ConfirmCreate:    false,
 				Runner:           r,
 			})
@@ -86,7 +87,7 @@ Requires agent-workspace kit so sbx-kit-state is available.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent recipe (required)")
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (required)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	_ = cmd.MarkFlagRequired("agent")

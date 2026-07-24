@@ -1,4 +1,8 @@
 # Agent catalog for sbx-kit (see docs/cli-tooling.md).
+#
+# Each key is a RECIPE id (user-chosen). sbx_agent is the underlying sbx agent.
+# This file ships example recipes for this toolkit tree — bring your own catalog
+# when pointing SBX_TREE at another templates/kits repo.
 
 defaults:
   resources: remote-llm

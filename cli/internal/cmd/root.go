@@ -41,8 +41,10 @@ func NewRoot() *cobra.Command {
 }
 
 func longHelp() string {
-	return `sbx-kit launches coding agents in Docker AI Sandboxes using a catalog of
-templates, mixin kits, and resource profiles.
+	return `sbx-kit helps you compose custom Docker AI Sandboxes templates and kits,
+give sandboxes stable identity, and export/restore workplace state across
+teardown. This repo ships a few example recipes — point SBX_TREE (or a future
+external tree) at your own templates/kits/catalog when you outgrow them.
 
 macOS install:  brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit && brew install sbx-kit
 Docs:           docs/homebrew.md, docs/cli-tooling.md
@@ -53,8 +55,8 @@ Host vault (created on demand):
 
 Day-to-day:
   sbx-kit agents
-  sbx-kit run --agent cursor
-  sbx-kit run --agent cursor --path ~/proj --yes
+  sbx-kit run --agent cursor --yes
+  sbx-kit run
   sbx-kit run --name sbxk-cursor-deadbeef
   sbx-kit rm --agent cursor --keep-state
   sbx-kit upgrade --agent cursor

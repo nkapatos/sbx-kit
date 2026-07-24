@@ -66,9 +66,9 @@ Export waits for the sandbox to leave "running" so SQLite WALs can flush.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox name (attach/rm by id; no create)")
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host XDG profile before rm")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd

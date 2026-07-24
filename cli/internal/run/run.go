@@ -27,6 +27,8 @@ type Opts struct {
 	Resources        *resources.Profile
 	ResourcesProfile string
 	RestoreState     bool
+	// CreateOnly refuses to attach when the sandbox already exists.
+	CreateOnly bool
 	// ConfirmCreate prompts before creating a new sandbox when true.
 	ConfirmCreate bool
 	// ConfirmFn asks whether to create; required when ConfirmCreate is true.
@@ -124,6 +126,11 @@ func Sbx(o Opts) (*Result, error) {
 			fmt.Printf("==> warning: --restore-state set but no archive at profile %s\n", profileID)
 		}
 
+		if exists && o.CreateOnly {
+			return res, fmt.Errorf("sandbox %s already exists for recipe %s (%s)\n  attach:  sbx-kit run --name %s\n  recreate with state: sbx-kit upgrade --agent %s --path %s",
+				name, o.AgentCatalogName, label, name, o.AgentCatalogName, absProject)
+		}
+
 		if !exists {
 			ok, err := confirmCreate(o, absProject, name)
 			if err != nil {
@@ -147,6 +154,10 @@ func Sbx(o Opts) (*Result, error) {
 
 	// Re-attach must not pass --kit/--template (sbx rejects those on existing sandboxes).
 	if exists {
+		if o.CreateOnly {
+			return res, fmt.Errorf("sandbox %s already exists for recipe %s (%s)\n  attach: sbx-kit run --name %s\n  or:    sbx-kit run   (from the project dir)",
+				name, o.AgentCatalogName, label, name)
+		}
 		fmt.Printf("==> re-attaching existing sandbox %s (%s)\n", name, label)
 		return res, r.RunEnv(env, "run", "--name", name)
 	}

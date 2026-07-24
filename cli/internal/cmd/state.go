@@ -44,7 +44,7 @@ func newStateExportCmd() *cobra.Command {
 			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
 	return cmd
@@ -72,7 +72,7 @@ func newStateImportCmd() *cobra.Command {
 			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog agent (resolve via project binding)")
+	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
 	return cmd
@@ -129,7 +129,7 @@ func newStatusCmd() *cobra.Command {
 						status = st
 					}
 				}
-				fmt.Printf("%s  label=%s  agent=%s  sandbox=%s  profile=%s  sbx=%s\n",
+				fmt.Printf("%s  label=%s  recipe=%s  sandbox=%s  profile=%s  sbx=%s\n",
 					rec.ProjectDir, binding.Label(&rec), rec.Agent, rec.SandboxName, rec.ProfileID, status)
 				shown++
 			}

@@ -23,12 +23,12 @@ brew install --HEAD nkapatos/sbx-kit/sbx-kit
 | Path | Contents |
 | --- | --- |
 | `$(brew --prefix)/bin/sbx-kit` | CLI |
-| `$(brew --prefix)/share/sbx-kit/` | `config/`, `kits/`, `templates/`, `docs/` |
+| `$(brew --prefix)/share/sbx-kit/` | Example `config/`, `kits/`, `templates/`, `docs/` |
 
-Normal use does not need `SBX_TREE`. For hacking on this checkout:
+This tap ships **example** recipes. Override with `SBX_TREE=/path/to/your-tree` to use your own templates/kits/catalog. Normal use of the brew share does not need `SBX_TREE`.
 
 ```bash
-export SBX_TREE=/path/to/sbx-kit
+export SBX_TREE=/path/to/sbx-kit   # local checkout or another recipe tree
 ```
 
 Lifecycle commands also use a **host vault** (created on demand, not by brew):
@@ -36,7 +36,7 @@ Lifecycle commands also use a **host vault** (created on demand, not by brew):
 | Path | Contents |
 | --- | --- |
 | `~/.local/share/sbx-kit/profiles/` | Portable sandbox state archives |
-| `~/.local/state/sbx-kit/` | Project ↔ sandbox name bindings |
+| `~/.local/state/sbx-kit/` | Project ↔ recipe sandbox bindings |
 ## Host verify flow
 
 Prerequisites: Docker **`sbx`** CLI signed in; Docker Desktop/Colima **or** Apple `container` + `skopeo`.

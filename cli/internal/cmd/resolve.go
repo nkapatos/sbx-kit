@@ -39,10 +39,10 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	}
 	agent, ok := cat.Agents[agentName]
 	if !ok {
-		return nil, fmt.Errorf("unknown agent %q (try: sbx-kit agents)", agentName)
+		return nil, fmt.Errorf("unknown recipe %q (try: sbx-kit agents)", agentName)
 	}
 	if agent.Stub {
-		return nil, fmt.Errorf("agent %q is still a stub in config/agents.yaml", agentName)
+		return nil, fmt.Errorf("recipe %q is still a stub in config/agents.yaml", agentName)
 	}
 	abs, err := filepath.Abs(projectDir)
 	if err != nil {
@@ -90,7 +90,7 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 }
 
 func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
-	// Prefer catalog agent name when it matches.
+	// Prefer catalog recipe id when it matches.
 	root, err := requireToolkitRoot()
 	if err != nil {
 		return nil, err

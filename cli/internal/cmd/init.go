@@ -18,7 +18,7 @@ func newInitCmd() *cobra.Command {
 		Long: `Writes (or updates) a short "## Docker Sandbox" section in project-dir/README.md
 so the repo documents how to run it under sbx via sbx-kit.
 
-Uses catalog agent names from config/agents.yaml (default: cursor).`,
+Uses recipe ids from config/agents.yaml (default example: cursor).`,
 		Example: `  sbx-kit init
   sbx-kit init ~/my-project
   sbx-kit init --agent opencode .`,
@@ -45,6 +45,6 @@ Uses catalog agent names from config/agents.yaml (default: cursor).`,
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "cursor", "catalog agent to document (see sbx-kit agents)")
+	cmd.Flags().StringVar(&agent, "agent", "cursor", "catalog recipe to document (see sbx-kit agents)")
 	return cmd
 }

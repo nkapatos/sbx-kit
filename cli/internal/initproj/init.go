@@ -22,7 +22,7 @@ type Opts struct {
 	Catalog    *catalog.Catalog
 }
 
-// Run writes or updates the README section for the given catalog agent.
+// Run writes or updates the README section for the given catalog recipe.
 func Run(o Opts) error {
 	agentName := o.Agent
 	if agentName == "" {
@@ -30,7 +30,7 @@ func Run(o Opts) error {
 	}
 	agent, ok := o.Catalog.Agents[agentName]
 	if !ok {
-		return fmt.Errorf("unknown agent %q (try: sbx-kit agents)", agentName)
+		return fmt.Errorf("unknown recipe %q (try: sbx-kit agents)", agentName)
 	}
 
 	dir := o.ProjectDir
@@ -53,7 +53,7 @@ func Run(o Opts) error {
 		if err := os.WriteFile(readme, []byte(title+section), 0o644); err != nil {
 			return err
 		}
-		fmt.Printf("Created %s with Docker Sandbox section (agent=%s)\n", readme, agentName)
+		fmt.Printf("Created %s with Docker Sandbox section (recipe=%s)\n", readme, agentName)
 		return nil
 	}
 
@@ -69,13 +69,13 @@ func Run(o Opts) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Updated Docker Sandbox section in %s (agent=%s)\n", readme, agentName)
+		fmt.Printf("Updated Docker Sandbox section in %s (recipe=%s)\n", readme, agentName)
 	} else {
 		if !strings.HasSuffix(body, "\n") {
 			body += "\n"
 		}
 		out = body + "\n" + section
-		fmt.Printf("Appended Docker Sandbox section to %s (agent=%s)\n", readme, agentName)
+		fmt.Printf("Appended Docker Sandbox section to %s (recipe=%s)\n", readme, agentName)
 	}
 	return os.WriteFile(readme, []byte(out), 0o644)
 }
@@ -85,7 +85,7 @@ func buildSection(name string, a catalog.Agent) string {
 	if a.Stub {
 		stubNote = " (kit still a stub in the catalog)"
 	}
-	blurb := fmt.Sprintf("the `%s` agent recipe (`%s` + kits)%s", name, a.ImageName, stubNote)
+	blurb := fmt.Sprintf("the `%s` recipe (`%s` + kits)%s", name, a.ImageName, stubNote)
 
 	runBlock := fmt.Sprintf("sbx-kit run --agent %s --yes", name)
 	if a.Stub {

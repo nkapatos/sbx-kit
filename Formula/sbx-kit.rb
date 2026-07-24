@@ -42,18 +42,20 @@ class SbxKit < Formula
 
   def caveats
     <<~EOS
-      sbx-kit data lives in:
+      sbx-kit data (example recipes) lives in:
         #{share}/sbx-kit
 
-      Override with SBX_TREE=/path/to/checkout for local toolkit development.
+      Override with SBX_TREE=/path/to/checkout for local development or another
+      templates/kits/catalog tree.
 
       Host vault (created on first run/rm/upgrade/status):
         ~/.local/share/sbx-kit/profiles/   portable state archives
-        ~/.local/state/sbx-kit/            project↔sandbox bindings
+        ~/.local/state/sbx-kit/            project↔recipe bindings
 
       You still need the Docker `sbx` CLI. Until images are on a registry:
         sbx-kit template load --engine docker cursor-mise-docker
         sbx-kit run --agent cursor --yes
+        sbx-kit run                          # re-attach
     EOS
   end
 

@@ -21,13 +21,14 @@ func newRmCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "rm",
-		Short: "Remove an sbx sandbox (optionally export portable state first)",
-		Long: `Resolve the sandbox from --agent/--path binding or --name, optionally pack
-state to ~/.local/share/sbx-kit/profiles/<id>/, then run sbx rm.
+		Short: "Remove a sandbox (optionally export portable state first)",
+		Long: `Resolve the sandbox from --agent/--path (recipe binding) or --name, optionally
+pack state to ~/.local/share/sbx-kit/profiles/<id>/, then run sbx rm.
 
 Without --keep-state, warns that /home/agent workplace state will be lost.
-Export waits for the sandbox to leave "running" so SQLite WALs can flush.`,
-		Example: `  sbx-kit rm --agent cursor
+With --keep-state, export best-effort waits if status is still running, then
+checkpoints SQLite WALs inside the VM before packing.`,
+		Example: `  sbx-kit rm --agent cursor --keep-state
   sbx-kit rm --agent cursor --path ~/proj --keep-state
   sbx-kit rm --name sbxk-cursor-deadbeef --keep-state --force`,
 		Args: cobra.NoArgs,
@@ -68,7 +69,7 @@ Export waits for the sandbox to leave "running" so SQLite WALs can flush.`,
 
 	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox name (attach/rm by id; no create)")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host XDG profile before rm")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd

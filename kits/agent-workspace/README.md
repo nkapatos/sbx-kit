@@ -9,6 +9,9 @@ Host `~/.cursor` is **not** mounted. Prefer:
 2. This kit for portable dirs + `sbx-kit-state` pack/unpack + short agentContext
 3. Host vault via `sbx-kit` (`~/.local/share/sbx-kit/profiles/…`) — never the git tree
 
+Detach the agent session before `rm --keep-state` / `upgrade` so SQLite WALs
+can checkpoint cleanly (`sbx-kit-state pack` also tries `wal_checkpoint`).
+
 ## Layout (inside the VM)
 
 | Path | Role |

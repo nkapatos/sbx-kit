@@ -21,16 +21,16 @@ func newUpgradeCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
-		Short: "Export state, recreate sandbox with current catalog kits/template, restore",
-		Long: `Blessed path when templates/kits change:
+		Short: "Export state, recreate sandbox from current recipe, restore",
+		Long: `Blessed path when templates/kits in the recipe change:
 
   1. sbx-kit-state pack + sbx cp → host profile
   2. sbx rm
-  3. sbx create with current catalog recipe + same --name
+  3. sbx create with current catalog recipe + same sandbox name
   4. restore archive
   5. sbx run --name (attach)
 
-Requires agent-workspace kit so sbx-kit-state is available.`,
+Requires the agent-workspace kit so sbx-kit-state is available.`,
 		Example: `  sbx-kit upgrade --agent cursor
   sbx-kit upgrade --agent cursor --path ~/proj --force`,
 		Args: cobra.NoArgs,

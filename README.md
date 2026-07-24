@@ -71,12 +71,14 @@ sbx-kit template load --engine docker cursor-mise-docker
 sbx template ls
 ```
 
-### 3. Run an agent in a project
+### 3. Run a recipe in a project
 
 ```bash
 cd ~/my-project
 sbx-kit init --agent cursor .   # optional README stamp
 sbx-kit run --agent cursor --yes
+# later: sbx-kit run                  # re-attach sole binding
+# or:    sbx-kit run --name <id>
 # parallel / isolated: sbx-kit run --agent cursor --yes --clone
 ```
 

@@ -14,7 +14,7 @@ import (
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "sbx-kit",
-		Short:         "Compose Docker AI Sandboxes templates, kits, and agents",
+		Short:         "Compose custom sbx templates/kits and manage portable sandbox state",
 		Long:          longHelp(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -51,7 +51,7 @@ Docs:           docs/homebrew.md, docs/cli-tooling.md
 
 Host vault (created on demand):
   ~/.local/share/sbx-kit/profiles/   portable state archives
-  ~/.local/state/sbx-kit/            project↔sandbox bindings
+  ~/.local/state/sbx-kit/            project↔recipe bindings
 
 Day-to-day:
   sbx-kit agents

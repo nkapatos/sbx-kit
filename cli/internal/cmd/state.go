@@ -15,7 +15,7 @@ import (
 func newStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "state",
-		Short: "Export or import portable sandbox state to the host XDG vault",
+		Short: "Export or import portable workplace state to the host XDG vault",
 	}
 	cmd.AddCommand(newStateExportCmd())
 	cmd.AddCommand(newStateImportCmd())
@@ -46,7 +46,7 @@ func newStateExportCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
 	return cmd
 }
 
@@ -74,7 +74,7 @@ func newStateImportCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox name (alternative to --agent)")
+	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
 	return cmd
 }
 
@@ -82,7 +82,7 @@ func newStatusCmd() *cobra.Command {
 	var path string
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show sbx-kit bindings and whether sandboxes still exist",
+		Short: "Show recipe↔sandbox bindings and whether sandboxes still exist",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := xdg.Ensure(); err != nil {
@@ -161,11 +161,11 @@ func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
 		}
 		switch len(recs) {
 		case 0:
-			return nil, fmt.Errorf("no binding for path %s; pass --agent or --name (see sbx-kit status)", path)
+			return nil, fmt.Errorf("no binding for path %s; pass --agent <recipe> or --name (see sbx-kit status)", path)
 		case 1:
 			agent = recs[0].Agent
 		default:
-			return nil, fmt.Errorf("multiple agents bound to %s; pass --agent explicitly", path)
+			return nil, fmt.Errorf("multiple recipes bound to %s; pass --agent or --name explicitly", path)
 		}
 	}
 	if path == "" {

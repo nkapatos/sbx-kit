@@ -1,0 +1,128 @@
+package cmd
+
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/nkapatos/sbx-kit/cli/internal/binding"
+	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
+	"github.com/nkapatos/sbx-kit/cli/internal/resources"
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxname"
+	"github.com/nkapatos/sbx-kit/cli/internal/xdg"
+)
+
+type resolvedSandbox struct {
+	AgentName   string
+	SbxAgent    string
+	ProjectDir  string
+	SandboxName string
+	ProfileID   string
+	KitPaths    []string
+	ImageName   string
+	TemplateFB  string
+	Resources   *resources.Profile
+	ResProfile  string
+	Root        string
+}
+
+func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
+	if err := xdg.Ensure(); err != nil {
+		return nil, err
+	}
+	root, err := requireToolkitRoot()
+	if err != nil {
+		return nil, err
+	}
+	cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	agent, ok := cat.Agents[agentName]
+	if !ok {
+		return nil, fmt.Errorf("unknown agent %q (try: sbx-kit agents)", agentName)
+	}
+	if agent.Stub {
+		return nil, fmt.Errorf("agent %q is still a stub in config/agents.yaml", agentName)
+	}
+	abs, err := filepath.Abs(projectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	name := sbxname.FromProject(agentName, abs)
+	profileID := name
+	if rec, err := binding.Get(abs, agentName); err == nil && rec != nil {
+		name = rec.SandboxName
+		profileID = rec.ProfileID
+	}
+
+	kits := agent.Kits
+	if len(kits) == 0 {
+		kits = cat.Defaults.Kits
+	}
+	kitPaths := make([]string, 0, len(kits))
+	for _, k := range kits {
+		kitPaths = append(kitPaths, filepath.Join(root, "kits", k))
+	}
+
+	resProfile := cat.Defaults.Resources
+	if resProfile == "" {
+		resProfile = "remote-llm"
+	}
+	res, err := resources.Load(root, resProfile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resolvedSandbox{
+		AgentName:   agentName,
+		SbxAgent:    agent.SbxAgent,
+		ProjectDir:  abs,
+		SandboxName: name,
+		ProfileID:   profileID,
+		KitPaths:    kitPaths,
+		ImageName:   agent.ImageName,
+		TemplateFB:  agent.TemplateFallback,
+		Resources:   res,
+		ResProfile:  resProfile,
+		Root:        root,
+	}, nil
+}
+
+func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
+	// Prefer catalog agent name when it matches.
+	root, err := requireToolkitRoot()
+	if err != nil {
+		return nil, err
+	}
+	cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	if _, ok := cat.Agents[arg]; ok {
+		return resolveFromAgent(arg, projectDir)
+	}
+	// Treat as sandbox name.
+	if err := xdg.Ensure(); err != nil {
+		return nil, err
+	}
+	rec, err := binding.GetBySandbox(arg)
+	if err != nil {
+		return nil, err
+	}
+	if rec != nil {
+		return &resolvedSandbox{
+			AgentName:   rec.Agent,
+			ProjectDir:  rec.ProjectDir,
+			SandboxName: rec.SandboxName,
+			ProfileID:   rec.ProfileID,
+			Root:        root,
+		}, nil
+	}
+	return &resolvedSandbox{
+		SandboxName: arg,
+		ProfileID:   arg,
+		ProjectDir:  projectDir,
+		Root:        root,
+	}, nil
+}

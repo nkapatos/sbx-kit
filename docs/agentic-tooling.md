@@ -20,7 +20,7 @@ docker/sandbox-templates:<runtime>-docker     # official starter (bake.env BASE_
         └── shell-mise-docker                 # Pi / Hermes / generic shell
                 │
                 ├── kits/mise-workspace       # mixin: dirs, activate, allowlists, agentContext
-                ├── kits/agent-workspace      # mixin: MCP/skills (stub)
+                ├── kits/agent-workspace      # mixin: portable state + sbx-kit-state + agentContext
                 └── kits/hermes|pi            # sandbox kits on shell-mise (stubs)
                         │
                         ▼
@@ -33,6 +33,7 @@ docker/sandbox-templates:<runtime>-docker     # official starter (bake.env BASE_
 | Always-on agent CLIs, compilers, non-interactive UX, **mise binary** | **Shared template bake** (`agent-base` / Dockerfile fragment) | Same package set for every runtime image |
 | Per-runtime image tag | Thin Dockerfile `FROM docker/sandbox-templates:<runtime>-docker` then apply shared bake | One bake definition, N FROM lines |
 | Mise data dirs, shims activate, registry allowlist, mise agentContext | **`kits/mise-workspace` mixin** | Must work on cursor **and** opencode **and** shell without renaming |
+| Portable agent state + `sbx-kit-state` pack/unpack | **`kits/agent-workspace` mixin** | Manifest/layout in kit (not bake); host CLI only `exec` + `cp` |
 | Go/Node/Rust/Python versions, linters, `air`, … | **Project `mise.toml`** | Never bake project pins into the image |
 | Cloud CLIs, Playwright, jj, k8s | **Optional thin kits** | Not part of mise-workspace |
 
@@ -199,5 +200,8 @@ sbx-kit run cursor . -- --clone
 | Git workspace docs (direct / `--clone`) | Done |
 | `sbx-kit` CLI + Homebrew tap | Done ([cli-tooling.md](cli-tooling.md), [homebrew.md](homebrew.md)) |
 | `sbx-kit init` + `template load` | Done (bash `bin/` / `scripts/` removed) |
+| Host XDG vault + sandbox name bindings | Done (`run` injects `--name`; `status` / `rm --keep-state` / `upgrade`) |
+| `agent-workspace` portable state + `sbx-kit-state` | Done (kit-owned manifest/helper; bake floor optional later) |
 | opencode / shell thin images | Stub (`bake.env` ready) |
-| `agent-workspace`, hermes, pi kits | Stub |
+| hermes, pi kits | Stub |
+| Kit add/remove UX / CLI upgrades via kits | Planned |

@@ -18,6 +18,7 @@ func newRunCmd() *cobra.Command {
 	var (
 		resourcesProfile string
 		clone            bool
+		restoreState     bool
 	)
 
 	cmd := &cobra.Command{
@@ -25,13 +26,18 @@ func newRunCmd() *cobra.Command {
 		Short: "Run an agent sandbox from the catalog",
 		Long: `Resolve the agent recipe (template image + kits + resources) and exec sbx.
 
-Pass-through: anything after -- goes to sbx run unchanged:
+sbx-kit always assigns a stable --name (unless you pass one after --) and
+records it under ~/.local/state/sbx-kit.
+
+Pass-through: anything after -- goes to sbx unchanged:
   sbx-kit run cursor . -- --name my-sandbox
 
---clone on this command injects sbx's --clone (workspace isolation).`,
+--clone injects sbx's --clone. --restore-state creates (if needed), imports
+the host profile archive, then attaches.`,
 		Example: `  sbx-kit run cursor
   sbx-kit run cursor ~/my-project
   sbx-kit run cursor . --clone
+  sbx-kit run cursor . --restore-state
   sbx-kit run cursor . -- --name feature
   SBX_MEMORY=8g sbx-kit run cursor .`,
 		Args: cobra.RangeArgs(1, 2),
@@ -86,8 +92,9 @@ Pass-through: anything after -- goes to sbx run unchanged:
 			}
 
 			overrideKey := "SBX_" + strings.ToUpper(agentName) + "_TEMPLATE"
-			return run.Sbx(run.Opts{
+			_, err = run.Sbx(run.Opts{
 				Root:             root,
+				AgentCatalogName: agentName,
 				SbxAgent:         agent.SbxAgent,
 				ImageName:        agent.ImageName,
 				TemplateFallback: agent.TemplateFallback,
@@ -97,13 +104,15 @@ Pass-through: anything after -- goes to sbx run unchanged:
 				Extra:            extra,
 				Resources:        res,
 				ResourcesProfile: profile,
+				RestoreState:     restoreState,
 			})
+			return err
 		},
 	}
 
 	cmd.Flags().StringVar(&resourcesProfile, "resources", "", "resource profile (remote-llm|local-llm); default from catalog")
 	cmd.Flags().BoolVar(&clone, "clone", false, "sandbox clone mode (isolates the host working tree)")
-	// Keep unknown flags after `--` for sbx; do not parse them as cobra flags.
+	cmd.Flags().BoolVar(&restoreState, "restore-state", false, "import host profile archive into the sandbox before attach")
 	cmd.Flags().SetInterspersed(false)
 	cmd.DisableFlagsInUseLine = false
 

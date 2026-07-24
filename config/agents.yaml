@@ -4,6 +4,7 @@ defaults:
   resources: remote-llm
   kits:
     - mise-workspace
+    - agent-workspace
 
 agents:
   cursor:
@@ -12,18 +13,21 @@ agents:
     template_fallback: local/sbx-cursor-mise-docker:latest
     kits:
       - mise-workspace
+      - agent-workspace
   opencode:
     sbx_agent: opencode
     image_name: sbx-opencode-mise-docker
     template_fallback: local/sbx-opencode-mise-docker:latest
     kits:
       - mise-workspace
+      - agent-workspace
   hermes:
     sbx_agent: hermes
     image_name: sbx-shell-mise-docker
     template_fallback: local/sbx-shell-mise-docker:latest
     kits:
       - mise-workspace
+      - agent-workspace
       - hermes
     stub: true
   pi:
@@ -32,5 +36,6 @@ agents:
     template_fallback: local/sbx-shell-mise-docker:latest
     kits:
       - mise-workspace
+      - agent-workspace
       - pi
     stub: true

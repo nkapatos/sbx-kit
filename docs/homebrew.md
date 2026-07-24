@@ -31,6 +31,12 @@ Normal use does not need `SBX_TREE`. For hacking on this checkout:
 export SBX_TREE=/path/to/sbx-kit
 ```
 
+Lifecycle commands also use a **host vault** (created on demand, not by brew):
+
+| Path | Contents |
+| --- | --- |
+| `~/.local/share/sbx-kit/profiles/` | Portable sandbox state archives |
+| `~/.local/state/sbx-kit/` | Project ↔ sandbox name bindings |
 ## Host verify flow
 
 Prerequisites: Docker **`sbx`** CLI signed in; Docker Desktop/Colima **or** Apple `container` + `skopeo`.

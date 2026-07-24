@@ -8,7 +8,7 @@ They are **not** images — pass them with `sbx run … --kit /path/to/kit`.
 | Directory | Kind | Used with |
 | --- | --- | --- |
 | [mise-workspace](mise-workspace/) | mixin | Any mise-prepared template. Allowlists, `MISE_*`, activate startup, agentContext (trust/install/prune). Never sets `environment.variables.PATH`. |
-| [agent-workspace](agent-workspace/) | mixin | **Stub.** MCP/skills/plugins conventions (sandbox-first; no host `~/.cursor`). |
+| [agent-workspace](agent-workspace/) | mixin | Portable state layout + `sbx-kit-state` pack/unpack + agentContext. MCP/skills still TBD. |
 
 ## Sandbox agents (BYO on shell-mise)
 

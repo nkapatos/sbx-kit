@@ -3,14 +3,56 @@ kind: mixin
 name: agent-workspace
 displayName: Agent workplace
 description: >
-  Sandbox-first conventions for MCP, skills, and plugins. Runtime-agnostic
-  mixin. Does not mount host ~/.cursor — projects should carry their own
-  config (see sbx-kit init). Stub: fill allowlists and shared skills later.
-
-# TODO: network.allowedDomains for common MCP hosts
-# TODO: optional files drop for shared skills under /opt/sbx/skills
-# TODO: agentContext for project .cursor / MCP / skills discovery
+  Sandbox-first agent workplace conventions: portable state layout and
+  sbx-kit-state pack/unpack helper. Does not mount host ~/.cursor.
+  Project-stamped rules stay in the repo (sbx-kit init); session/docs
+  material stays under /home/agent and can be exported to the host XDG
+  vault via sbx-kit rm --keep-state.
 
 environment:
   variables:
     SBX_AGENT_WORKSPACE: "1"
+    SBX_KIT_STATE_MANIFEST: /home/agent/.local/share/sbx-kit/state.manifest
+
+commands:
+  startup:
+    - description: Ensure portable dirs and install sbx-kit-state on PATH
+      command:
+        - bash
+        - -lc
+        - |
+          set -euo pipefail
+          SHARE=/home/agent/.local/share/sbx-kit
+          mkdir -p "$SHARE/portable" "$SHARE/bin"
+          if [[ -f "$SHARE/bin/sbx-kit-state" ]]; then
+            chmod 755 "$SHARE/bin/sbx-kit-state"
+            if [[ ! -x /usr/local/bin/sbx-kit-state ]] || ! cmp -s "$SHARE/bin/sbx-kit-state" /usr/local/bin/sbx-kit-state 2>/dev/null; then
+              sudo install -m 755 "$SHARE/bin/sbx-kit-state" /usr/local/bin/sbx-kit-state
+            fi
+          fi
+          # Keep ownership on agent home trees (install may run as root).
+          if [[ "$(id -u)" -eq 0 ]]; then
+            chown -R agent:agent /home/agent/.local 2>/dev/null || true
+          else
+            sudo chown -R agent:agent /home/agent/.local 2>/dev/null || true
+          fi
+          touch /etc/sandbox-persistent.sh
+          if ! grep -qF '# sbx-agent-workspace-state' /etc/sandbox-persistent.sh; then
+            printf '%s\n' \
+              '# sbx-agent-workspace-state' \
+              'export SBX_KIT_STATE_MANIFEST="${SBX_KIT_STATE_MANIFEST:-/home/agent/.local/share/sbx-kit/state.manifest}"' \
+              >> /etc/sandbox-persistent.sh
+          fi
+
+agentContext: |
+  ## Agent workplace state (sbx-kit)
+
+  Portable agent material lives under `/home/agent/.local/share/sbx-kit/portable`
+  (internal docs/refs). Cursor sessions/config under `/home/agent/.cursor` are
+  included in exports; caches are excluded and rebuild on a fresh sandbox.
+
+  The human can preserve this across sandbox recreate with:
+  - `sbx-kit rm --keep-state` (export to host `~/.local/share/sbx-kit/profiles/…`)
+  - `sbx-kit run … --restore-state` or `sbx-kit upgrade`
+
+  In-VM helper: `sbx-kit-state check|pack|unpack` (installed by this kit).

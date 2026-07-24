@@ -4,7 +4,7 @@
 **Base:** `docker/sandbox-templates:cursor-agent-docker` (via [`bake.env`](bake.env))  
 **Bake:** [`templates/_bake`](../_bake/)  
 **Agent:** `cursor`  
-**Kits:** [`mise-workspace`](../../kits/mise-workspace/) (mixin); optional [`agent-workspace`](../../kits/agent-workspace/)  
+**Kits:** [`mise-workspace`](../../kits/mise-workspace/) + [`agent-workspace`](../../kits/agent-workspace/)  
 **CLI:** `sbx-kit run cursor`
 
 ## Guarantees

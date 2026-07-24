@@ -29,6 +29,10 @@ func NewRoot() *cobra.Command {
 
 	root.AddCommand(newAgentsCmd())
 	root.AddCommand(newRunCmd())
+	root.AddCommand(newRmCmd())
+	root.AddCommand(newUpgradeCmd())
+	root.AddCommand(newStateCmd())
+	root.AddCommand(newStatusCmd())
 	root.AddCommand(newInitCmd())
 	root.AddCommand(newTemplateCmd())
 	root.AddCommand(newVersionCmd())
@@ -43,10 +47,18 @@ templates, mixin kits, and resource profiles.
 macOS install:  brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit && brew install sbx-kit
 Docs:           docs/homebrew.md, docs/cli-tooling.md
 
+Host vault (created on demand):
+  ~/.local/share/sbx-kit/profiles/   portable state archives
+  ~/.local/state/sbx-kit/            project↔sandbox bindings
+
 Day-to-day:
   sbx-kit agents
   sbx-kit run cursor .
   sbx-kit run cursor . --clone
+  sbx-kit run cursor . --restore-state
+  sbx-kit rm cursor . --keep-state
+  sbx-kit upgrade cursor .
+  sbx-kit status
   sbx-kit init --agent cursor .
   sbx-kit template load --engine docker cursor-mise-docker`
 }

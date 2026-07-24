@@ -32,7 +32,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Stub | [`templates/opencode-mise-docker`](templates/opencode-mise-docker/) | Same bake on opencode-docker |
 | Stub | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Same bake on shell-docker (Pi/Hermes image) |
 | Stub | [`kits/hermes`](kits/hermes/), [`kits/pi`](kits/pi/) | Sandbox kits on shell-mise (entrypoint TBD) |
-| Stub | [`kits/agent-workspace`](kits/agent-workspace/) | MCP/skills mixin |
+| Shipped | [`kits/agent-workspace`](kits/agent-workspace/) | Portable state + `sbx-kit-state`; MCP/skills still TBD |
 | Planned | `cursor-mise-ide` | Same stack with Cursor IDE baked in |
 | Planned | `nvim-*` | ACP / headless nvim remote-dev |
 

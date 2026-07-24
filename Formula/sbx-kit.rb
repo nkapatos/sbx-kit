@@ -47,6 +47,10 @@ class SbxKit < Formula
 
       Override with SBX_TREE=/path/to/checkout for local toolkit development.
 
+      Host vault (created on first run/rm/upgrade/status):
+        ~/.local/share/sbx-kit/profiles/   portable state archives
+        ~/.local/state/sbx-kit/            project↔sandbox bindings
+
       You still need the Docker `sbx` CLI. Until images are on a registry:
         sbx-kit template load --engine docker cursor-mise-docker
         sbx-kit run cursor .

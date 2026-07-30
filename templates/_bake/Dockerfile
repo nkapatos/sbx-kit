@@ -55,6 +55,8 @@ RUN set -eux; \
       2>/dev/null || true
 
 # Agent CLIs + native build helpers (project language versions stay on mise).
+# neovim: in-box editing and headless/ACP remote-dev (config stays kits).
+# xz-utils/sqlite3: small floors (Hermes installer; sbx-kit-state WAL checkpoint).
 RUN set -eux; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
@@ -69,9 +71,12 @@ RUN set -eux; \
       iproute2 \
       locales \
       lsof \
+      neovim \
       pkg-config \
       libssl-dev \
+      sqlite3 \
       unzip \
+      xz-utils \
     ; \
     locale-gen en_US.UTF-8; \
     update-locale LANG=en_US.UTF-8; \
@@ -105,6 +110,7 @@ ENV MISE_DATA_DIR=/mise \
     GIT_PAGER=cat \
     EDITOR=true \
     VISUAL=true
+# EDITOR/VISUAL stay non-interactive for agent/git flows; nvim is on PATH for humans.
 
 RUN set -eux; \
     curl -fsSL https://mise.run | sh; \

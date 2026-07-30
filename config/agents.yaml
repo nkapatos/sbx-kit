@@ -3,6 +3,10 @@
 # Each key is a RECIPE id (user-chosen). sbx_agent is the underlying sbx agent.
 # This file ships example recipes for this toolkit tree — bring your own catalog
 # when pointing SBX_TREE at another templates/kits repo.
+#
+# Optional capability mixins (not in defaults): lsp-mise, apt-extras.
+# Add them to a recipe's kits: list when you want box LSPs or apt extras.
+# Product scope: docs/product-scope.md
 
 defaults:
   resources: remote-llm
@@ -18,6 +22,14 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
+  cursor-ide:
+    sbx_agent: cursor
+    image_name: sbx-cursor-mise-ide
+    template_fallback: local/sbx-cursor-mise-ide:latest
+    kits:
+      - mise-workspace
+      - agent-workspace
+    stub: true
   opencode:
     sbx_agent: opencode
     image_name: sbx-opencode-mise-docker
@@ -27,19 +39,17 @@ agents:
       - agent-workspace
   hermes:
     sbx_agent: hermes
-    image_name: sbx-shell-mise-docker
-    template_fallback: local/sbx-shell-mise-docker:latest
+    image_name: sbx-hermes-mise-docker
+    template_fallback: docker.io/local/sbx-hermes-mise-docker:latest
     kits:
       - mise-workspace
       - agent-workspace
       - hermes
-    stub: true
   pi:
     sbx_agent: pi
-    image_name: sbx-shell-mise-docker
-    template_fallback: local/sbx-shell-mise-docker:latest
+    image_name: sbx-pi-mise-docker
+    template_fallback: docker.io/local/sbx-pi-mise-docker:latest
     kits:
       - mise-workspace
       - agent-workspace
       - pi
-    stub: true

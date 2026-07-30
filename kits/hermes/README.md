@@ -1,10 +1,16 @@
-# Hermes kit (stub)
+# Hermes kit
 
-**Sandbox kit** (`kind: sandbox`) for the Hermes agent.
+Thin **sandbox kit** for the [Hermes](https://hermes-agent.nousresearch.com/) agent.
 
-- **Image:** `local/sbx-shell-mise-docker:latest` (shared bake on `shell-docker`)
-- **Mixins to add:** `mise-workspace` (and later `agent-workspace`)
+- **Image:** `local/sbx-hermes-mise-docker:latest` (agent baked; `--skip-browser`)
+- **Mixins:** `mise-workspace`, `agent-workspace` (via catalog)
+- **This kit:** network + agentContext — **no** `commands.install`
 
-No separate Hermes Docker image — same machine as Pi/shell; this kit owns entrypoint/install/auth.
+```bash
+sbx-kit template load --engine docker shell-mise-docker
+sbx-kit template load --engine docker hermes-mise-docker
+sbx-kit run --agent hermes --yes
+```
 
-Fill in step 4. See Docker’s [Build your own agent kit](https://docs.docker.com/ai/sandboxes/customize/build-an-agent/).
+Provider secrets and first-run `hermes setup` / `hermes model` are host-side.
+Watch `sbx policy log` for missing domains.

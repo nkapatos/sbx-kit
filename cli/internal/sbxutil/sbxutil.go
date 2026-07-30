@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxcompat"
 )
 
 // Runner executes sbx subcommands. Tests can substitute a fake.
@@ -15,6 +17,8 @@ type Runner struct {
 	LookPath func() (string, error)
 	// Command builds a command; defaults to exec.Command.
 	Command func(name string, args ...string) *exec.Cmd
+	// SkipCompatCheck disables the sbx version gate (tests).
+	SkipCompatCheck bool
 }
 
 func Default() *Runner {
@@ -31,14 +35,62 @@ func (r *Runner) require() (string, error) {
 	if r.Command == nil {
 		r.Command = exec.Command
 	}
-	return r.LookPath()
+	bin, err := r.LookPath()
+	if err != nil {
+		return "", fmt.Errorf("sbx not found on PATH (need Docker sbx >= %s)", sbxcompat.MinVersion)
+	}
+	if !r.SkipCompatCheck {
+		if err := sbxcompat.Ensure(func() (string, error) {
+			return r.versionOutput(bin)
+		}); err != nil {
+			return "", err
+		}
+	}
+	return bin, nil
+}
+
+// ProbeVersion returns raw `sbx version` output without enforcing the gate.
+func (r *Runner) ProbeVersion() (string, error) {
+	if r.LookPath == nil {
+		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
+	}
+	if r.Command == nil {
+		r.Command = exec.Command
+	}
+	bin, err := r.LookPath()
+	if err != nil {
+		return "", err
+	}
+	return r.versionOutput(bin)
+}
+
+func (r *Runner) versionOutput(bin string) (string, error) {
+	// Prefer `sbx version`; fall back to --version / -v.
+	for _, args := range [][]string{{"version"}, {"--version"}, {"-v"}} {
+		cmd := r.Command(bin, args...)
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		cmd.Env = os.Environ()
+		if err := cmd.Run(); err != nil {
+			continue
+		}
+		out := strings.TrimSpace(stdout.String())
+		if out == "" {
+			out = strings.TrimSpace(stderr.String())
+		}
+		if out != "" {
+			return out, nil
+		}
+	}
+	return "", fmt.Errorf("sbx version / --version produced no output")
 }
 
 // RunInteractive attaches stdin/stdout/stderr (for sbx run).
 func (r *Runner) RunInteractive(args ...string) error {
 	bin, err := r.require()
 	if err != nil {
-		return fmt.Errorf("sbx not found on PATH")
+		return err
 	}
 	fmt.Printf("==> sbx %s\n", strings.Join(args, " "))
 	cmd := r.Command(bin, args...)
@@ -53,7 +105,7 @@ func (r *Runner) RunInteractive(args ...string) error {
 func (r *Runner) RunEnv(env []string, args ...string) error {
 	bin, err := r.require()
 	if err != nil {
-		return fmt.Errorf("sbx not found on PATH")
+		return err
 	}
 	fmt.Printf("==> sbx %s\n", strings.Join(args, " "))
 	cmd := r.Command(bin, args...)
@@ -68,7 +120,7 @@ func (r *Runner) RunEnv(env []string, args ...string) error {
 func (r *Runner) Output(args ...string) (string, error) {
 	bin, err := r.require()
 	if err != nil {
-		return "", fmt.Errorf("sbx not found on PATH")
+		return "", err
 	}
 	cmd := r.Command(bin, args...)
 	var stdout, stderr bytes.Buffer

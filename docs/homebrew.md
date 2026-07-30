@@ -39,9 +39,10 @@ Lifecycle commands also use a **host vault** (created on demand, not by brew):
 | `~/.local/state/sbx-kit/` | Project ↔ recipe sandbox bindings |
 ## Host verify flow
 
-Prerequisites: Docker **`sbx`** CLI signed in; Docker Desktop/Colima **or** Apple `container` + `skopeo`.
+Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"1"`); Docker Desktop/Colima **or** Apple `container` + `skopeo`.
 
 ```bash
+sbx-kit version   # sbx-kit + required range + detected sbx
 sbx-kit agents
 sbx-kit template load --engine docker cursor-mise-docker
 sbx template ls
@@ -51,7 +52,9 @@ sbx-kit init --agent cursor .    # optional
 sbx-kit run --agent cursor --yes
 ```
 
-Until images are published to a registry, `template load` is the local import path. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`).
+Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.
+
+Until images are published to a registry, `template load` is the local import path. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → Docker Hub publish and Formula version tags are the next release step (credentials/setup iterate separately).
 
 ## Update / remove
 

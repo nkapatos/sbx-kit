@@ -30,7 +30,6 @@ commands:
               sudo install -m 755 "$SHARE/bin/sbx-kit-state" /usr/local/bin/sbx-kit-state
             fi
           fi
-          # Keep ownership on agent home trees (install may run as root).
           if [[ "$(id -u)" -eq 0 ]]; then
             chown -R agent:agent /home/agent/.local 2>/dev/null || true
           else
@@ -47,9 +46,14 @@ commands:
 agentContext: |
   ## Agent workplace state (sbx-kit)
 
-  Portable agent material lives under `/home/agent/.local/share/sbx-kit/portable`
-  (internal docs/refs). Cursor sessions/config under `/home/agent/.cursor` are
-  included in exports; caches are excluded and rebuild on a fresh sandbox.
+  **Portable docs/refs** (agent-first, not the git tree):
+  `/home/agent/.local/share/sbx-kit/portable/`
+  Prefer this over gitignored `ref/` / `internal/` folders in the project.
+  See `portable/README.md` inside that directory. The dir starts with a
+  README only — add `refs/`, `docs/`, or `scratch/` as needed.
+
+  Cursor sessions/config under `/home/agent/.cursor` are included in
+  exports; caches are excluded and rebuild on a fresh sandbox.
 
   The human can preserve this across sandbox recreate with:
   - `sbx-kit rm --agent <recipe> --keep-state` (export to host XDG profiles)

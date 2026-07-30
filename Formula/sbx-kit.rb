@@ -52,7 +52,9 @@ class SbxKit < Formula
         ~/.local/share/sbx-kit/profiles/   portable state archives
         ~/.local/state/sbx-kit/            project↔recipe bindings
 
-      You still need the Docker `sbx` CLI. Until images are on a registry:
+      You still need the Docker `sbx` CLI (>= 0.34.0; kits are schemaVersion 1). Check with:
+        sbx-kit version
+      Until images are on a registry:
         sbx-kit template load --engine docker cursor-mise-docker
         sbx-kit run --agent cursor --yes
         sbx-kit run                          # re-attach

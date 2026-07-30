@@ -9,6 +9,9 @@ Host `~/.cursor` is **not** mounted. Prefer:
 2. This kit for portable dirs + `sbx-kit-state` pack/unpack + short agentContext
 3. Host vault via `sbx-kit` (`~/.local/share/sbx-kit/profiles/…`) — never the git tree
 
+`portable/` is created on purpose and may look “empty” aside from a seeded
+README — that is the agent docs/refs root, not a broken mount.
+
 Detach the agent session before `rm --keep-state` / `upgrade` so SQLite WALs
 can checkpoint cleanly (`sbx-kit-state pack` also tries `wal_checkpoint`).
 
@@ -16,7 +19,7 @@ can checkpoint cleanly (`sbx-kit-state pack` also tries `wal_checkpoint`).
 
 | Path | Role |
 | --- | --- |
-| `/home/agent/.local/share/sbx-kit/portable/` | Agent-local docs/refs (exportable) |
+| `/home/agent/.local/share/sbx-kit/portable/` | Agent-local docs/refs (exportable; starts with README) |
 | `/home/agent/.local/share/sbx-kit/state.manifest` | INCLUDE/EXCLUDE list for pack |
 | `/home/agent/.local/share/sbx-kit/bin/sbx-kit-state` | Helper (also installed to `/usr/local/bin`) |
 

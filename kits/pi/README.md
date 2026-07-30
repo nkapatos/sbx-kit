@@ -1,10 +1,17 @@
-# Pi kit (stub)
+# Pi kit
 
-**Sandbox kit** (`kind: sandbox`) for Pi agents.
+Thin **sandbox kit** for the [Pi](https://pi.dev/) coding agent.
 
-- **Image:** `local/sbx-shell-mise-docker:latest` (shared bake on `shell-docker`)
-- **Mixins to add:** `mise-workspace` (and later `agent-workspace`)
+- **Image:** `local/sbx-pi-mise-docker:latest` (agent baked in the template)
+- **Mixins:** `mise-workspace`, `agent-workspace` (via catalog)
+- **This kit:** credentials, network, agentContext — **no** `commands.install`
+- **Out of scope:** Oh My Pi (`omp`) and other forks (remote registry / `SBX_TREE`)
 
-No separate Pi Docker image — same machine as Hermes/shell; this kit owns entrypoint/install/auth.
+```bash
+sbx-kit template load --engine docker shell-mise-docker
+sbx-kit template load --engine docker pi-mise-docker
+sbx-kit run --agent pi --yes
+```
 
-Fill in step 4. See Docker’s [Build your own agent kit](https://docs.docker.com/ai/sandboxes/customize/build-an-agent/).
+Register Anthropic (or other provider) secrets per Docker sbx docs. Iterate
+missing domains with `sbx policy log`.

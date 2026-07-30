@@ -47,7 +47,7 @@ teardown. This repo ships a few example recipes — point SBX_TREE (or a future
 external tree) at your own templates/kits/catalog when you outgrow them.
 
 macOS install:  brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit && brew install sbx-kit
-Docs:           docs/homebrew.md, docs/cli-tooling.md
+Docs:           docs/homebrew.md, docs/cli-tooling.md, docs/product-scope.md
 
 Host vault (created on demand):
   ~/.local/share/sbx-kit/profiles/   portable state archives

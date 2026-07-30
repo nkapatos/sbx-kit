@@ -2,9 +2,14 @@
 
 Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): reusable **templates** (sandbox images), **kits** (create-time YAML), and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace.** This repo ships a few **example** recipes (lean images + mise mixins + portable state). Bring your own templates/kits/catalog when you want a different stack — sbx-kit is the helper for composing them and surviving teardown without losing agent home state.
+**Sandbox = agent workplace; host = human workplace** by default. Shared bake
+also includes **neovim** for optional in-box / headless ACP work; **Cursor IDE**
+is a separate thin image (`cursor-mise-ide`). This repo ships a few **example**
+recipes (lean images + mise mixins + portable state). Bring your own
+templates/kits/catalog when you want a different stack — sbx-kit is the helper
+for composing them and surviving teardown without losing agent home state.
 
-Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
+Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 
 Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/) · [Templates](https://docs.docker.com/ai/sandboxes/customize/templates/).
 
@@ -26,15 +31,18 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 
 | Status | Name | Notes |
 | --- | --- | --- |
-| Shipped | [`templates/_bake`](templates/_bake/) | Shared agent bake (strip languages, CLIs, mise binary, UX) |
+| Shipped | [`templates/_bake`](templates/_bake/) | Shared bake: CLIs, mise, **neovim**, sqlite3/xz, non-interactive UX |
 | Shipped | [`templates/cursor-mise-docker`](templates/cursor-mise-docker/) | Thin: cursor-agent-docker + bake; `sbx-kit run --agent cursor` |
+| Shipped | [`templates/opencode-mise-docker`](templates/opencode-mise-docker/) | Same bake on opencode-docker |
+| Shipped | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Generic shell floor; parent for Pi/Hermes layers |
+| Shipped | [`templates/pi-mise-docker`](templates/pi-mise-docker/) | Extends shell-mise; Node + official Pi |
+| Shipped | [`templates/hermes-mise-docker`](templates/hermes-mise-docker/) | Extends shell-mise; Hermes `--skip-browser` |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
-| Stub | [`templates/opencode-mise-docker`](templates/opencode-mise-docker/) | Same bake on opencode-docker |
-| Stub | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Same bake on shell-docker (Pi/Hermes image) |
-| Stub | [`kits/hermes`](kits/hermes/), [`kits/pi`](kits/pi/) | Sandbox kits on shell-mise (entrypoint TBD) |
-| Shipped | [`kits/agent-workspace`](kits/agent-workspace/) | Portable state + `sbx-kit-state`; MCP/skills still TBD |
-| Planned | `cursor-mise-ide` | Same stack with Cursor IDE baked in |
-| Planned | `nvim-*` | ACP / headless nvim remote-dev |
+| Shipped | [`kits/hermes`](kits/hermes/), [`kits/pi`](kits/pi/) | Thin sandbox kits (creds/network; no install) |
+| Shipped | [`kits/agent-workspace`](kits/agent-workspace/) | Portable state + seeded `portable/` README |
+| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional capability mixins |
+| Scaffold | [`templates/cursor-mise-ide`](templates/cursor-mise-ide/) | Extends cursor-mise; IDE install + recipe stub |
+| Follow-up | CI → Docker Hub images, Homebrew version tags, remote recipe registries | Creds / publish details later |
 
 ## Layout
 
@@ -61,7 +69,9 @@ brew install sbx-kit   # or: brew install --HEAD nkapatos/sbx-kit/sbx-kit
 sbx-kit agents
 ```
 
-You still need the Docker **`sbx`** CLI signed in. Details: [docs/homebrew.md](docs/homebrew.md).
+You still need the Docker **`sbx` CLI >= 0.34.0** signed in (kits authored as
+schemaVersion `"1"` until released sbx accepts v2). `sbx-kit version` reports
+the required range. Details: [docs/homebrew.md](docs/homebrew.md).
 
 ### 2. Import a template (until Hub publishes images)
 

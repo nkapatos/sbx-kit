@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxcompat"
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 )
 
 // LoadOpts controls template import into sbx.
@@ -26,8 +29,14 @@ func Load(o LoadOpts) error {
 		return fmt.Errorf("unknown engine %q (use docker or container)", o.Engine)
 	}
 
-	if _, err := exec.LookPath("sbx"); err != nil {
-		return fmt.Errorf("sbx not found on PATH (run this on the host)")
+	r := sbxutil.Default()
+	if _, err := r.LookPath(); err != nil {
+		return fmt.Errorf("sbx not found on PATH (run this on the host; need >= %s)", sbxcompat.MinVersion)
+	}
+	if err := sbxcompat.Ensure(func() (string, error) {
+		return r.ProbeVersion()
+	}); err != nil {
+		return err
 	}
 
 	b, err := ResolveBuild(o.Root, o.NameOrPath, o.ImageTag)
@@ -90,7 +99,10 @@ func loadDocker(b *Build, dockerTar string) error {
 	}
 
 	fmt.Printf("==> [2/3] docker image save -> %s\n", dockerTar)
-	return runLogged("docker", "image", "save", b.ImageTag, "-o", dockerTar)
+	if err := runLogged("docker", "image", "save", b.ImageTag, "-o", dockerTar); err != nil {
+		return err
+	}
+	return smokeAgentBinary(b)
 }
 
 func loadContainer(b *Build, ociTar, dockerTar string) error {
@@ -117,6 +129,9 @@ func loadContainer(b *Build, ociTar, dockerTar string) error {
 		return err
 	}
 
+	// Smoke runs via docker CLI when available; Apple container path skips host probe.
+	_ = smokeAgentBinary(b)
+
 	fmt.Printf("==> [2/4] container image save (OCI) -> %s\n", ociTar)
 	if err := runLogged("container", "image", "save", b.ImageTag, "-o", ociTar); err != nil {
 		return err
@@ -129,6 +144,29 @@ func loadContainer(b *Build, ociTar, dockerTar string) error {
 		"oci-archive:"+ociTar,
 		"docker-archive:"+dockerTar+":"+b.ImageTag,
 	)
+}
+
+// smokeAgentBinary verifies layered agent images expose their CLI on PATH before
+// import. Catches "agent binary not found" failures early.
+func smokeAgentBinary(b *Build) error {
+	bin := ""
+	switch b.Name {
+	case "pi-mise-docker":
+		bin = "pi"
+	case "hermes-mise-docker":
+		bin = "hermes"
+	default:
+		return nil
+	}
+	if _, err := exec.LookPath("docker"); err != nil {
+		fmt.Printf("==> skip smoke (%s): docker CLI not available\n", bin)
+		return nil
+	}
+	fmt.Printf("==> smoke: docker run --rm --entrypoint which %s %s\n", b.ImageTag, bin)
+	if err := runLogged("docker", "run", "--rm", "--entrypoint", "which", b.ImageTag, bin); err != nil {
+		return fmt.Errorf("image %s is missing %q on PATH (rebuild parent shell-mise then this template): %w", b.ImageTag, bin, err)
+	}
+	return nil
 }
 
 func hostArch() (string, error) {

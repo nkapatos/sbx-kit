@@ -1,7 +1,7 @@
 # Agentic sandbox tooling
 
 **Audience:** contributors and users of this toolkit.  
-**Goal:** one **shared bake** (`templates/_bake`) + thin per-runtime images on official Docker sbx starters, plus runtime-agnostic mixin kits (`mise-workspace`, later `agent-workspace`).
+**Goal:** one **shared bake** (`templates/_bake`) + thin per-runtime images on official Docker sbx starters, plus runtime-agnostic mixin kits (`mise-workspace`, `agent-workspace`, optional capability kits).
 
 This file is the source of truth for *what goes where*. Consumer READMEs are secondary.
 
@@ -13,37 +13,48 @@ This file is the source of truth for *what goes where*. Consumer READMEs are sec
 docker/sandbox-templates:<runtime>-docker     # official starter (bake.env BASE_IMAGE)
         │
         ▼
-   templates/_bake                            # CLIs, compilers, UX, mise binary (no activate)
+   templates/_bake                            # CLIs, compilers, UX, mise, neovim (no activate)
         │
         ├── cursor-mise-docker
+        ├── cursor-mise-ide                   # extends cursor-mise; IDE layer (scaffolding)
         ├── opencode-mise-docker
-        └── shell-mise-docker                 # Pi / Hermes / generic shell
+        └── shell-mise-docker                 # generic shell + parent for BYO agent layers
                 │
-                ├── kits/mise-workspace       # mixin: dirs, activate, allowlists, agentContext
-                ├── kits/agent-workspace      # mixin: portable state + sbx-kit-state + agentContext
-                └── kits/hermes|pi            # sandbox kits on shell-mise (stubs)
+                ├── pi-mise-docker            # Node + official Pi (agent in image)
+                └── hermes-mise-docker        # Hermes CLI --skip-browser (agent in image)
                         │
-                        ▼
-                project mise.toml + .cursor/  # language pins + agent config
+                        ├── kits/mise-workspace
+                        ├── kits/agent-workspace
+                        ├── kits/lsp-mise | apt-extras   # optional
+                        └── kits/hermes|pi               # thin: creds/network/context only
+                                │
+                                ▼
+                        project mise.toml + .cursor/
+                        /home/agent/.../portable/
 ```
 
 | Concern | Lives in | Notes |
 | --- | --- | --- |
-| Agent runtime binary / entrypoint | Official sbx starter (`cursor-agent`, `opencode`, `shell`, …) | Do not reinvent agents in the bake layer |
-| Always-on agent CLIs, compilers, non-interactive UX, **mise binary** | **Shared template bake** (`agent-base` / Dockerfile fragment) | Same package set for every runtime image |
-| Per-runtime image tag | Thin Dockerfile `FROM docker/sandbox-templates:<runtime>-docker` then apply shared bake | One bake definition, N FROM lines |
-| Mise data dirs, shims activate, registry allowlist, mise agentContext | **`kits/mise-workspace` mixin** | Must work on cursor **and** opencode **and** shell without renaming |
-| Portable agent state + `sbx-kit-state` pack/unpack | **`kits/agent-workspace` mixin** | Manifest/layout in kit (not bake); host CLI only `exec` + `cp` |
-| Go/Node/Rust/Python versions, linters, `air`, … | **Project `mise.toml`** | Never bake project pins into the image |
-| Cloud CLIs, Playwright, jj, k8s | **Optional thin kits** | Not part of mise-workspace |
+| Agent runtime binary | Official starter **or** agent thin image (`pi-mise`, `hermes-mise`) | Do not heavy-install agents in kits |
+| Always-on agent CLIs, compilers, non-interactive UX, **mise**, **neovim** | **Shared template bake** | Same package set for every runtime image; `EDITOR=true` stays |
+| Cursor IDE (GUI) | **`cursor-mise-ide` thin image** | Extends cursor-mise; auth via sbx secrets |
+| Per-runtime image tag | Thin `bake.env` → shared bake, or parent Dockerfile | One bake definition, N FROM lines |
+| Mise data dirs, shims activate, registry allowlist | **`kits/mise-workspace` mixin** | Runtime-agnostic |
+| Portable agent docs/refs + state pack/unpack | **`kits/agent-workspace` mixin** | `…/sbx-kit/portable/`; host vault via CLI |
+| Project language versions | **Project `mise.toml`** | Never bake project pins into the image |
+| Box LSPs / editor helpers | **`kits/lsp-mise`** (optional) | Global `/mise/config.toml` |
+| Extra Linux packages | **`kits/apt-extras`** (optional) | apt in the VM — not host Homebrew |
+| Cloud CLIs, Playwright, forks (OMP, …) | **Remote registry / `SBX_TREE`** | Not first-party examples — see [product-scope.md](product-scope.md) |
+| Host nvim / `.cursor` / skills copy | **Optional kits** (not sbx-kit core) | Create-time personalization |
 
 **Hard rules**
 
 1. `mise-workspace` is **not** Cursor-specific. No cursor-only paths, entrypoints, or `aiFilename` assumptions in the kit.
 2. Do **not** set `environment.variables.PATH` in the kit (breaks/fights sandbox PATH management). Activate + `/mise/shims` via persistent shell env only.
-3. Do **not** run `mise install` in kit `commands.install` (create-time WORKDIR is unreliable). Agent/`sbx exec` installs on first session.
+3. Do **not** run heavy agent installs in kit `commands.install` — bake agent binaries into templates. Mixins may use startup for idempotent workplace wiring; sandbox kits for BYO agents may install only if the agent is intentionally not imaged (avoid in this example tree).
 4. Never put bash completion scripts in `/etc/sandbox-persistent.sh`.
-5. Sandbox = agent workplace; host = human workplace (no fzf/IDE/browser in base).
+5. Default recipes stay lean (agent image + mise + portable state). GUI IDE is opt-in (`cursor-mise-ide`). neovim binary in bake is OK; host editor **configs** stay kits.
+6. Personalization (dotfiles, skills, forks) is kit/`SBX_TREE`/registry territory — not `sbx-kit` lifecycle commands.
 
 ---
 
@@ -79,6 +90,8 @@ Install as `root`, then return to `agent`. Pin release versions in build args.
 | `git-lfs` | apt + `git lfs install --system` | LFS repos |
 | `ca-certificates`, `locales` (`en_US.UTF-8`) | apt | TLS + UTF-8 |
 | **`mise` binary** | Install if missing on base (curl install script or release); ensure `/usr/local/bin/mise` | Required so kit only configures, does not install mise |
+| **`neovim`** | apt `neovim` | In-box editing and headless/ACP remote-dev; configs stay kits |
+| `sqlite3`, `xz-utils` | apt | State WAL checkpoint; Hermes installer prereq |
 | Keep from starters | `git`, `gh`, `jq`, `rg`, `curl`, `make`, `python3`, `uv`, `docker` (on `-docker` images) | Already strong on current Cursor sandbox |
 
 ### Non-interactive UX (bake)
@@ -93,6 +106,8 @@ export VISUAL=true
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 ```
+
+`EDITOR`/`VISUAL` stay non-interactive so agent/git flows never block; humans can still run `nvim` explicitly.
 
 System gitconfig (`/etc/gitconfig`):
 
@@ -113,9 +128,20 @@ System gitconfig (`/etc/gitconfig`):
 ### Explicitly do **not** bake
 
 - Project language versions; asdf/nvm/sdkman; jj
-- fzf, zoxide, starship, full editors, browsers
+- fzf, zoxide, starship, **GUI IDEs**, browsers (IDE → `cursor-mise-ide`; browsers → kits)
 - kubectl/helm, aws/gcloud/azure CLIs, Playwright/Chromium, Terraform → separate kits
-- Anything agent-runtime-specific (Cursor settings, OpenCode config, Pi/Hermes binaries) unless that thin image’s job is to add that agent on `shell`
+- Anything agent-runtime-specific (Cursor settings, OpenCode config, Pi/Hermes binaries) unless that thin image’s / sandbox kit’s job is to add that agent on `shell`
+- Host editor configs / skills — optional kits only
+
+---
+
+## Portable docs / refs (agent-workspace)
+
+| Place | Role |
+| --- | --- |
+| Repo (`AGENTS.md`, `docs/`) | Shared, reviewed team truth |
+| `/home/agent/.local/share/sbx-kit/portable/` | Agent-first dumps/refs; survives vault export; empty aside from seeded README is OK |
+| Gitignored `ref/` / `internal/` in project | Optional host scratch — not the official contract |
 
 ---
 
@@ -194,14 +220,20 @@ sbx-kit run --agent cursor --clone
 
 | Item | Status |
 | --- | --- |
-| `templates/_bake` + cursor thin image | Done |
+| `templates/_bake` + cursor thin image | Done (includes neovim) |
 | `mise-workspace` (activate, prune, allowlists) | Done |
 | Resource profiles (`remote-llm` / `local-llm`) | Done |
 | Git workspace docs (direct / `--clone`) | Done |
 | `sbx-kit` CLI + Homebrew tap | Done ([cli-tooling.md](cli-tooling.md), [homebrew.md](homebrew.md)) |
 | `sbx-kit init` + `template load` | Done (bash `bin/` / `scripts/` removed) |
 | Host XDG vault + sandbox name bindings | Done (`run` injects `--name`; `status` / `rm --keep-state` / `upgrade`) |
-| `agent-workspace` portable state + `sbx-kit-state` | Done (kit-owned manifest/helper; bake floor optional later) |
-| opencode / shell thin images | Stub (`bake.env` ready) |
-| hermes, pi kits | Stub |
-| Kit add/remove UX / CLI upgrades via kits | Planned |
+| `agent-workspace` portable state + `sbx-kit-state` | Done (seeded `portable/README`) |
+| opencode / shell thin images | Done (`bake.env` + docs) |
+| hermes, pi sandbox kits | Done (thin; agent binary in dedicated templates) |
+| `pi-mise-docker`, `hermes-mise-docker` | Done (extend shell-mise) |
+| Product scope doc | Done ([product-scope.md](product-scope.md)) |
+| `lsp-mise`, `apt-extras` optional mixins | Done |
+| `cursor-mise-ide` | Scaffold (IDE install TODO; recipe stub) |
+| CI → Hub image publish + brew version tags | Planned |
+| Remote recipe registries | Planned |
+| Kit add/remove UX polish | Planned |

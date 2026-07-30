@@ -5,9 +5,8 @@ displayName: Mise workspace
 description: >
   Network allowlist and mise env for projects that pin tools via mise.toml /
   .tool-versions. Does not run mise install at create time (install cwd /
-  WORKDIR is unreliable in commands.install). The agent (or a one-shot
-  sbx exec) installs tools. Never sets environment.variables.PATH.
-  Runtime-agnostic mixin (cursor, opencode, shell, Pi, Hermes, …).
+  WORKDIR is unreliable). The agent (or a one-shot sbx exec) installs tools.
+  Never sets environment.variables.PATH. Runtime-agnostic mixin.
 
 network:
   allowedDomains:

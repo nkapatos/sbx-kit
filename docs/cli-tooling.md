@@ -12,6 +12,22 @@ agents work fine with plain `sbx`.
 **Install (macOS):** [homebrew.md](homebrew.md) — `brew tap nkapatos/sbx-kit …`  
 **Go module:** `github.com/nkapatos/sbx-kit/cli`
 
+## Required `sbx` CLI
+
+Kits/templates are still experimental upstream. This tree requires **Docker
+`sbx` >= 0.34.0** and authors kits as **schemaVersion `"1"`** (released CLIs
+through at least 0.37 do not yet accept clean authored v2). Lifecycle commands
+refuse an older `sbx`.
+
+```bash
+sbx-kit version          # prints sbx-kit + required range + detected sbx
+brew upgrade docker/tap/sbx
+sbx kit validate kits/pi # expect VALID; deprecation WARNs are OK
+```
+
+Escape hatch (not recommended): `SBX_KIT_SKIP_SBX_CHECK=1`.
+Bump the floor in `cli/internal/sbxcompat` when we depend on newer sbx.
+
 ## Commands
 
 ```text

@@ -9,7 +9,7 @@
 
 ## Guarantees
 
-- Shared bake: strip conflicting language toolchains; agent CLIs; mise binary; non-interactive UX  
+- Shared bake: strip conflicting language toolchains; agent CLIs; mise binary; **neovim**; non-interactive UX  
 - Does **not** set `ENV PATH`  
 - Mise activate/shims come from the **mise-workspace** kit (not this image alone)
 

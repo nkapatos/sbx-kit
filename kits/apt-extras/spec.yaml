@@ -1,0 +1,29 @@
+schemaVersion: "1"
+kind: mixin
+name: apt-extras
+displayName: Apt extras
+description: >
+  Optional Linux packages via apt (sandbox is Ubuntu-based — not Homebrew).
+  Keep this lean; heavy stacks (Playwright, cloud CLIs) get their own kits.
+
+commands:
+  install:
+    - description: Install common apt extras
+      command: |
+        set -euo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          tree \
+          zip \
+          unzip \
+          moreutils \
+          silversearcher-ag
+        sudo rm -rf /var/lib/apt/lists/*
+
+agentContext: |
+  ## Apt extras
+
+  Extra Linux packages were installed via the apt-extras kit (not Homebrew).
+  Prefer **mise** for language runtimes and LSPs. Use apt only for system
+  libraries and small CLI utilities that are not mise-managed.

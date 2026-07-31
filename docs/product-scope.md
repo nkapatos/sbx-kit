@@ -19,24 +19,31 @@ as first-party examples.
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **Template (image)** | Agent binary, default runtime deps, shared bake floor | `cursor-mise-docker`, `pi-mise-docker`, `hermes-mise-docker` |
+| **Template (image)** | Shared bake floor; official agent binaries when the starter has them | `cursor-mise-docker`, `opencode-mise-docker`, `shell-mise-docker` |
 | **Mixin kit** | Workplace conventions, allowlists, optional capabilities | `mise-workspace`, `agent-workspace`, `lsp-mise`, `apt-extras` |
-| **Sandbox kit** | Agent id / entrypoint / creds / network / short context — **not** heavy installs | `kits/pi`, `kits/hermes` |
+| **Sandbox kit (BYO)** | Agent id / entrypoint / creds / network + create-time setup script | `kits/pi` (on shell-mise); Hermes same pattern when proven |
 | **Project** | Language pins, app code | `mise.toml`, repo `AGENTS.md` |
 | **Remote / `SBX_TREE`** | Forks, team stacks, taste | Oh My Pi, Playwright FE, host nvim config copy |
 
-Bake when install is slow, flaky, or must be pinned. Keep kits for wiring that
-should change without rebaking. Create-time `commands.install` for large agents
-is an anti-pattern in this tree.
+Bake the workplace floor (apt + mise + tools). For agents **not** in official
+starters, prefer a kit dropped setup script + one-line `commands.install` over
+a second template that reinstalls Node/etc. Dedicated agent images remain an
+optional later optimization (pin/Hub), not the default BYO path.
 
 ## In scope (examples we maintain)
 
 - Shared `_bake` (mise binary, neovim, agent CLIs, non-interactive UX)
-- Thin templates: cursor, opencode, shell (generic parent), **pi**, **hermes**
+- Thin templates: cursor, opencode, shell (workplace floor)
 - Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras
-- Thin pi/hermes sandbox kits (creds/network/context only)
 - CLI lifecycle + host vault; sbx version floor for tested CLIs
 - Docs that state bake vs kit and this scope
+
+## Parked / broken (do not use)
+
+- **`pi` / `hermes` sbx recipes** — stubbed in `config/agents.yaml`. Kit and
+  dedicated-image attempts failed create (`500 failed to run sandbox container`
+  / agent binary not found). **Next:** plain Dockerfile + Compose for VPS,
+  reusing the shell-mise bake ideas — not more sbx BYO kit loops.
 
 ## Out of scope (not first-party examples)
 
@@ -50,17 +57,10 @@ is an anti-pattern in this tree.
 
 ## Pi / Hermes specifically
 
-- Image: `_bake` on `shell-docker` via parent `shell-mise-docker`, then agent layer
-  with the CLI forced onto `/usr/local/bin` (sbx probes PATH for the agent binary)
-- Kit: thin sandbox kit (creds/network/context); agent name = kit name (`pi` / `hermes`)
-- **Expected warning:** template built for `shell` but agent is `pi`/`hermes` —
-  Docker templates do not register new runtimes; the sandbox kit does. Ignore the
-  warning when `/usr/local/bin/pi` (or `hermes`) exists in the imported image.
-- **Hard failure** `agent binary not found`: rebuild parent + child, confirm with
-  `docker run --rm --entrypoint which <tag> pi`, then `sbx template load` again
-- Extensions: in-box (`pi install`, Hermes setup) or separate recipes elsewhere
-- `shell-mise-docker` remains the **generic** parent / BYO floor, not the product recipe for Pi/Hermes
-- Oh My Pi / other forks: remote registry or `SBX_TREE` only
+**Broken under sbx-kit today** (catalog `stub: true`). Do not run these recipes.
+Planned recovery is **Docker / Compose** (local + VPS), not further kit churn.
+Keep `shell-mise` + `_bake` as the workplace reference for that translation.
+Oh My Pi / other forks: remote registry or `SBX_TREE` only.
 
 ## Compatibility
 

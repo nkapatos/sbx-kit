@@ -15,7 +15,9 @@ Deprecation WARNs on `network.*` / `proxyManaged` are expected on newer sbx.
 | `commands.install` | **string** (passed to `sh -c`) |
 | `commands.startup` | **argv array** (e.g. `[bash, -lc, "…"]`) |
 
-Product agents (**Pi**, **Hermes**) bake the binary into a template; their sandbox kits are **thin** (creds/network/context only). See [docs/product-scope.md](../docs/product-scope.md).
+Product agents (**Pi**, …) that are not in official starters use **shell-mise**
+plus a sandbox kit with a dropped setup script and a one-line
+`commands.install`. See [docs/product-scope.md](../docs/product-scope.md).
 
 ## Mixins (runtime-agnostic)
 
@@ -26,12 +28,12 @@ Product agents (**Pi**, **Hermes**) bake the binary into a template; their sandb
 | [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers (not project pins). |
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small Ubuntu packages via apt (not Homebrew). |
 
-## Sandbox agents (thin — image owns the binary)
+## Sandbox agents (BYO — BROKEN / parked)
 
-| Directory | Kind | Image | Notes |
-| --- | --- | --- | --- |
-| [hermes](hermes/) | sandbox | `local/sbx-hermes-mise-docker` | Network + context; no install |
-| [pi](pi/) | sandbox | `local/sbx-pi-mise-docker` | Creds + network + context; no install |
+| Directory | Kind | Status |
+| --- | --- | --- |
+| [pi](pi/) | sandbox | **Broken** — stubbed; next = Docker/Compose for VPS |
+| [hermes](hermes/) | sandbox | **Broken** — stubbed with Pi |
 
 There is **no** cursor-mise kit — Cursor specificity is the thin template (`sbx-kit run --agent cursor`). Language tooling is always the `mise-workspace` mixin.
 

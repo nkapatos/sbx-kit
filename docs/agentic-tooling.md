@@ -18,24 +18,24 @@ docker/sandbox-templates:<runtime>-docker     # official starter (bake.env BASE_
         ├── cursor-mise-docker
         ├── cursor-mise-ide                   # extends cursor-mise; IDE layer (scaffolding)
         ├── opencode-mise-docker
-        └── shell-mise-docker                 # generic shell + parent for BYO agent layers
+        └── shell-mise-docker                 # workplace floor (apt + mise)
                 │
-                ├── pi-mise-docker            # Node + official Pi (agent in image)
-                └── hermes-mise-docker        # Hermes CLI --skip-browser (agent in image)
+                ├── kits/mise-workspace
+                ├── kits/agent-workspace
+                └── kits/lsp-mise | apt-extras   # optional
                         │
-                        ├── kits/mise-workspace
-                        ├── kits/agent-workspace
-                        ├── kits/lsp-mise | apt-extras   # optional
-                        └── kits/hermes|pi               # thin: creds/network/context only
-                                │
-                                ▼
-                        project mise.toml + .cursor/
-                        /home/agent/.../portable/
+                        ▼
+                project mise.toml + .cursor/
+                /home/agent/.../portable/
+
+# Pi / Hermes sbx recipes: BROKEN / stubbed — see docs/product-scope.md
+# Next: plain Docker/Compose for VPS (not more kit loops)
 ```
 
 | Concern | Lives in | Notes |
 | --- | --- | --- |
-| Agent runtime binary | Official starter **or** agent thin image (`pi-mise`, `hermes-mise`) | Do not heavy-install agents in kits |
+| Official agent runtime binary | Official starter (cursor, opencode, …) | Thin mise image on that starter |
+| BYO agent (Pi, Hermes) | **Parked** | Stubbed; Docker/Compose next |
 | Always-on agent CLIs, compilers, non-interactive UX, **mise**, **neovim** | **Shared template bake** | Same package set for every runtime image; `EDITOR=true` stays |
 | Cursor IDE (GUI) | **`cursor-mise-ide` thin image** | Extends cursor-mise; auth via sbx secrets |
 | Per-runtime image tag | Thin `bake.env` → shared bake, or parent Dockerfile | One bake definition, N FROM lines |
@@ -51,7 +51,9 @@ docker/sandbox-templates:<runtime>-docker     # official starter (bake.env BASE_
 
 1. `mise-workspace` is **not** Cursor-specific. No cursor-only paths, entrypoints, or `aiFilename` assumptions in the kit.
 2. Do **not** set `environment.variables.PATH` in the kit (breaks/fights sandbox PATH management). Activate + `/mise/shims` via persistent shell env only.
-3. Do **not** run heavy agent installs in kit `commands.install` — bake agent binaries into templates. Mixins may use startup for idempotent workplace wiring; sandbox kits for BYO agents may install only if the agent is intentionally not imaged (avoid in this example tree).
+3. BYO agents (Pi, Hermes) under sbx-kit are **parked / broken**. Do not extend
+   kit install loops; next is plain Docker/Compose for VPS. Mixins may still
+   use startup for idempotent workplace wiring on working recipes (cursor, …).
 4. Never put bash completion scripts in `/etc/sandbox-persistent.sh`.
 5. Default recipes stay lean (agent image + mise + portable state). GUI IDE is opt-in (`cursor-mise-ide`). neovim binary in bake is OK; host editor **configs** stay kits.
 6. Personalization (dotfiles, skills, forks) is kit/`SBX_TREE`/registry territory — not `sbx-kit` lifecycle commands.

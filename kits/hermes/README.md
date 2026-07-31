@@ -1,16 +1,9 @@
-# Hermes kit
+# Hermes kit — BROKEN (parked)
 
-Thin **sandbox kit** for the [Hermes](https://hermes-agent.nousresearch.com/) agent.
+> **Status: broken / stubbed** (same park as Pi).
+>
+> Do not use `sbx-kit run --agent hermes`. BYO agent work via sbx kits/templates
+> is paused. **Next:** plain Docker / Compose for VPS, after the Pi image path
+> is redefined that way.
 
-- **Image:** `local/sbx-hermes-mise-docker:latest` (agent baked; `--skip-browser`)
-- **Mixins:** `mise-workspace`, `agent-workspace` (via catalog)
-- **This kit:** network + agentContext — **no** `commands.install`
-
-```bash
-sbx-kit template load --engine docker shell-mise-docker
-sbx-kit template load --engine docker hermes-mise-docker
-sbx-kit run --agent hermes --yes
-```
-
-Provider secrets and first-run `hermes setup` / `hermes model` are host-side.
-Watch `sbx policy log` for missing domains.
+Artifacts under `templates/hermes-mise-docker/` and this kit are reference-only.

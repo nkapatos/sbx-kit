@@ -248,7 +248,11 @@ func confirmCreate(o Opts, absProject, name string) (bool, error) {
 }
 
 func buildArgs(verb, sbxAgent, template string, kits, extra []string, project string) []string {
-	args := []string{verb, sbxAgent, "--template", template}
+	args := []string{verb, sbxAgent}
+	// Empty template: let a sandbox kit's sandbox.image drive the image (Amp-style).
+	if template != "" {
+		args = append(args, "--template", template)
+	}
 	for _, k := range kits {
 		args = append(args, "--kit", k)
 	}
@@ -260,6 +264,10 @@ func buildArgs(verb, sbxAgent, template string, kits, extra []string, project st
 func resolveTemplate(r *sbxutil.Runner, imageName, fallback, override string) string {
 	if override != "" {
 		return override
+	}
+	// Explicit empty fallback means "kit owns the image" — do not invent a tag.
+	if imageName == "" && fallback == "" {
+		return ""
 	}
 	out, err := r.Output("template", "ls")
 	if err != nil {

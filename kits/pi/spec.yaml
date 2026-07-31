@@ -3,11 +3,11 @@ kind: sandbox
 name: pi
 displayName: Pi
 description: >
-  Pi coding agent on sbx-pi-mise-docker. The agent binary is baked into the
-  image; this kit only wires credentials, network, and agent context.
+  BROKEN / parked. Do not use with sbx-kit run. Create fails (sbx 500).
+  Next: plain Docker/Compose for VPS. Spec kept for reference only.
 
 sandbox:
-  image: "docker.io/local/sbx-pi-mise-docker:latest"
+  image: "local/sbx-shell-mise-docker:latest"
   aiFilename: AGENTS.md
   entrypoint:
     run: [pi]
@@ -24,9 +24,13 @@ network:
   allowedDomains:
     - registry.npmjs.org
     - "**.npmjs.org"
+    - nodejs.org
+    - "**.nodejs.org"
     - github.com
     - "**.github.com"
     - objects.githubusercontent.com
+    - mise.jdx.dev
+    - "**.jdx.dev"
     - api.anthropic.com
     - console.anthropic.com
     - claude.ai
@@ -35,14 +39,14 @@ environment:
   proxyManaged:
     - ANTHROPIC_API_KEY
 
+commands:
+  install:
+    - description: Install Pi (mise node + npm) via kit setup script
+      user: "1000"
+      command: "bash /home/agent/.local/share/sbx-kit/bin/setup-pi.sh"
+
 agentContext: |
-  ## Pi (sbx-kit example)
+  ## Pi (sbx-kit example) — BROKEN
 
-  You are Pi inside a Docker AI Sandbox. The `pi` binary is preinstalled on the
-  image. Workspace is the mounted project path. `sudo` is passwordless.
-  Tooling: prefer **mise** for language runtimes (see mise-workspace).
-  Portable docs/refs: `/home/agent/.local/share/sbx-kit/portable/`.
-  neovim is available for in-box or headless ACP.
-
-  Optional extensions: `pi install npm:…` or `pi install git:…` (into
-  `~/.pi/agent`). Do not assume Oh My Pi / `omp` — that is a separate fork.
+  This kit path is parked. Prefer a plain Docker/Compose image built from the
+  shell-mise bake floor when Pi is needed on a VPS or outside sbx.

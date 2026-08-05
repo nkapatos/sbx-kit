@@ -37,6 +37,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Shipped | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Generic shell floor; parent for Pi/Hermes layers |
 | Shipped | [`templates/pi-mise-docker`](templates/pi-mise-docker/) | Extends shell-mise; Node + official Pi |
 | Shipped | [`templates/hermes-mise-docker`](templates/hermes-mise-docker/) | Extends shell-mise; Hermes `--skip-browser` |
+| Shipped | [`deploy/`](deploy/) | Docker/Compose VPS twin — see [`deploy/docs/vps-setup.md`](deploy/docs/vps-setup.md) |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/hermes`](kits/hermes/), [`kits/pi`](kits/pi/) | Thin sandbox kits (creds/network; no install) |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/) | Portable state + seeded `portable/` README |
@@ -51,6 +52,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 ├── Formula/sbx-kit.rb           # Homebrew formula (macOS)
 ├── cli/                         # Go toolkit CLI (sbx-kit)
 ├── config/                      # agents.yaml + resource profiles
+├── deploy/                      # Docker/Compose VPS twin (Pi first; not sbx-managed)
 ├── docs/                        # architecture, homebrew, CLI
 ├── kits/<name>/                 # mixins and sandbox agent kits
 ├── templates/_bake/             # shared Dockerfile + UX files

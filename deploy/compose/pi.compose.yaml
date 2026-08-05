@@ -1,0 +1,77 @@
+# Base Pi stack — usable alone (laptop) or with overlays (vps / locked).
+#
+# Laptop:
+#   docker compose -f deploy/compose/pi.compose.yaml run --rm --entrypoint pi pi --version
+#
+# VPS 24/7:
+#   ./deploy/scripts/gen-egress-filter.sh
+#   WORKSPACE=/abs/project docker compose \
+#     -f deploy/compose/pi.compose.yaml \
+#     -f deploy/compose/overlays/vps.yaml \
+#     up -d
+#
+# Locked (no sudo caps, read-only root):
+#   ... -f deploy/compose/overlays/vps.yaml -f deploy/compose/overlays/locked.yaml up -d
+
+name: sbx-kit-pi
+
+services:
+  pi:
+    image: local/sbx-kit-pi:latest
+    build:
+      context: ../agents/pi
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: local/sbx-kit-base:latest
+    working_dir: /workspace
+    volumes:
+      - type: bind
+        source: ${WORKSPACE:-./workspace}
+        target: /workspace
+      - type: volume
+        source: agent_state
+        target: /home/agent
+    # /tmp via tmpfs only in overlays (locked) or add here for laptop if needed.
+    tmpfs:
+      - /tmp:size=256m
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOME: /home/agent
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    user: "1000:1000"
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    pids_limit: 1024
+    mem_limit: ${MEM_LIMIT:-2g}
+    cpus: ${CPUS:-2.0}
+    oom_score_adj: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - agent
+    stdin_open: true
+    tty: true
+    restart: "no"
+    # No ports published — agent is not a public service.
+
+volumes:
+  agent_state:
+    name: sbx-kit-pi-agent-state
+
+networks:
+  agent:
+    driver: bridge

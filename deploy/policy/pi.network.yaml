@@ -1,0 +1,46 @@
+# Declarative network intent for Pi (VPS / Compose).
+# Source of truth for egress allowlisting. Generate tinyproxy filter with:
+#   ./deploy/scripts/gen-egress-filter.sh
+#
+# schema: informal v0
+
+version: 0
+agent: pi
+tier: vps
+
+# Domains the agent may reach (HTTPS via egress proxy on vps/locked tiers).
+# Keep this tight; expand when policy log / proxy deny logs prove a need.
+allow:
+  # Model / product APIs
+  - api.anthropic.com
+  - console.anthropic.com
+  - claude.ai
+  # Pi product
+  - pi.dev
+  - www.pi.dev
+  # Package / SCM (agent self-provision + git)
+  - registry.npmjs.org
+  - registry.yarnpkg.com
+  - github.com
+  - api.github.com
+  - objects.githubusercontent.com
+  - release-assets.githubusercontent.com
+  - codeload.github.com
+  - ghcr.io
+  - nodejs.org
+  - mise.jdx.dev
+  # OS updates inside the box (optional; remove on locked tier if host patches images)
+  - deb.debian.org
+  - security.debian.org
+
+# Always deny — even if a wildcard would match elsewhere.
+deny:
+  - "169.254.169.254"          # cloud instance metadata
+  - metadata.google.internal
+  - "metadata.google.internal."
+  - kubernetes-metadata.azure.com
+
+notes: |
+  laptop tier: bridge has open egress; this file is documentation only.
+  vps/locked: tinyproxy FilterDefaultDeny + Filter file from `allow:`.
+  Host firewall should still block IMDS from Docker bridges.

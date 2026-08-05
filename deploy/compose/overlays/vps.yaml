@@ -1,0 +1,72 @@
+# VPS overlay: 24/7 restart + egress only via allowlisted tinyproxy.
+# Requires: ./deploy/scripts/gen-egress-filter.sh (writes egress/filter)
+#
+#   WORKSPACE=/abs/project docker compose \
+#     -f deploy/compose/pi.compose.yaml \
+#     -f deploy/compose/overlays/vps.yaml \
+#     up -d
+
+services:
+  pi:
+    restart: unless-stopped
+    # Keep a TTY so interactive agents (pi) do not exit immediately under `up -d`.
+    # Attach with: docker compose … attach pi
+    stdin_open: true
+    tty: true
+    # Stay up after pi exits so `attach`/`exec` work; avoid exit-0 crash loops.
+    # $$ → $ after Compose interpolation.
+    entrypoint: ["/usr/bin/tini", "--"]
+    command:
+      - bash
+      - -lc
+      - "set +e; pi; ec=$$?; echo \"sbx-kit: pi exited $$ec\"; exec sleep infinity"
+    environment:
+      HTTP_PROXY: http://egress-proxy:8888
+      HTTPS_PROXY: http://egress-proxy:8888
+      http_proxy: http://egress-proxy:8888
+      https_proxy: http://egress-proxy:8888
+      NO_PROXY: localhost,127.0.0.1,egress-proxy
+      no_proxy: localhost,127.0.0.1,egress-proxy
+    networks:
+      agent: {}
+    depends_on:
+      - egress-proxy
+
+  egress-proxy:
+    image: local/sbx-kit-egress-proxy:latest
+    build:
+      context: ../../egress
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/log/tinyproxy:size=16m
+    user: "65534:65534"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      agent: {}
+      egress: {}
+
+networks:
+  agent:
+    driver: bridge
+    internal: true
+  egress:
+    driver: bridge
+    # Outbound to the internet (proxy only).

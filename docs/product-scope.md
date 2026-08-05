@@ -41,9 +41,10 @@ optional later optimization (pin/Hub), not the default BYO path.
 ## Parked / broken (do not use)
 
 - **`pi` / `hermes` sbx recipes** — stubbed in `config/agents.yaml`. Kit and
-  dedicated-image attempts failed create (`500 failed to run sandbox container`
-  / agent binary not found). **Next:** plain Dockerfile + Compose for VPS,
-  reusing the shell-mise bake ideas — not more sbx BYO kit loops.
+  dedicated-image attempts failed create under sbx.
+- **Next for Pi (and later Hermes):** plain Docker under [`deploy/`](../deploy/)
+  (Compose for VPS). sbx-kit may later **report** policy → compose drift; it
+  does not manage deploy lifecycle yet.
 
 ## Out of scope (not first-party examples)
 
@@ -57,9 +58,8 @@ optional later optimization (pin/Hub), not the default BYO path.
 
 ## Pi / Hermes specifically
 
-**Broken under sbx-kit today** (catalog `stub: true`). Do not run these recipes.
-Planned recovery is **Docker / Compose** (local + VPS), not further kit churn.
-Keep `shell-mise` + `_bake` as the workplace reference for that translation.
+**sbx-kit recipes are stubbed** (`stub: true`). Use [`deploy/`](../deploy/) for
+Pi on Docker/Compose (VPS). Hermes can follow the same multilayer pattern.
 Oh My Pi / other forks: remote registry or `SBX_TREE` only.
 
 ## Compatibility

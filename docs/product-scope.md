@@ -1,48 +1,45 @@
 # Product scope (sbx-kit example tree)
 
-This document is the guardrail for what belongs in **this repository’s**
-templates, kits, and catalog. sbx-kit the CLI can compose any tree via
-`SBX_TREE` or (later) remote registries — that does not expand what we ship
-as first-party examples.
+Guardrail for this repo’s templates, kits, and catalog. CLI can compose any
+tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 ## Goals
 
-1. **Own lean templates** that work with sbx (and later Compose/VPS) — not
-   purge/strip fat official `docker/sandbox-templates:*` bases.
-2. **Manage kits** around those images (thin mixins; agent binaries in images).
-3. **Lifecycle** — stable names, portable agent state, recreate/upgrade without
-   losing workplace material; later: export the same floor to Compose.
-4. Keep the brew/share tree **small and teachable**.
+1. **Own lean images** for sbx and (later) VPS — not fat official templates.
+2. **Clear update ownership** — rare image rebuilds; mise for langs; kits for
+   preference CLIs; **host-side agent refresh** before attach.
+3. **Lifecycle** — names, portable state, migrate; later Compose export.
+4. Keep the brew/share tree small and teachable.
 
 ## Layering rule
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **Template (image)** | Lean floor + optional agent binary | `kit-core`, `kit-cursor` (next: `kit-pi`) |
-| **Mixin kit** | Workplace conventions, allowlists, optional credentials | `mise-workspace`, `agent-workspace`, `lsp-mise`, `apt-extras`, `pi` (creds only) |
-| **Project** | Language pins, app code | `mise.toml`, repo `AGENTS.md` |
-| **Remote / `SBX_TREE`** | Forks, team stacks, taste | Oh My Pi, Playwright FE, host nvim config copy |
+| **kit-core** | OS essentials, modern utils, sbx glue, mise **binary** | `templates/kit-core` |
+| **Agent image** | Bootstrap install/layout only | `kit-cursor` (next `kit-pi`) |
+| **Mixin kit** | Activate, allowlists, state, preference CLIs, creds | `mise-workspace`, `agent-workspace`, `apt-extras`, `pi` |
+| **Project** | Language pins | `mise.toml` |
+| **Host / CLI** | Agent binary refresh before run; later update reports | (future `sbx-kit update`) |
 
-**kit-core** ships the mise **binary**. **mise-workspace** activates shims /
-allowlists. Project languages stay on mise — never apt toolchains in the floor.
-Agent CLIs (Cursor, Pi, …) are **baked layers**, not create-time kit installs.
+Languages → mise. Preference CLIs (`gh`, `glab`, …) → kits / in-box — **not**
+special-cased into core. Agent version churn → host refresh, not daily rebake.
 
-## In scope (examples we maintain)
+## In scope
 
 - `templates/kit-core`, `templates/kit-cursor`
 - Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras; pi creds
-- CLI lifecycle + host vault; sbx version floor for tested CLIs
-- `deploy/` VPS path converging on the same floor
-- Docs that state core vs kits and this scope
+- CLI lifecycle + vault; docs for why/layers/updates
+- `deploy/` converging on the same floor
 
 ## Out of scope / abandoned
 
-- Extending fat official templates then `apt purge` languages
-- First-party thins on `cursor-agent-docker` / `shell-docker` / …
-- Installing agent binaries via kit `commands.install` (prefer image layers)
-- Hermès until core + cursor + pi layers are boring
+- Official-base + apt purge
+- Baking `gh` alone (or any preference CLI) into core “for parity”
+- Daily Hub rebuilds for Cursor/Pi releases
+- Hot-swapping the agent binary mid-session
+- Hermès until core + cursor + pi are boring
 
 ## Compatibility
 
-- Kits: **schemaVersion `"1"`** on released sbx (see `kits/README.md`)
-- CLI: `sbx-kit` requires Docker `sbx` >= floor in `cli/internal/sbxcompat`
+- Kits: schemaVersion `"1"`
+- CLI: `sbx` >= floor in `cli/internal/sbxcompat`

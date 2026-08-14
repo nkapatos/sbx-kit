@@ -29,8 +29,8 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 
 | Status | Name | Notes |
 | --- | --- | --- |
-| Shipped | [`templates/kit-core`](templates/kit-core/) | Lean floor: debian + sbx glue + mise |
-| Shipped | [`templates/kit-cursor`](templates/kit-cursor/) | Cursor agent on kit-core |
+| Shipped | [`templates/kit-core`](templates/kit-core/) | Lean floor (cache-split); sbx + later VPS |
+| Shipped | [`templates/kit-cursor`](templates/kit-cursor/) | Cursor bootstrap on kit-core (refresh agent on host) |
 | Shipped | [`deploy/`](deploy/) | Docker/Compose VPS twin — see [`deploy/docs/vps-setup.md`](deploy/docs/vps-setup.md) |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/mise-workspace`](kits/mise-workspace/), [`kits/agent-workspace`](kits/agent-workspace/) | Default mixins |

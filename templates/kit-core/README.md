@@ -2,21 +2,31 @@
 
 **Tag:** `local/sbx-kit-core:latest`  
 **FROM:** `debian:bookworm-slim`  
-**sbx agent:** `shell`
+**sbx agent:** `shell`  
+**Also:** intended VPS/Compose floor later (`deploy/` convergence)
 
-Lean floor for sbx-kit: `agent` user (sudo), `/etc/sandbox-persistent.sh` +
-`/etc/sbx-agent-env.sh` (UX only), **mise** binary, small agent utilities
-(`fd`, `rg`, `jq`, `git-lfs`, `sqlite3`, `socat`, …). No project language
-toolchains — mise + kits own those.
+## Why this image
 
-**Not in this image:** host SSH keys, DinD, language runtimes, secrets.
-Prefer HTTPS + `sbx secret` / proxy; keep Docker Engine on a future `-docker`
-variant if needed.
+Official `docker/sandbox-templates:*` ship language toolchains we will not
+maintain. This floor is intentionally thin:
+
+| In image | Out of image (on purpose) |
+| --- | --- |
+| sbx glue, `agent`+sudo, mise **binary** | Project languages → **mise** |
+| git (+ lfs), curl, small modern utils | Preference CLIs (`gh`, `glab`, …) → **kits** / in-box update |
+| `/etc/sbx-agent-env.sh` + persistent env | Docker Engine → future **`-docker`** variant |
+| | Agent CLIs → **agent layers** (layout bootstrap only) |
+
+## Docker layer cache
+
+Rebuild only the layer you change: CA → essential OS → modern utils → user →
+env glue → mise. See comments in `Dockerfile`.
+
+## Use
 
 ```bash
 sbx-kit template load --engine docker kit-core
 sbx-kit run --agent kit-core --yes
 ```
 
-Agent layers (e.g. [kit-cursor](../kit-cursor/)) `FROM` this image. Same floor is
-the intended base for Compose/VPS (`deploy/` convergence).
+Agent layers (e.g. [kit-cursor](../kit-cursor/)) `FROM` this image.

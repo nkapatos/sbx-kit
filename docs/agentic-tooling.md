@@ -1,8 +1,18 @@
 # Agentic sandbox tooling
 
 **Audience:** contributors and users of this toolkit.  
-**Goal:** own **lean core** image + thin agent layers, plus runtime-agnostic mixin
-kits. CLI stays for lifecycle, migrate, and (later) Compose/VPS export.
+**Goal:** own lean **OS → utils → glue/mise → agent** images + mixin kits. Same
+floor for sbx templates and (later) VPS/Compose. CLI owns lifecycle, migrate,
+and (later) update reports / Compose export.
+
+---
+
+## Why not official fat templates
+
+Official `docker/sandbox-templates:*` bake language toolchains and preference
+CLIs we will not keep current. We omit them: **mise** for languages,
+**kits / in-box update** for `gh`/`glab`/taste tools, **host-side agent
+refresh** for Cursor/Pi (many releases per week — do not rebake daily).
 
 ---
 
@@ -10,35 +20,36 @@ kits. CLI stays for lifecycle, migrate, and (later) Compose/VPS export.
 
 ```text
 debian:bookworm-slim
-        │
+        │  (1) CA  (2) essential OS  (3) modern utils
         ▼
-   templates/kit-core                 # agent user, sbx persistent-env, mise binary
-        │                             # no Node/Go/Java/Rust project toolchains
-        ├── kits/mise-workspace       # activate + allowlists (not the binary)
-        ├── kits/agent-workspace
-        ├── kits/lsp-mise | apt-extras | pi(creds)   # optional
+   templates/kit-core          # (4) agent user/sudo  (5) persistent-env  (6) mise binary
         │
-        ├── templates/kit-cursor      # Cursor agent CLI
-        └── templates/kit-pi          # next — Pi baked via mise on core
+        ├── kits/mise-workspace          # activate + allowlists
+        ├── kits/agent-workspace         # portable state
+        ├── kits/apt-extras | lsp-mise | pi(creds)   # optional preference / extras
+        │
+        ├── templates/kit-cursor         # bootstrap Cursor layout (refresh on host)
+        └── templates/kit-pi             # next
 
-# VPS: deploy/ converges on the same floor (Compose); CLI export later
+# VPS: same kit-core floor via deploy/ / CLI export later
 ```
 
-| Concern | Lives in | Notes |
+| Concern | Lives in | Update cadence |
 | --- | --- | --- |
-| sbx glue + mise binary | **kit-core** | No language apt packages |
-| Agent binary | **Thin layer** on kit-core | kit-cursor now; kit-pi next |
-| Mise activate / allowlist | **mise-workspace** | Runtime-agnostic |
-| Portable agent state | **agent-workspace** | Host vault via CLI |
-| Project language versions | **Project `mise.toml`** | Never bake into the image |
-| Official fat bases + apt purge | **Abandoned** | Do not revive |
+| OS + floor utils + sbx glue + mise binary | **kit-core** (split layers) | Rare / occasional |
+| Agent binary layout | **Agent layer** bootstrap pin | Rebake only when layout changes |
+| Agent version / new models | **Host refresh before attach** | As needed — not mid-session |
+| Languages | **mise** (+ project `mise.toml`) | In-box / agent |
+| Preference CLIs (`gh`, `glab`, …) | **Kits** / Compose / in-box | User preference |
+| Docker Engine | Future **`-docker`** variant | Not on default core |
 
 **Hard rules**
 
-1. `mise-workspace` is not Cursor-specific.
-2. Do not set `environment.variables.PATH` in kits.
-3. Do not install agent CLIs in kit `commands.install` — bake image layers.
-4. Never put bash completion scripts in `/etc/sandbox-persistent.sh`.
+1. `mise-workspace` is not Cursor-specific; never set `environment.variables.PATH`.
+2. Do not install preference CLIs or languages into kit-core “because official has them.”
+3. Agent layers bootstrap install paths; **do not** chase daily Hub rebuilds for agent churn.
+4. Never put secrets or bash completions in `/etc/sandbox-persistent.sh`.
+5. Keep `AGENT_CLI_CREDENTIAL_STORE=memory` on Cursor layers.
 
 ---
 
@@ -47,12 +58,12 @@ debian:bookworm-slim
 | Image tag | Role | Recipe |
 | --- | --- | --- |
 | `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
-| `local/sbx-kit-cursor:latest` | + Cursor agent | `cursor` / `kit-cursor` |
+| `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `cursor` / `kit-cursor` |
 
 ```bash
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
-# Cursor tarball: allow downloads.cursor.com if policy blocks
+# Cursor tarball: sbx policy allow network downloads.cursor.com
 sbx-kit run --agent cursor --yes
 ```
 
@@ -62,13 +73,11 @@ sbx-kit run --agent cursor --yes
 
 | Item | Status |
 | --- | --- |
-| kit-core + kit-cursor | Done |
-| Drop official-base thins | Done |
-| Harden kit-core | Done (sudo, locales, utils, `/etc/sbx-agent-env.sh`) |
-| kit-pi image layer + pi creds mixin | Next |
-| Rebuild kit-cursor on new core | Host: reload kit-core then kit-cursor |
-| SSH auth socket | Host policy: do not forward by default; documented in agent-workspace |
-| Cursor download domains on a mixin | Open |
-| Host env allowlist into boxes | Open (sbx/host); prefer default-deny secrets |
-| DinD | Separate `-docker` variant later — not on default kit-core |
-| CLI → Compose export | Later |
+| kit-core cache-split layers | Done |
+| kit-cursor bootstrap + host refresh policy | Done (docs) |
+| kit-pi layer | Next |
+| Kits for preference CLIs (`gh`/`glab`/…) | Open |
+| CLI: report/apply mise+apt+agent updates (agent = pre-attach) | Open |
+| SSH sock / host env allowlist | Open |
+| DinD `-docker` variant | Later |
+| Compose / VPS export from same floor | Later |

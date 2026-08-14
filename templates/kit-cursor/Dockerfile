@@ -1,27 +1,30 @@
 # syntax=docker/dockerfile:1
-# Cursor agent on sbx-kit-core (lean floor — no language toolchains).
+# Cursor agent layout on kit-core.
+#
+# Why a layer (not daily rebuilds): CURSOR_AGENT_VERSION is a bootstrap pin so
+# a fresh box has *some* agent. Cursor ships often — refresh the binary from
+# the HOST before attach (recreate / future sbx-kit update), never hot-swap
+# mid-session. Preference CLIs stay in kits, not this image.
 #
 # Load parent first:
 #   sbx-kit template load --engine docker kit-core
 #   sbx-kit template load --engine docker kit-cursor
 #
 # Tag: local/sbx-kit-cursor:latest
-# Run: sbx-kit run --agent kit-cursor --yes
-#   or: sbx run --template local/sbx-kit-cursor:latest cursor .
+# Run: sbx-kit run --agent cursor --yes
 #
-# Build needs network to downloads.cursor.com. On a locked sandbox host:
+# Build needs downloads.cursor.com:
 #   sbx policy allow network downloads.cursor.com
 
 ARG PARENT_IMAGE=local/sbx-kit-core:latest
 FROM ${PARENT_IMAGE}
 
-# Pin when Cursor publishes a new lab build (see curl https://cursor.com/install).
+# Bootstrap pin only — bump when you intentionally refresh the baked layout.
+# Day-to-day agent updates: host-side refresh before sbx-kit run (not rebake).
 ARG CURSOR_AGENT_VERSION=2026.08.11-e8db854
 ARG TARGETARCH
 
-# Official cursor-agent-docker preconfigures these so agent traffic works through
-# the sbx host proxy (HTTP/1.1 + SSE). Mirror that on our lean floor.
-# Keep Cursor creds in memory — do not write API keys to the image filesystem.
+# Proxy-friendly Node + keep Cursor creds off disk (official template parity).
 ENV NODE_USE_ENV_PROXY=1 \
     NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
     AGENT_CLI_CREDENTIAL_STORE=memory
@@ -29,7 +32,7 @@ ENV NODE_USE_ENV_PROXY=1 \
 USER agent
 WORKDIR /home/agent
 
-# Same layout as https://cursor.com/install (agent + cursor-agent under ~/.local).
+# Same layout as https://cursor.com/install → ~/.local + symlinks.
 RUN set -eux; \
     arch="${TARGETARCH:-}"; \
     if [ -z "$arch" ]; then arch="$(uname -m)"; fi; \
@@ -51,7 +54,6 @@ RUN set -eux; \
     /home/agent/.local/bin/cursor-agent --help >/dev/null
 
 USER root
-# sbx probes agent binaries with a minimal PATH; keep names on /usr/local/bin.
 RUN set -eux; \
     ln -sfn /home/agent/.local/bin/cursor-agent /usr/local/bin/cursor-agent; \
     ln -sfn /home/agent/.local/bin/agent /usr/local/bin/agent; \
@@ -60,5 +62,5 @@ RUN set -eux; \
 
 USER agent
 WORKDIR /home/agent
-# sbx agent "cursor" supplies the real entrypoint (cursor-agent --yolo).
+# sbx agent "cursor" supplies entrypoint (cursor-agent --yolo).
 CMD ["bash", "-l"]

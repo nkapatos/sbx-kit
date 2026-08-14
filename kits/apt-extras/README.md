@@ -1,11 +1,12 @@
 # Apt extras
 
-Optional **mixin** for small Ubuntu packages inside the sandbox (the VM is
-Linux — use apt here, not host Homebrew formulae).
+Optional **mixin** for small apt packages inside the sandbox (Linux VM — use
+apt here, not host Homebrew).
 
-Default set is intentionally light (`tree`, `zip`, archives helpers, etc.).
-Fork or replace this kit for team needs. Do **not** put Go/Node/Rust/Python
-toolchains here — that is mise + project `mise.toml`.
+Default set is light (`tree`, `zip`, archive helpers, etc.). Use this kit (or a
+team fork) for **preference CLIs** such as `gh` / `glab` — they are **not**
+baked into `kit-core`. Do **not** put Go/Node/Rust/Python toolchains here —
+that is mise + project `mise.toml`.
 
 ```bash
 # Catalog: add apt-extras to a recipe's kits list, or:

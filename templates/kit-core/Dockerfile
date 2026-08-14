@@ -1,14 +1,24 @@
 # syntax=docker/dockerfile:1
-# sbx-kit minimal core — lean floor for Docker AI Sandboxes (shell family).
+# sbx-kit-core — lean floor for sbx templates AND (later) VPS/Compose.
 #
-# Not based on docker/sandbox-templates:* (those ship language toolchains).
-# Ships: agent user, sbx persistent-env glue, mise binary. No Node/Go/Java/Rust
-# project toolchains — mise (and kits) own those.
+# Why (not official docker/sandbox-templates:*):
+#   Official images ship language toolchains we cannot maintain. We own a thin
+#   floor; languages → mise; preference CLIs (gh/glab/…) → kits / in-box update;
+#   agent binaries → thin layers with HOST-side refresh (not daily image rebuilds).
+#
+# Layer cache (rebuild only what changed):
+#   1) CA bootstrap
+#   2) Essential OS packages (rare: OS / major bumps)
+#   3) Modern utils (occasional: add/remove floor tools)
+#   4) agent user + sudo / proxy env_keep
+#   5) sbx persistent-env + UX
+#   6) mise binary (occasional: mise releases)
+#
+# Not here: Node/Go/Java/Rust, gh/glab, Docker Engine (future -docker variant).
 #
 # Tag: local/sbx-kit-core:latest
-# Load: sbx-kit template load --engine docker kit-core
-# Run:  sbx run --template local/sbx-kit-core:latest shell .
-#   or: sbx-kit run --agent kit-core --yes
+#   sbx-kit template load --engine docker kit-core
+#   sbx-kit run --agent kit-core --yes
 
 ARG DEBIAN_VERSION=bookworm-slim
 FROM debian:${DEBIAN_VERSION}
@@ -20,7 +30,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     HOME=/home/agent \
-    # Standard tool locations; do not fight sandbox PATH management later.
     PATH=/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     NO_PROXY=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
     no_proxy=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
@@ -33,7 +42,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     EDITOR=true \
     VISUAL=true
 
-# bookworm-slim has no CAs; cleartext apt is often blocked. Bootstrap CAs first.
+# --- 1) CA bootstrap (bookworm-slim has none; cleartext apt often blocked) ---
 RUN set -eux; \
     if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
       sed -i 's|http://|https://|g' /etc/apt/sources.list.d/debian.sources; \
@@ -46,25 +55,16 @@ RUN set -eux; \
     apt-get -o Acquire::https::Verify-Peer=false \
             -o Acquire::https::Verify-Host=false \
             install -y --no-install-recommends ca-certificates; \
+    rm -rf /var/lib/apt/lists/*
+
+# --- 2) Essential OS (rebuild rarely: debian / major floor changes) ---
+RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       bash \
       curl \
-      dnsutils \
-      fd-find \
       git \
-      git-lfs \
-      iproute2 \
-      jq \
-      less \
       locales \
-      lsof \
-      make \
-      procps \
-      ripgrep \
-      rsync \
-      socat \
-      sqlite3 \
       tini \
       unzip \
       xz-utils \
@@ -75,11 +75,31 @@ RUN set -eux; \
     sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen; \
     locale-gen en_US.UTF-8; \
     update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8; \
+    rm -rf /var/lib/apt/lists/*
+
+# --- 3) Modern utils (floor tools; preference CLIs stay in kits) ---
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      dnsutils \
+      fd-find \
+      git-lfs \
+      iproute2 \
+      jq \
+      less \
+      lsof \
+      make \
+      procps \
+      ripgrep \
+      rsync \
+      socat \
+      sqlite3 \
+    ; \
     ln -sf "$(command -v fdfind)" /usr/local/bin/fd; \
     git lfs install --system; \
     rm -rf /var/lib/apt/lists/*
 
-# Non-root workplace user (UID/GID 1000). Match official sandbox templates.
+# --- 4) Workplace user (uid 1000) + sudo / proxy env_keep ---
 RUN set -eux; \
     groupadd --gid 1000 agent; \
     useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash agent; \
@@ -87,7 +107,6 @@ RUN set -eux; \
       usermod -aG sudo agent; \
       echo 'agent ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/agent; \
       chmod 0440 /etc/sudoers.d/agent; \
-      # Keep proxy-related env across sudo (agent + %sudo).
       printf '%s\n' \
         'Defaults:agent env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
         'Defaults:%sudo env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
@@ -97,8 +116,7 @@ RUN set -eux; \
     mkdir -p /home/agent/.local/bin /home/agent/.docker/sandbox/locks; \
     chown -R agent:agent /home/agent
 
-# sbx sources this for every bash (interactive and BASH_ENV). No completions.
-# No secrets here — only tool/UX init (see /etc/sbx-agent-env.sh).
+# --- 5) sbx persistent-env + UX (no secrets, no completions) ---
 COPY agent-env.sh /etc/sbx-agent-env.sh
 RUN set -eux; \
     chmod 644 /etc/sbx-agent-env.sh; \
@@ -136,7 +154,7 @@ RUN set -eux; \
 
 ENV BASH_ENV=/etc/sandbox-persistent.sh
 
-# Mise binary only — activate/shims belong to kits/mise-workspace.
+# --- 6) Mise binary only (activate/shims → kits/mise-workspace) ---
 RUN set -eux; \
     curl -fsSL https://mise.run | sh; \
     test -x /usr/local/bin/mise; \

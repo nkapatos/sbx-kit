@@ -1,23 +1,33 @@
 # Templates
 
-Sandbox images live here. First-party templates are **our** lean floor — not
-extensions of fat `docker/sandbox-templates:*` bases.
+First-party images are **our** lean floor (sbx + later VPS) — not fat official
+`docker/sandbox-templates:*` bases.
+
+## Why this split
+
+| Layer | Rebuild when | Holds |
+| --- | --- | --- |
+| OS / essential apt | Debian major/minor | bash, curl, git, locales, tini, sudo |
+| Modern utils | Occasional floor tools | fd, rg, jq, git-lfs, sqlite3, … |
+| sbx glue + mise binary | Glue or mise binary bumps | user, persistent-env, `/usr/local/bin/mise` |
+| Agent layer | Intentional layout bootstrap only | Cursor/Pi install paths — **not** daily releases |
+| Kits / in-box / CLI update | Preference + churn | `gh`/`glab`/…, lang tools via mise, agent refresh |
+
+**Agent updates run from the host before attach** (new models / CLI bits). Do not
+hot-swap the running agent binary mid-session.
 
 ```bash
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor   # after kit-core
+sbx-kit run --agent cursor --yes
 ```
-
-Tag convention: `local/sbx-<name>:latest`  
-Images are **linux** (arm64/amd64) — they run inside the sbx microVM.
 
 | Path | Tag | sbx agent | Notes |
 | --- | --- | --- | --- |
-| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `shell` | Minimal core; mise binary; VPS floor later |
-| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `cursor` | Extends kit-core; Cursor agent CLI |
+| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `shell` | Floor; cache-split Dockerfile; VPS later |
+| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `cursor` | Bootstrap Cursor layout on core |
 
-Load `kit-core` before `kit-cursor`. Recipes: `kit-core`, `cursor` / `kit-cursor`.
-Pi will be a `kit-pi` layer later (same pattern).
+Recipes: `kit-core`, `cursor` / `kit-cursor`. Next agent layer: `kit-pi`.
 
 `ResolveBuild` still honors optional `bake.env` → sibling `_bake` for external
-`SBX_TREE` layouts; this repo no longer ships that pattern.
+`SBX_TREE` layouts; this repo does not ship that pattern.

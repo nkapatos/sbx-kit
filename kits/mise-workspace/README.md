@@ -17,7 +17,7 @@ Runtime-agnostic **mixin** for any mise-prepared sbx template (`cursor`, `openco
 
 ## Prerequisites
 
-The template must provide the **mise** binary at `/usr/local/bin/mise` (see `templates/_bake`).
+The template must provide the **mise** binary at `/usr/local/bin/mise` (see `templates/kit-core`).
 
 ## Apply
 
@@ -25,12 +25,12 @@ Prefer the catalog CLI (pulls this kit automatically):
 
 ```bash
 sbx-kit run --agent cursor --yes
-sbx-kit run --agent opencode --yes
+sbx-kit run --agent kit-core --yes
 ```
 
 Long form:
 
 ```bash
-sbx run cursor --template local/sbx-cursor-mise-docker:latest \
+sbx run cursor --template local/sbx-kit-cursor:latest \
   --kit "$(brew --prefix)/share/sbx-kit/kits/mise-workspace" .
 ```

@@ -27,20 +27,22 @@ func newTemplateLoadCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "load <template-name-or-path> [image-tag]",
 		Short: "Build a template and import it into sbx",
-		Long: `Build a thin template (bake.env → templates/_bake) or a directory with a
-Dockerfile, then import via sbx template load.
+		Long: `Build a template directory (Dockerfile, or bake.env → sibling _bake for
+external trees), then import via sbx template load.
 
 Engines:
   docker      Docker Desktop or Colima (docker CLI)
   container   Apple container + skopeo (OCI → docker-archive)
 
 Template names resolve under the toolkit root (Brew share or SBX_TREE):
-  sbx-kit template load --engine docker cursor-mise-docker
+  sbx-kit template load --engine docker kit-core
+  sbx-kit template load --engine docker kit-cursor
 
 Not supported: OrbStack, Podman.`,
-		Example: `  sbx-kit template load --engine docker cursor-mise-docker
-  sbx-kit template load --engine container templates/cursor-mise-docker
-  sbx-kit template load --engine docker cursor-mise-docker local/sbx-cursor-mise-docker:dev`,
+		Example: `  sbx-kit template load --engine docker kit-core
+  sbx-kit template load --engine docker kit-cursor
+  sbx-kit template load --engine container templates/kit-core
+  sbx-kit template load --engine docker kit-cursor local/sbx-kit-cursor:dev`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if engine == "" {

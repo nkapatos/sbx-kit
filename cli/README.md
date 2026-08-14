@@ -12,7 +12,8 @@ export SBX_TREE=/path/to/this/repo
 ../bin/sbx-kit agents
 ../bin/sbx-kit run --agent cursor --yes
 ../bin/sbx-kit run --agent cursor --yes --clone
-../bin/sbx-kit template load --engine docker cursor-mise-docker
+../bin/sbx-kit template load --engine docker kit-core
+../bin/sbx-kit template load --engine docker kit-cursor
 ../bin/sbx-kit init --agent cursor .
 ```
 

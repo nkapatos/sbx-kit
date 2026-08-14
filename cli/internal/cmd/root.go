@@ -62,7 +62,8 @@ Day-to-day:
   sbx-kit upgrade --agent cursor
   sbx-kit status
   sbx-kit init --agent cursor .
-  sbx-kit template load --engine docker cursor-mise-docker`
+  sbx-kit template load --engine docker kit-core
+  sbx-kit template load --engine docker kit-cursor`
 }
 
 func requireToolkitRoot() (string, error) {

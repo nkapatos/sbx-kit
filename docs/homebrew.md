@@ -44,7 +44,8 @@ Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"
 ```bash
 sbx-kit version   # sbx-kit + required range + detected sbx
 sbx-kit agents
-sbx-kit template load --engine docker cursor-mise-docker
+sbx-kit template load --engine docker kit-core
+sbx-kit template load --engine docker kit-cursor
 sbx template ls
 
 cd ~/my-project

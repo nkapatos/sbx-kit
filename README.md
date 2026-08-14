@@ -2,12 +2,11 @@
 
 Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): reusable **templates** (sandbox images), **kits** (create-time YAML), and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace** by default. Shared bake
-also includes **neovim** for optional in-box / headless ACP work; **Cursor IDE**
-is a separate thin image (`cursor-mise-ide`). This repo ships a few **example**
-recipes (lean images + mise mixins + portable state). Bring your own
-templates/kits/catalog when you want a different stack — sbx-kit is the helper
-for composing them and surviving teardown without losing agent home state.
+**Sandbox = agent workplace; host = human workplace** by default. First-party
+images are a **lean core** (debian + sbx glue + mise) with thin agent layers —
+not fat official `docker/sandbox-templates:*` bases. This repo ships a few
+**example** recipes (core / cursor / pi + mise mixins + portable state). Bring
+your own templates/kits/catalog when you want a different stack.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 
@@ -17,13 +16,12 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 
 | Term | Meaning |
 | --- | --- |
-| **Template** | Linux image the sandbox boots from. Thin dirs set `bake.env`; shared body is `templates/_bake`. |
+| **Template** | Linux image the sandbox boots from (`templates/kit-core`, `templates/kit-cursor`, …). |
 | **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin or sandbox agent). Not an image. |
 | **Import** | `sbx-kit template load` — build → save → load into sbx’s store (`docker` or Apple `container`). |
-| **CLI** | `sbx-kit` — compose template + kits + resources; stamp project READMEs |
+| **CLI** | `sbx-kit` — compose template + kits + resources; stamp project READMEs; migrate state |
 
-Image tags follow: `local/sbx-<role>-<capability>[-<runtime>]:<tag>`  
-(e.g. `local/sbx-cursor-mise-docker:latest`).
+Image tags: `local/sbx-<name>:latest` (e.g. `local/sbx-kit-cursor:latest`).
 
 ## Catalog
 
@@ -31,19 +29,14 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 
 | Status | Name | Notes |
 | --- | --- | --- |
-| Shipped | [`templates/_bake`](templates/_bake/) | Shared bake: CLIs, mise, **neovim**, sqlite3/xz, non-interactive UX |
-| Shipped | [`templates/cursor-mise-docker`](templates/cursor-mise-docker/) | Thin: cursor-agent-docker + bake; `sbx-kit run --agent cursor` |
-| Shipped | [`templates/opencode-mise-docker`](templates/opencode-mise-docker/) | Same bake on opencode-docker |
-| Shipped | [`templates/shell-mise-docker`](templates/shell-mise-docker/) | Generic shell floor; parent for Pi/Hermes layers |
-| Shipped | [`templates/pi-mise-docker`](templates/pi-mise-docker/) | Extends shell-mise; Node + official Pi |
-| Shipped | [`templates/hermes-mise-docker`](templates/hermes-mise-docker/) | Extends shell-mise; Hermes `--skip-browser` |
+| Shipped | [`templates/kit-core`](templates/kit-core/) | Lean floor: debian + sbx glue + mise |
+| Shipped | [`templates/kit-cursor`](templates/kit-cursor/) | Cursor agent on kit-core |
 | Shipped | [`deploy/`](deploy/) | Docker/Compose VPS twin — see [`deploy/docs/vps-setup.md`](deploy/docs/vps-setup.md) |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
-| Shipped | [`kits/hermes`](kits/hermes/), [`kits/pi`](kits/pi/) | Thin sandbox kits (creds/network; no install) |
-| Shipped | [`kits/agent-workspace`](kits/agent-workspace/) | Portable state + seeded `portable/` README |
+| Shipped | [`kits/mise-workspace`](kits/mise-workspace/), [`kits/agent-workspace`](kits/agent-workspace/) | Default mixins |
+| Shipped | [`kits/pi`](kits/pi/) | Pi install mixin on kit-core |
 | Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional capability mixins |
-| Scaffold | [`templates/cursor-mise-ide`](templates/cursor-mise-ide/) | Extends cursor-mise; IDE install + recipe stub |
-| Follow-up | CI → Docker Hub images, Homebrew version tags, remote recipe registries | Creds / publish details later |
+| Follow-up | CI → Hub images, Compose export from CLI, SSH auth socket, more agent layers | |
 
 ## Layout
 
@@ -52,11 +45,10 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 ├── Formula/sbx-kit.rb           # Homebrew formula (macOS)
 ├── cli/                         # Go toolkit CLI (sbx-kit)
 ├── config/                      # agents.yaml + resource profiles
-├── deploy/                      # Docker/Compose VPS twin (Pi first; not sbx-managed)
+├── deploy/                      # Docker/Compose VPS twin (converges with kit-core)
 ├── docs/                        # architecture, homebrew, CLI
-├── kits/<name>/                 # mixins and sandbox agent kits
-├── templates/_bake/             # shared Dockerfile + UX files
-└── templates/<name>/bake.env    # BASE_IMAGE=… for thin images
+├── kits/<name>/                 # mixins (and optional sandbox kits)
+└── templates/<name>/Dockerfile  # kit-core, kit-cursor, …
 ```
 
 Homebrew installs the binary plus `share/sbx-kit/{config,kits,templates,docs}`.
@@ -75,11 +67,13 @@ You still need the Docker **`sbx` CLI >= 0.34.0** signed in (kits authored as
 schemaVersion `"1"` until released sbx accepts v2). `sbx-kit version` reports
 the required range. Details: [docs/homebrew.md](docs/homebrew.md).
 
-### 2. Import a template (until Hub publishes images)
+### 2. Import templates (until Hub publishes images)
 
 ```bash
-sbx-kit template load --engine docker cursor-mise-docker
+sbx-kit template load --engine docker kit-core
+sbx-kit template load --engine docker kit-cursor
 # Apple container: --engine container (needs skopeo)
+# Cursor package download: allow downloads.cursor.com if policy blocks it
 sbx template ls
 ```
 
@@ -107,12 +101,12 @@ Host **git worktrees** are for parallel host-visible checkouts. For VM-private a
 
 ---
 
-## Adding a thin template
+## Adding a template
 
-1. Add `templates/<name>/bake.env` with `BASE_IMAGE=docker/sandbox-templates:<official>-docker`.
-2. Add a short `README.md`; do **not** copy `_bake/Dockerfile`.
-3. Import: `sbx-kit template load --engine <docker|container> <name>`.
-4. Pair with mixin kits (`mise-workspace`, …). Sandbox kits only for BYO agents (Pi/Hermes).
+1. Add `templates/<name>/Dockerfile` (usually `FROM local/sbx-kit-core:latest`).
+2. Add a short `README.md`.
+3. Import: `sbx-kit template load --engine <docker|container> <name>` (load `kit-core` first when needed).
+4. Pair with mixin kits (`mise-workspace`, …).
 5. Add an entry in [`config/agents.yaml`](config/agents.yaml) and [templates/README.md](templates/README.md).
 
 ## Reference
@@ -132,7 +126,7 @@ Apple `container image save` → OCI; `sbx template load` expects docker-archive
 
 ```bash
 sbx run cursor \
-  --template docker.io/local/sbx-cursor-mise-docker:latest \
+  --template local/sbx-kit-cursor:latest \
   --kit "$(brew --prefix)/share/sbx-kit/kits/mise-workspace" \
   .
 ```
@@ -147,10 +141,9 @@ sbx run cursor \
 | Can’t find toolkit data | Brew share, or `export SBX_TREE=/path/to/checkout` |
 | Wrong toolchain versions | Ensure `mise.toml` exists; agent or `sbx exec … mise install`; then `mise ls` |
 | Removed pin still on PATH | `mise install && mise prune -y`; fresh `bash -l -c '…'` if env looks stale |
-| Downloads blocked | `sbx policy log` / kit allowlist |
+| Downloads blocked | `sbx policy log` / kit allowlist; Cursor package: `downloads.cursor.com` |
+| `cursor-agent` missing after load | Rebuild `kit-core` then `kit-cursor` |
 
-```bash
-sbx template ls
-sbx ls
-sbx exec -it <name> bash
-```
+## License
+
+See repository license file if present; otherwise all rights reserved by the author until stated otherwise.

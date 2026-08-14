@@ -3,7 +3,7 @@ kind: mixin
 name: pi
 displayName: Pi
 description: >
-  Installs Pi coding agent via mise on shell-mise (or any mise-prepared shell
+  Installs Pi coding agent via mise on kit-core (or any mise-prepared shell
   template). Create-time install only. Adds DeepSeek credentials
   (openai/google/xai are already declared by the shell agent).
 

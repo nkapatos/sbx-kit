@@ -7,65 +7,43 @@ as first-party examples.
 
 ## Goals
 
-1. **Ease custom templates** on official Docker AI Sandboxes bases (`_bake` +
-   thin images).
-2. **Manage kits** around those images (mixins + thin sandbox kits).
+1. **Own lean templates** that work with sbx (and later Compose/VPS) — not
+   purge/strip fat official `docker/sandbox-templates:*` bases.
+2. **Manage kits** around those images (mixins + optional agent install).
 3. **Lifecycle** — stable names, portable agent state, recreate/upgrade without
-   losing workplace material.
-4. Keep the brew/share tree **small and teachable** so people can copy the
-   pattern and extend it.
+   losing workplace material; later: export the same floor to Compose.
+4. Keep the brew/share tree **small and teachable**.
 
 ## Layering rule
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **Template (image)** | Shared bake floor; official agent binaries when the starter has them | `cursor-mise-docker`, `opencode-mise-docker`, `shell-mise-docker` |
-| **Mixin kit** | Workplace conventions, allowlists, optional capabilities | `mise-workspace`, `agent-workspace`, `lsp-mise`, `apt-extras` |
-| **Sandbox kit (BYO)** | Agent id / entrypoint / creds / network + create-time setup script | `kits/pi` (on shell-mise); Hermes same pattern when proven |
+| **Template (image)** | Lean floor + optional agent binary | `kit-core`, `kit-cursor` |
+| **Mixin kit** | Workplace conventions, allowlists, optional capabilities | `mise-workspace`, `agent-workspace`, `lsp-mise`, `apt-extras`, `pi` |
 | **Project** | Language pins, app code | `mise.toml`, repo `AGENTS.md` |
 | **Remote / `SBX_TREE`** | Forks, team stacks, taste | Oh My Pi, Playwright FE, host nvim config copy |
 
-Bake the workplace floor (apt + mise + tools). For agents **not** in official
-starters, prefer a kit dropped setup script + one-line `commands.install` over
-a second template that reinstalls Node/etc. Dedicated agent images remain an
-optional later optimization (pin/Hub), not the default BYO path.
+**kit-core** ships the mise **binary**. **mise-workspace** activates shims /
+allowlists. Project languages stay on mise — never apt toolchains in the floor.
 
 ## In scope (examples we maintain)
 
-- Shared `_bake` (mise binary, neovim, agent CLIs, non-interactive UX)
-- Thin templates: cursor, opencode, shell (workplace floor)
-- Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras
+- `templates/kit-core`, `templates/kit-cursor`
+- Mixins: mise-workspace, agent-workspace, pi; optional lsp-mise, apt-extras
 - CLI lifecycle + host vault; sbx version floor for tested CLIs
-- Docs that state bake vs kit and this scope
+- `deploy/` VPS path converging on the same floor
+- Docs that state core vs kits and this scope
 
-## Parked / broken (do not use)
+## Out of scope / abandoned
 
-- **`pi` / `hermes` sbx recipes** — stubbed in `config/agents.yaml`. Kit and
-  dedicated-image attempts failed create under sbx.
-- **Next for Pi (and later Hermes):** plain Docker under [`deploy/`](../deploy/)
-  (Compose for VPS). sbx-kit may later **report** policy → compose drift; it
-  does not manage deploy lifecycle yet.
-
-## Out of scope (not first-party examples)
-
-- **Oh My Pi (`omp`) and other Pi/Hermes forks** — remote registry or local tree
-- Nested sandboxes inside sbx (e.g. pi-docker-sandbox)
-- Host `~/.cursor` / nvim config sync inside **sbx-kit** (optional kits only if ever)
-- Playwright / browsers / heavy FE in default images (team kits or remote recipes)
-- Baking every popular `pi install` package
-- Authored kit-spec v2 until released `sbx kit validate` accepts it
-- Full CI → Hub publish and compose export (follow-ups; design should stay compatible)
-
-## Pi / Hermes specifically
-
-**sbx-kit recipes are stubbed** (`stub: true`). Use [`deploy/`](../deploy/) for
-Pi on Docker/Compose (VPS). Hermes can follow the same multilayer pattern.
-Oh My Pi / other forks: remote registry or `SBX_TREE` only.
+- Extending fat official templates then `apt purge` languages (`_bake` strip)
+- First-party `*-mise-docker` thins on `cursor-agent-docker` / `shell-docker` / …
+- Baking every popular agent variant; Hermès until core+cursor+pi are boring
+- Nested sandboxes inside sbx; host `~/.cursor` sync in core CLI
 
 ## Compatibility
 
 - Kits: **schemaVersion `"1"`** on released sbx (see `kits/README.md`)
 - CLI: `sbx-kit` requires Docker `sbx` >= floor in `cli/internal/sbxcompat`
 
-When in doubt: prefer a smaller example tree and a clear extension path over
-shipping every popular agent variant.
+When in doubt: prefer a smaller example tree and a clear extension path.

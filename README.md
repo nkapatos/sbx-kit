@@ -5,7 +5,7 @@ Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes
 **Sandbox = agent workplace; host = human workplace** by default. First-party
 images are a **lean core** (debian + sbx glue + mise) with thin agent layers —
 not fat official `docker/sandbox-templates:*` bases. This repo ships a few
-**example** recipes (core / cursor / pi + mise mixins + portable state). Bring
+**example** recipes (core / cursor + mise mixins + portable state). Bring
 your own templates/kits/catalog when you want a different stack.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
@@ -34,7 +34,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Shipped | [`deploy/`](deploy/) | Docker/Compose VPS twin — see [`deploy/docs/vps-setup.md`](deploy/docs/vps-setup.md) |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/mise-workspace`](kits/mise-workspace/), [`kits/agent-workspace`](kits/agent-workspace/) | Default mixins |
-| Shipped | [`kits/pi`](kits/pi/) | Pi install mixin on kit-core |
+| Shipped | [`kits/pi`](kits/pi/) | Thin DeepSeek mixin for future kit-pi image |
 | Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional capability mixins |
 | Follow-up | CI → Hub images, Compose export from CLI, SSH auth socket, more agent layers | |
 

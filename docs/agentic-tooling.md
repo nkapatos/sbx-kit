@@ -2,10 +2,7 @@
 
 **Audience:** contributors and users of this toolkit.  
 **Goal:** own **lean core** image + thin agent layers, plus runtime-agnostic mixin
-kits (`mise-workspace`, `agent-workspace`, optional capability kits). CLI stays
-for lifecycle, migrate, and (later) Compose/VPS export.
-
-This file is the source of truth for *what goes where*. Consumer READMEs are secondary.
+kits. CLI stays for lifecycle, migrate, and (later) Compose/VPS export.
 
 ---
 
@@ -19,10 +16,10 @@ debian:bookworm-slim
         │                             # no Node/Go/Java/Rust project toolchains
         ├── kits/mise-workspace       # activate + allowlists (not the binary)
         ├── kits/agent-workspace
-        ├── kits/lsp-mise | apt-extras | pi   # optional
+        ├── kits/lsp-mise | apt-extras | pi(creds)   # optional
         │
-        └── templates/kit-cursor      # Cursor agent CLI only
-                └── sbx_agent: cursor + same mixins
+        ├── templates/kit-cursor      # Cursor agent CLI
+        └── templates/kit-pi          # next — Pi baked via mise on core
 
 # VPS: deploy/ converges on the same floor (Compose); CLI export later
 ```
@@ -30,27 +27,26 @@ debian:bookworm-slim
 | Concern | Lives in | Notes |
 | --- | --- | --- |
 | sbx glue + mise binary | **kit-core** | No language apt packages |
-| Agent binary (Cursor, …) | **Thin layer** on kit-core | e.g. kit-cursor |
-| Mise activate / registry allowlist | **mise-workspace** | Runtime-agnostic |
+| Agent binary | **Thin layer** on kit-core | kit-cursor now; kit-pi next |
+| Mise activate / allowlist | **mise-workspace** | Runtime-agnostic |
 | Portable agent state | **agent-workspace** | Host vault via CLI |
 | Project language versions | **Project `mise.toml`** | Never bake into the image |
-| Official fat `sandbox-templates:*` | **Not used** for first-party | Abandoned purge/`_bake` approach |
+| Official fat bases + apt purge | **Abandoned** | Do not revive |
 
 **Hard rules**
 
-1. `mise-workspace` is **not** Cursor-specific.
-2. Do **not** set `environment.variables.PATH` in kits.
-3. Do **not** maintain apt-purge lists against official fat bases.
+1. `mise-workspace` is not Cursor-specific.
+2. Do not set `environment.variables.PATH` in kits.
+3. Do not install agent CLIs in kit `commands.install` — bake image layers.
 4. Never put bash completion scripts in `/etc/sandbox-persistent.sh`.
-5. Default recipes: kit-core or kit-cursor + mise + portable state.
 
 ---
 
 ## First-party templates
 
-| Image tag | Role | Used with |
+| Image tag | Role | Recipe |
 | --- | --- | --- |
-| `local/sbx-kit-core:latest` | Lean floor | `shell` / recipe `kit-core`, `pi` |
+| `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
 | `local/sbx-kit-cursor:latest` | + Cursor agent | `cursor` / `kit-cursor` |
 
 ```bash
@@ -62,25 +58,14 @@ sbx-kit run --agent cursor --yes
 
 ---
 
-## Kits
-
-See [kits/README.md](../kits/README.md). Defaults on recipes: `mise-workspace` +
-`agent-workspace`. Template must provide `/usr/local/bin/mise` (kit-core).
-
-**After changing pins in mise.toml:** `mise install && mise prune -y` (prefer a
-fresh login shell if env looks stale).
-
----
-
 ## Follow-ups
 
 | Item | Status |
 | --- | --- |
-| kit-core + kit-cursor | Done (proven under sbx) |
-| Drop official-base `_bake` thins | Done |
-| Pi mixin on kit-core | Wired; harden install/activate later |
-| SSH auth socket in lean boxes | Open |
-| Cursor download domains on a cursor mixin | Open |
-| More agent layers (opencode, …) | Later |
-| CLI → Compose export / deploy convergence | Later |
-| Hub publish | Later |
+| kit-core + kit-cursor | Done |
+| Drop official-base thins | Done |
+| Harden kit-core | In progress |
+| kit-pi image layer + pi creds mixin | Next after core harden |
+| SSH auth socket | Open |
+| Cursor download domains on a mixin | Open |
+| CLI → Compose export | Later |

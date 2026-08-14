@@ -3,9 +3,8 @@ kind: mixin
 name: pi
 displayName: Pi
 description: >
-  Installs Pi coding agent via mise on kit-core (or any mise-prepared shell
-  template). Create-time install only. Adds DeepSeek credentials
-  (openai/google/xai are already declared by the shell agent).
+  Thin mixin for a future kit-pi image: DeepSeek credentials only.
+  Does not install Pi — bake the agent on kit-core (same pattern as kit-cursor).
 
 network:
   allowedDomains:
@@ -27,33 +26,12 @@ environment:
   proxyManaged:
     - DEEPSEEK_API_KEY
 
-commands:
-  install:
-    - description: Install Pi via mise (node, aube, pnpm, npm:pi)
-      user: "1000"
-      command: |
-        set -euo pipefail
-        export MISE_DATA_DIR=/mise MISE_CONFIG_DIR=/mise MISE_CACHE_DIR=/mise/cache
-        export PATH="/mise/shims:${PATH:-/usr/local/bin:/usr/bin:/bin}"
-        if [[ ! -x /usr/local/bin/mise ]]; then
-          echo "ERROR: /usr/local/bin/mise missing — load kit-core first" >&2
-          exit 1
-        fi
-        eval "$(/usr/local/bin/mise activate bash)"
-        mise settings add idiomatic_version_file_enable_tools node
-        mise use -g node@latest
-        mise use -g aube@latest
-        mise use -g pnpm@latest
-        mise use -g 'npm:@earendil-works/pi-coding-agent'
-        command -v pi
-        pi --version
-
 agentContext: |
   ## Pi
 
-  Pi is installed with mise (`npm:@earendil-works/pi-coding-agent`). Prefer mise
-  for Node and package-manager updates (`mise use -g …`, `mise upgrade`).
+  The Pi binary belongs in the **kit-pi** image (mise-baked on kit-core), not
+  this mixin. This kit only adds DeepSeek proxy credentials.
 
-  Host secrets: shell already wires openai/google/xai. This kit adds deepseek —
-  `sbx secret set -g openai|google|xai|deepseek`. Do not put real keys in the
-  sandbox env or in `~/.pi/agent/auth.json` unless the human uses `/login`.
+  Host: `sbx secret set -g openai|google|xai|deepseek`. Shell already declares
+  openai/google/xai; do not put real keys in the sandbox env or
+  `~/.pi/agent/auth.json` unless the human uses `/login`.

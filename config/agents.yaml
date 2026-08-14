@@ -5,7 +5,6 @@
 # when pointing SBX_TREE at another templates/kits repo.
 #
 # Optional capability mixins (not in defaults): lsp-mise, apt-extras.
-# Add them to a recipe's kits: list when you want box LSPs or apt extras.
 # Product scope: docs/product-scope.md
 
 defaults:
@@ -23,7 +22,7 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-  # Cursor agent on kit-core (preferred).
+  # Cursor agent layered on kit-core.
   cursor:
     sbx_agent: cursor
     image_name: sbx-kit-cursor
@@ -31,7 +30,7 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-  # Alias for the same image (matches early kit-cursor testing).
+  # Same image as cursor (early testing name).
   kit-cursor:
     sbx_agent: cursor
     image_name: sbx-kit-cursor
@@ -39,12 +38,4 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-  # Pi mixin on kit-core (install via mise at create).
-  pi:
-    sbx_agent: shell
-    image_name: sbx-kit-core
-    template_fallback: local/sbx-kit-core:latest
-    kits:
-      - mise-workspace
-      - agent-workspace
-      - pi
+  # Next: kit-pi image layer on kit-core (not create-time install).

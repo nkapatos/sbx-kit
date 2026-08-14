@@ -16,7 +16,8 @@ Images are **linux** (arm64/amd64) — they run inside the sbx microVM.
 | [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `shell` | Minimal core; mise binary; VPS floor later |
 | [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `cursor` | Extends kit-core; Cursor agent CLI |
 
-Load `kit-core` before `kit-cursor`. Recipes: `kit-core`, `cursor` / `kit-cursor`, `pi` (core + pi mixin).
+Load `kit-core` before `kit-cursor`. Recipes: `kit-core`, `cursor` / `kit-cursor`.
+Pi will be a `kit-pi` layer later (same pattern).
 
 `ResolveBuild` still honors optional `bake.env` → sibling `_bake` for external
 `SBX_TREE` layouts; this repo no longer ships that pattern.

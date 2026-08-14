@@ -28,12 +28,18 @@ environment:
     - DEEPSEEK_API_KEY
 
 commands:
-  startup:
-    - command: ["pi", "--approve"]
   install:
     - description: Install Pi via mise (node, aube, pnpm, npm:pi)
-      # user: "1000"
+      user: "1000"
       command: |
+        set -euo pipefail
+        export MISE_DATA_DIR=/mise MISE_CONFIG_DIR=/mise MISE_CACHE_DIR=/mise/cache
+        export PATH="/mise/shims:${PATH:-/usr/local/bin:/usr/bin:/bin}"
+        if [[ ! -x /usr/local/bin/mise ]]; then
+          echo "ERROR: /usr/local/bin/mise missing — load kit-core first" >&2
+          exit 1
+        fi
+        eval "$(/usr/local/bin/mise activate bash)"
         mise settings add idiomatic_version_file_enable_tools node
         mise use -g node@latest
         mise use -g aube@latest

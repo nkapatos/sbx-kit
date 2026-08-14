@@ -21,8 +21,10 @@ ARG TARGETARCH
 
 # Official cursor-agent-docker preconfigures these so agent traffic works through
 # the sbx host proxy (HTTP/1.1 + SSE). Mirror that on our lean floor.
+# Keep Cursor creds in memory — do not write API keys to the image filesystem.
 ENV NODE_USE_ENV_PROXY=1 \
-    NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+    NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
+    AGENT_CLI_CREDENTIAL_STORE=memory
 
 USER agent
 WORKDIR /home/agent

@@ -53,7 +53,15 @@ agentContext: |
   README only — add `refs/`, `docs/`, or `scratch/` as needed.
 
   Cursor sessions/config under `/home/agent/.cursor` are included in
-  exports; caches are excluded and rebuild on a fresh sandbox.
+  exports; caches and credential-shaped paths are excluded.
+
+  **Do not** dump `.env`, tokens, or `auth.json` into `portable/` or
+  `~/.cursor` — `--keep-state` would copy them to the host vault.
+
+  Prefer HTTPS + `sbx secret` / proxy injection for git and cloud APIs.
+  Do not run `gh auth login` or overwrite `proxy-managed` sentinels with
+  real tokens. If `SSH_AUTH_SOCK` is present, treat it as a host-forwarded
+  agent (full key use without printing the key) — prefer not relying on it.
 
   The human can preserve this across sandbox recreate with:
   - `sbx-kit rm --agent <recipe> --keep-state` (export to host XDG profiles)

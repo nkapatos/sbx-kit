@@ -1,5 +1,5 @@
 # Portable agent workplace state for sbx-kit (host vault via sbx cp).
-# Paths are absolute inside the sandbox. Caches/indexes are excluded.
+# Paths are absolute inside the sandbox. Caches/indexes/secrets are excluded.
 #
 # INCLUDE <path>
 # EXCLUDE <tar --exclude pattern relative to archive members, or path prefix>
@@ -15,3 +15,14 @@ EXCLUDE home/agent/.cursor/**/CachedProfilesData
 EXCLUDE home/agent/.cursor/**/GPUCache
 EXCLUDE home/agent/.cursor/**/Code Cache
 EXCLUDE home/agent/.cursor/ai-tracking
+
+# Never pack secrets / credential dumps into the host vault (--keep-state).
+EXCLUDE **/.env
+EXCLUDE **/.env.*
+EXCLUDE **/*credential*
+EXCLUDE **/*credentials*
+EXCLUDE **/*secret*
+EXCLUDE **/.netrc
+EXCLUDE home/agent/.ssh
+EXCLUDE home/agent/.cursor/**/auth.json
+EXCLUDE home/agent/.pi/**/auth.json

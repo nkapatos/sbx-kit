@@ -64,9 +64,11 @@ sbx-kit run --agent cursor --yes
 | --- | --- |
 | kit-core + kit-cursor | Done |
 | Drop official-base thins | Done |
-| Harden kit-core | Done (sudo group, locales, lean utils) |
+| Harden kit-core | Done (sudo, locales, utils, `/etc/sbx-agent-env.sh`) |
 | kit-pi image layer + pi creds mixin | Next |
 | Rebuild kit-cursor on new core | Host: reload kit-core then kit-cursor |
-| SSH auth socket | Open |
+| SSH auth socket | Host policy: do not forward by default; documented in agent-workspace |
 | Cursor download domains on a mixin | Open |
+| Host env allowlist into boxes | Open (sbx/host); prefer default-deny secrets |
+| DinD | Separate `-docker` variant later — not on default kit-core |
 | CLI → Compose export | Later |

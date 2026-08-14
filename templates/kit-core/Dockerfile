@@ -98,15 +98,20 @@ RUN set -eux; \
     chown -R agent:agent /home/agent
 
 # sbx sources this for every bash (interactive and BASH_ENV). No completions.
+# No secrets here — only tool/UX init (see /etc/sbx-agent-env.sh).
+COPY agent-env.sh /etc/sbx-agent-env.sh
 RUN set -eux; \
+    chmod 644 /etc/sbx-agent-env.sh; \
     touch /etc/sandbox-persistent.sh; \
     chmod 644 /etc/sandbox-persistent.sh; \
     chown agent:agent /etc/sandbox-persistent.sh; \
+    if ! grep -qF 'sbx-agent-env.sh' /etc/sandbox-persistent.sh; then \
+      printf '\n# sbx-agent-ux\n[ -f /etc/sbx-agent-env.sh ] && . /etc/sbx-agent-env.sh\n' \
+        >> /etc/sandbox-persistent.sh; \
+    fi; \
     printf '%s\n' \
       '# sbx-kit-core' \
       'umask 027' \
-      'export LANG="${LANG:-en_US.UTF-8}"' \
-      'export LC_ALL="${LC_ALL:-en_US.UTF-8}"' \
       > /etc/profile.d/sbx-kit-core.sh; \
     chmod 644 /etc/profile.d/sbx-kit-core.sh; \
     printf '%s\n' \
@@ -114,7 +119,6 @@ RUN set -eux; \
       'export BASH_ENV=/etc/sandbox-persistent.sh' \
       | tee /etc/profile.d/sandbox-persistent.sh >/dev/null; \
     chmod 644 /etc/profile.d/sandbox-persistent.sh; \
-    # Also prepend into system bashrc so non-login interactive shells pick it up.
     if [ -f /etc/bash.bashrc ] && ! grep -qF 'sandbox-persistent.sh' /etc/bash.bashrc; then \
       printf '\n# sbx-kit-core\nif [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi\nexport BASH_ENV=/etc/sandbox-persistent.sh\n' \
         >> /etc/bash.bashrc; \

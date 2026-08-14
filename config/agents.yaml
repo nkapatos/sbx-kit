@@ -15,6 +15,23 @@ defaults:
     - agent-workspace
 
 agents:
+  # Own lean floor (debian + sbx glue + mise). Preferred for new work.
+  kit-core:
+    sbx_agent: shell
+    image_name: sbx-kit-core
+    template_fallback: local/sbx-kit-core:latest
+    kits:
+      - mise-workspace
+      - agent-workspace
+  kit-cursor:
+    # Cursor agent layered on kit-core.
+    sbx_agent: cursor
+    image_name: sbx-kit-cursor
+    template_fallback: local/sbx-kit-cursor:latest
+    kits:
+      - mise-workspace
+      - agent-workspace
+  # Legacy: official docker/sandbox-templates:* via _bake (fat bases; leave as-is).
   cursor:
     sbx_agent: cursor
     image_name: sbx-cursor-mise-docker
@@ -38,7 +55,7 @@ agents:
       - mise-workspace
       - agent-workspace
   pi:
-    # Pi mixin on shell-mise: install via mise, startup launches pi.
+    # Pi mixin on shell-mise (legacy fat shell). Re-point to kit-core once proven.
     sbx_agent: shell
     image_name: sbx-shell-mise-docker
     template_fallback: local/sbx-shell-mise-docker:latest

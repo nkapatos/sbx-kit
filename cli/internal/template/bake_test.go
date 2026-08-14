@@ -37,6 +37,40 @@ func TestResolveBuildByPath(t *testing.T) {
 	}
 }
 
+func TestResolveBuildKitCoreDockerfile(t *testing.T) {
+	root := findRepoRoot(t)
+	b, err := template.ResolveBuild(root, "kit-core", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.ImageTag != "local/sbx-kit-core:latest" {
+		t.Fatalf("tag: %s", b.ImageTag)
+	}
+	if filepath.Base(b.Context) != "kit-core" {
+		t.Fatalf("context: %s", b.Context)
+	}
+	if filepath.Base(b.Dockerfile) != "Dockerfile" {
+		t.Fatalf("dockerfile: %s", b.Dockerfile)
+	}
+	if len(b.BuildArgs) != 0 {
+		t.Fatalf("unexpected build args: %#v", b.BuildArgs)
+	}
+}
+
+func TestResolveBuildKitCursorDockerfile(t *testing.T) {
+	root := findRepoRoot(t)
+	b, err := template.ResolveBuild(root, "kit-cursor", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.ImageTag != "local/sbx-kit-cursor:latest" {
+		t.Fatalf("tag: %s", b.ImageTag)
+	}
+	if filepath.Base(b.Context) != "kit-cursor" {
+		t.Fatalf("context: %s", b.Context)
+	}
+}
+
 func findRepoRoot(t *testing.T) string {
 	t.Helper()
 	wd, err := os.Getwd()

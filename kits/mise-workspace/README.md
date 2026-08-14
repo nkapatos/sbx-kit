@@ -1,6 +1,6 @@
 # Mise workspace kit
 
-Runtime-agnostic **mixin** for any mise-prepared sbx template (`cursor`, `opencode`, `shell`, Pi/Hermes, …). Configures mise; does not install language toolchains or bind to one agent image.
+Runtime-agnostic **mixin** for any mise-prepared sbx template (`kit-core`, `cursor`, …). Configures mise; does not install language toolchains or bind to one agent image.
 
 ## What it does
 

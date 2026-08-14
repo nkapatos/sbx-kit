@@ -17,13 +17,13 @@ ARG ENABLE_SUDO=1
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
     HOME=/home/agent \
     # Standard tool locations; do not fight sandbox PATH management later.
     PATH=/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    NO_PROXY=localhost,127.0.0.1,::1,172.17.0.0/16 \
-    no_proxy=localhost,127.0.0.1,::1,172.17.0.0/16 \
+    NO_PROXY=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
+    no_proxy=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
     MISE_DATA_DIR=/mise \
     MISE_CONFIG_DIR=/mise \
     MISE_CACHE_DIR=/mise/cache \
@@ -50,13 +50,21 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
       bash \
       curl \
+      dnsutils \
+      fd-find \
       git \
+      git-lfs \
+      iproute2 \
       jq \
       less \
+      locales \
       lsof \
       make \
       procps \
       ripgrep \
+      rsync \
+      socat \
+      sqlite3 \
       tini \
       unzip \
       xz-utils \
@@ -64,6 +72,11 @@ RUN set -eux; \
     if [ "${ENABLE_SUDO}" = "1" ]; then \
       apt-get install -y --no-install-recommends sudo; \
     fi; \
+    sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen; \
+    locale-gen en_US.UTF-8; \
+    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8; \
+    ln -sf "$(command -v fdfind)" /usr/local/bin/fd; \
+    git lfs install --system; \
     rm -rf /var/lib/apt/lists/*
 
 # Non-root workplace user (UID/GID 1000). Match official sandbox templates.
@@ -71,9 +84,12 @@ RUN set -eux; \
     groupadd --gid 1000 agent; \
     useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash agent; \
     if [ "${ENABLE_SUDO}" = "1" ]; then \
+      usermod -aG sudo agent; \
       echo 'agent ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/agent; \
       chmod 0440 /etc/sudoers.d/agent; \
+      # Keep proxy-related env across sudo (agent + %sudo).
       printf '%s\n' \
+        'Defaults:agent env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
         'Defaults:%sudo env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
         > /etc/sudoers.d/proxyconfig; \
       chmod 0440 /etc/sudoers.d/proxyconfig; \
@@ -89,8 +105,8 @@ RUN set -eux; \
     printf '%s\n' \
       '# sbx-kit-core' \
       'umask 027' \
-      'export LANG="${LANG:-C.UTF-8}"' \
-      'export LC_ALL="${LC_ALL:-C.UTF-8}"' \
+      'export LANG="${LANG:-en_US.UTF-8}"' \
+      'export LC_ALL="${LC_ALL:-en_US.UTF-8}"' \
       > /etc/profile.d/sbx-kit-core.sh; \
     chmod 644 /etc/profile.d/sbx-kit-core.sh; \
     printf '%s\n' \
@@ -98,6 +114,11 @@ RUN set -eux; \
       'export BASH_ENV=/etc/sandbox-persistent.sh' \
       | tee /etc/profile.d/sandbox-persistent.sh >/dev/null; \
     chmod 644 /etc/profile.d/sandbox-persistent.sh; \
+    # Also prepend into system bashrc so non-login interactive shells pick it up.
+    if [ -f /etc/bash.bashrc ] && ! grep -qF 'sandbox-persistent.sh' /etc/bash.bashrc; then \
+      printf '\n# sbx-kit-core\nif [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi\nexport BASH_ENV=/etc/sandbox-persistent.sh\n' \
+        >> /etc/bash.bashrc; \
+    fi; \
     if ! grep -qF 'sandbox-persistent.sh' /home/agent/.bashrc 2>/dev/null; then \
       printf '%s\n' \
         'if [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi' \
@@ -105,7 +126,9 @@ RUN set -eux; \
         | cat - /home/agent/.bashrc > /tmp/agent-bashrc; \
       mv /tmp/agent-bashrc /home/agent/.bashrc; \
       chown agent:agent /home/agent/.bashrc; \
-    fi
+    fi; \
+    printf 'core\n' > /etc/sbx-kit-agent; \
+    chmod 644 /etc/sbx-kit-agent
 
 ENV BASH_ENV=/etc/sandbox-persistent.sh
 

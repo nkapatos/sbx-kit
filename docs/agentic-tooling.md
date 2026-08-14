@@ -64,8 +64,9 @@ sbx-kit run --agent cursor --yes
 | --- | --- |
 | kit-core + kit-cursor | Done |
 | Drop official-base thins | Done |
-| Harden kit-core | In progress |
-| kit-pi image layer + pi creds mixin | Next after core harden |
+| Harden kit-core | Done (sudo group, locales, lean utils) |
+| kit-pi image layer + pi creds mixin | Next |
+| Rebuild kit-cursor on new core | Host: reload kit-core then kit-cursor |
 | SSH auth socket | Open |
 | Cursor download domains on a mixin | Open |
 | CLI → Compose export | Later |

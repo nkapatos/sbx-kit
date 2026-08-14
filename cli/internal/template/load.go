@@ -147,25 +147,9 @@ func loadContainer(b *Build, ociTar, dockerTar string) error {
 }
 
 // smokeAgentBinary verifies layered agent images expose their CLI on PATH before
-// import. Catches "agent binary not found" failures early.
+// import. No first-party layered agent templates currently need a binary smoke.
 func smokeAgentBinary(b *Build) error {
-	bin := ""
-	switch b.Name {
-	case "pi-mise-docker":
-		bin = "pi"
-	case "hermes-mise-docker":
-		bin = "hermes"
-	default:
-		return nil
-	}
-	if _, err := exec.LookPath("docker"); err != nil {
-		fmt.Printf("==> skip smoke (%s): docker CLI not available\n", bin)
-		return nil
-	}
-	fmt.Printf("==> smoke: docker run --rm --entrypoint which %s %s\n", b.ImageTag, bin)
-	if err := runLogged("docker", "run", "--rm", "--entrypoint", "which", b.ImageTag, bin); err != nil {
-		return fmt.Errorf("image %s is missing %q on PATH (rebuild parent shell-mise then this template): %w", b.ImageTag, bin, err)
-	}
+	_ = b
 	return nil
 }
 

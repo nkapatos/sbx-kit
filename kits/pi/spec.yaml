@@ -1,52 +1,53 @@
 schemaVersion: "1"
-kind: sandbox
+kind: mixin
 name: pi
 displayName: Pi
 description: >
-  BROKEN / parked. Do not use with sbx-kit run. Create fails (sbx 500).
-  Next: plain Docker/Compose for VPS. Spec kept for reference only.
-
-sandbox:
-  image: "local/sbx-shell-mise-docker:latest"
-  aiFilename: AGENTS.md
-  entrypoint:
-    run: [pi]
+  Installs Pi coding agent via mise on shell-mise (or any mise-prepared shell
+  template). Create-time install only. Adds DeepSeek credentials
+  (openai/google/xai are already declared by the shell agent).
 
 network:
-  serviceDomains:
-    api.anthropic.com: anthropic
-    console.anthropic.com: anthropic
-    claude.ai: anthropic
-  serviceAuth:
-    anthropic:
-      headerName: x-api-key
-      valueFormat: "%s"
   allowedDomains:
-    - registry.npmjs.org
-    - "**.npmjs.org"
-    - nodejs.org
-    - "**.nodejs.org"
-    - github.com
-    - "**.github.com"
-    - objects.githubusercontent.com
-    - mise.jdx.dev
-    - "**.jdx.dev"
-    - api.anthropic.com
-    - console.anthropic.com
-    - claude.ai
+    - api.deepseek.com
+  serviceDomains:
+    api.deepseek.com: deepseek
+  serviceAuth:
+    deepseek:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+
+credentials:
+  sources:
+    deepseek:
+      env:
+        - DEEPSEEK_API_KEY
 
 environment:
   proxyManaged:
-    - ANTHROPIC_API_KEY
+    - DEEPSEEK_API_KEY
 
 commands:
+  startup:
+    - command: ["pi", "--approve"]
   install:
-    - description: Install Pi (mise node + npm) via kit setup script
-      user: "1000"
-      command: "bash /home/agent/.local/share/sbx-kit/bin/setup-pi.sh"
+    - description: Install Pi via mise (node, aube, pnpm, npm:pi)
+      # user: "1000"
+      command: |
+        mise settings add idiomatic_version_file_enable_tools node
+        mise use -g node@latest
+        mise use -g aube@latest
+        mise use -g pnpm@latest
+        mise use -g 'npm:@earendil-works/pi-coding-agent'
+        command -v pi
+        pi --version
 
 agentContext: |
-  ## Pi (sbx-kit example) — BROKEN
+  ## Pi
 
-  This kit path is parked. Prefer a plain Docker/Compose image built from the
-  shell-mise bake floor when Pi is needed on a VPS or outside sbx.
+  Pi is installed with mise (`npm:@earendil-works/pi-coding-agent`). Prefer mise
+  for Node and package-manager updates (`mise use -g …`, `mise upgrade`).
+
+  Host secrets: shell already wires openai/google/xai. This kit adds deepseek —
+  `sbx secret set -g openai|google|xai|deepseek`. Do not put real keys in the
+  sandbox env or in `~/.pi/agent/auth.json` unless the human uses `/login`.

@@ -37,24 +37,12 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-  hermes:
-    # BROKEN / stub: sbx BYO agent path blocked; will redo as plain Docker/Compose for VPS.
-    sbx_agent: hermes
-    image_name: sbx-hermes-mise-docker
-    template_fallback: docker.io/local/sbx-hermes-mise-docker:latest
-    kits:
-      - mise-workspace
-      - agent-workspace
-      - hermes
-    stub: true
   pi:
-    # BROKEN / stub: kit+template BYO on shell-mise failed create (500). Parked.
-    # Next: plain Dockerfile / Compose for VPS — not more sbx kit experiments.
-    sbx_agent: pi
+    # Pi mixin on shell-mise: install via mise, startup launches pi.
+    sbx_agent: shell
     image_name: sbx-shell-mise-docker
     template_fallback: local/sbx-shell-mise-docker:latest
     kits:
       - mise-workspace
       - agent-workspace
       - pi
-    stub: true

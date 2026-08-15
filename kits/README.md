@@ -35,11 +35,12 @@ set any you use. See `sbx-kit concepts`.
 **Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose
 `sandbox.image` is an official template.
 
-**Custom path:** images under `templates/` (`kit-core` → `kit-shell` | `kit-cursor`).
-`sbx-kit image load` for local build/import; `sbx-kit image pull` for a registry
-tag. Pin the tag in the recipe once published. Same sandbox kit as Hub; the
-recipe `-t` overrides `sandbox.image`.
-Use `mise-workspace` only on images that ship `/usr/local/bin/mise`.
+**Custom shell + kits:** `kit-shell` (same as Hub shell: add kits, don’t bake).
+
+**Custom image on core:** `FROM kit-core` (`kit-cursor`, …). `image load` locally
+or `image pull` a registry tag; pin it in the recipe. Same sandbox kit as Hub;
+the recipe `-t` overrides `sandbox.image`. Use `mise-workspace` only on images
+that ship `/usr/local/bin/mise`.
 
 ## Composition
 

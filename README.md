@@ -23,7 +23,8 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 | Path | When | What you do |
 | --- | --- | --- |
 | **Official / stock** | Day-to-day on Hub kinds | Recipe with no image pin → `sbx run <kind> --kit …` (no `-t`) |
-| **Custom** | Lean floor (`kit-core` → `kit-shell` / `kit-cursor`) or your own image | `sbx-kit image load` while developing, or `sbx-kit image pull` for a registry tag; both import into sbx |
+| **Custom shell + kits** | Lean counterpart to Hub `shell` | `kit-shell` image; add kits (`kit-pi`, mixins) |
+| **Custom image on core** | Bake an agent image you own | `FROM kit-core` (e.g. `kit-cursor`); `image load` or `image pull` |
 
 ## Catalog
 

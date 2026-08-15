@@ -33,9 +33,9 @@ sbx-kit run kit-cursor --yes
 
 | Dir | Image tag | Recipe | Role |
 | --- | --- | --- | --- |
-| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `kit-core` | Bare floor |
-| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Official-shell counterpart: tini + bash |
-| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Cursor CLI on kit-core |
+| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | (parent; optional smoke) | `FROM` this to bake images |
+| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Hub-shell counterpart: tinishell; add **kits** |
+| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Cursor CLI **FROM kit-core** |
 
-Recipes: stock `shell` / `cursor` / `pi`; custom `kit-core` / `kit-shell` / `kit-cursor` / `kit-pi`.
-`kit-pi` uses the **kit-shell** image (same idea as Hub Pi on official shell).
+Recipes: stock `shell` / `cursor` / `pi`; custom `kit-shell` / `kit-cursor` / `kit-pi`.
+`kit-pi` uses **kit-shell** (same idea as Hub Pi on official shell).

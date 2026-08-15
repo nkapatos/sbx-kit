@@ -2,13 +2,16 @@
 
 **Tag:** `local/sbx-kit-core:latest`  
 **FROM:** `debian:bookworm-slim`  
-**sbx agent:** `shell` only so attach works; this image is the floor, not tinishell.
+**Role:** parent image. You `FROM` this to bake agent images (Cursor, later others).
+It is not the Hub-shell counterpart — that is [kit-shell](../kit-shell/), which
+you customize with **kits**.
 
 ## Why this image
 
 Official `docker/sandbox-templates:*` ship language toolchains we will not
-maintain. This floor is intentionally thin. **kit-shell** is tini + login bash
-on top of this; **kit-cursor** bakes the Cursor CLI here (not via kit-shell).
+maintain. This floor is intentionally thin. **kit-cursor** bakes the Cursor CLI
+here. **kit-shell** is a tiny attach image on the same floor so you can emulate
+`sbx run shell` and add kits (e.g. Pi).
 
 | In image | Out of image (on purpose) |
 | --- | --- |
@@ -26,7 +29,10 @@ env glue → mise. See comments in `Dockerfile`.
 
 ```bash
 sbx-kit image load --engine docker kit-core
-sbx-kit run kit-core --yes
+# then bake a child, e.g.:
+sbx-kit image load --engine docker kit-cursor
+sbx-kit run kit-cursor --yes
 ```
 
-Agent layers: [kit-shell](../kit-shell/) (tiny shell), [kit-cursor](../kit-cursor/).
+Children: [kit-cursor](../kit-cursor/) (baked agent), [kit-shell](../kit-shell/)
+(tinishell + kits). `sbx-kit run kit-core` only smokes the floor.

@@ -20,19 +20,18 @@ Agents Hub doesn’t ship (e.g. Pi) fit as **sandbox kits** on an official shell
 template (`startup` + trust args), with credentials through `sbx secret` /
 proxyManaged — not by stripping or rebaking Hub images.
 
-Local lean images (`kit-core` → `kit-shell` or `kit-cursor`) are for when you want a thin
-floor or a custom agent image you pull **local or remote**. Same approach for
-future baked agents on core; not a substitute for the Hub+kits path.
+Local `kit-shell` emulates Hub shell (add kits). Local agent images (`kit-cursor`)
+are `FROM kit-core`, pulled local or remote — not a substitute for Hub+kits.
 
 ---
 
 ## Architecture
 
 ```text
-                    ┌── Hub / registry template (sbx pulls)
-sbx agent + kits ───┤     sandbox kits start extra agents on shell, etc.
-                    └── custom: kit-core → kit-shell | kit-cursor
-                              pull local (image load) or remote registry (image pull)
+                    ┌── Hub shell / kit-shell  → add kits (pi, mixins, …)
+sbx agent + kits ───┤
+                    └── FROM kit-core → baked agent image (kit-cursor, …)
+                              pull local (image load) or remote (image pull)
 
 kits: agent-workspace (default) | mise-workspace | pi (sandbox + provider secrets) | …
 CLI: recipes, placement, state export/import/upgrade; later recipe registry
@@ -67,12 +66,12 @@ in the recipe when ready.
 
 | Image tag | Role | Recipe |
 | --- | --- | --- |
-| `local/sbx-kit-core:latest` | Bare floor | `kit-core` |
-| `local/sbx-kit-shell:latest` | tini + login bash | `kit-shell` |
-| `local/sbx-kit-cursor:latest` | Cursor bootstrap on core | `kit-cursor` |
+| `local/sbx-kit-core:latest` | Parent (`FROM`) for baked images | smoke only |
+| `local/sbx-kit-shell:latest` | Hub-shell counterpart; add kits | `kit-shell` / `kit-pi` |
+| `local/sbx-kit-cursor:latest` | Cursor bootstrap **FROM kit-core** | `kit-cursor` |
 
-Stock recipes: `shell`, `cursor`, `pi` (sandbox kit on official shell; provider keys on the kit).
-Custom: `kit-core`, `kit-shell`, `kit-cursor`, `kit-pi` (Pi kit on kit-shell).
+Stock: `shell`, `cursor`, `pi` (kits on official shell).
+Custom shell+kits: `kit-shell`, `kit-pi`. Custom image on core: `kit-cursor`.
 
 ```bash
 sbx-kit concepts

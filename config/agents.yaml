@@ -41,7 +41,7 @@ agents:
     kits:
       - pi
 
-  # Custom floor (bare minimum). Agent layers and kit-shell sit on this.
+  # Parent image (FROM for kit-cursor, etc.). Optional smoke attach only.
   kit-core:
     sbx_agent: shell
     image_name: sbx-kit-core
@@ -49,7 +49,7 @@ agents:
     kits:
       - mise-workspace
 
-  # Custom counterpart to official shell: kit-core + tini + login bash.
+  # Emulates Hub shell: tinishell on kit-core. Add stuff with kits, not layers.
   kit-shell:
     sbx_agent: shell
     image_name: sbx-kit-shell

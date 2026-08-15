@@ -21,16 +21,16 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 | Path | How |
 | --- | --- |
-| **Hub + kits** | Stock `sbx` kind; recipes attach kits (incl. sandbox kits that start agents Hub doesn’t ship). Secrets via `sbx secret` / proxyManaged. |
-| **Custom floor** | `kit-core` → `kit-shell` (tini + bash) or `kit-cursor`. Build/load locally or pull from a registry. |
+| **Shell + kits** | Official Hub `shell` or our `kit-shell`. Add stuff with **kits** (Pi, mixins). Do not bake a new image. |
+| **Image on core** | `FROM kit-core` for custom images you own (e.g. `kit-cursor`). Build/load locally or pull a registry tag. |
 
 ## Layering rule (local / custom images)
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **kit-core** | OS essentials, modern utils, sbx glue, mise **binary** | `templates/kit-core` |
-| **kit-shell** | Almost nothing: tini + login bash (Hub shell counterpart) | `templates/kit-shell` |
-| **Agent image** | Bootstrap install/layout only | `kit-cursor` on kit-core |
+| **kit-core** | Parent image: OS, utils, sbx glue, mise **binary** | `FROM` for `kit-cursor` (and later baked agents) |
+| **kit-shell** | Hub-shell counterpart: tini + login bash only | Kits on top (`kit-pi`), same as official `shell` |
+| **Agent image** | Bootstrap install/layout only | `kit-cursor` **FROM kit-core**, not via kit-shell |
 | **Mixin kit** | Activate, allowlists, state, preference CLIs | `mise-workspace`, `agent-workspace`, `apt-extras` |
 | **Sandbox kit** | Agent Hub doesn’t ship: image + entrypoint + install + provider secrets | `kits/pi` (recipes `pi` / `kit-pi`) |
 | **Project** | Language pins | `mise.toml` |

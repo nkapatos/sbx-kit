@@ -3,10 +3,9 @@
 Optional **mixin** for small apt packages inside the sandbox (Linux VM — use
 apt here, not host Homebrew).
 
-Default set is light (`tree`, `zip`, archive helpers, etc.). Use this kit (or a
+Default set is light (`tree`, archive helpers, `ag`). Use this kit (or a
 team fork) for **preference CLIs** such as `gh` / `glab` — they are **not**
-baked into `kit-core`. Do **not** put Go/Node/Rust/Python toolchains here —
-that is mise + project `mise.toml`.
+baked into `kit-core`. Zip/unzip/zstd already live on the custom floor.
 
 ```bash
 # Catalog: add apt-extras to a recipe's kits list, or:

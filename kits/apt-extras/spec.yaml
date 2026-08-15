@@ -15,8 +15,6 @@ commands:
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
           tree \
-          zip \
-          unzip \
           moreutils \
           silversearcher-ag
         sudo rm -rf /var/lib/apt/lists/*

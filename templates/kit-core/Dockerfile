@@ -14,7 +14,8 @@
 #   5) sbx persistent-env + UX
 #   6) mise binary (occasional: mise releases)
 #
-# Not here: Node/Go/Java/Rust, gh/glab, Docker Engine (future -docker variant).
+# Not here: Node/Go/Java/Rust/Python, gh/glab, Docker Engine (future -docker variant).
+# C toolchain is here so mise-managed langs can compile native addons.
 #
 # Tag: local/sbx-kit-core:latest (Docker FROM parent — not imported into sbx)
 #   sbx-kit image load --engine docker kit-shell
@@ -40,7 +41,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PAGER=cat \
     GIT_PAGER=cat \
     EDITOR=true \
-    VISUAL=true
+    VISUAL=true \
+    TZ=UTC
 
 # --- 1) CA bootstrap (bookworm-slim has none; cleartext apt often blocked) ---
 RUN set -eux; \
@@ -62,12 +64,21 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       bash \
+      build-essential \
+      bzip2 \
       curl \
       git \
       locales \
+      openssh-client \
+      patch \
+      pkg-config \
       tini \
+      tzdata \
       unzip \
+      wget \
       xz-utils \
+      zip \
+      zstd \
     ; \
     if [ "${ENABLE_SUDO}" = "1" ]; then \
       apt-get install -y --no-install-recommends sudo; \
@@ -83,13 +94,16 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
       dnsutils \
       fd-find \
+      file \
       git-lfs \
       iproute2 \
+      iputils-ping \
       jq \
       less \
       lsof \
-      make \
+      openssl \
       procps \
+      psmisc \
       ripgrep \
       rsync \
       socat \

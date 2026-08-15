@@ -18,9 +18,9 @@ you can emulate `sbx run shell` and add kits (e.g. Pi).
 | In image | Out of image (on purpose) |
 | --- | --- |
 | sbx glue, `agent`+sudo, mise **binary** | Project languages → **mise** |
-| git (+ lfs), curl, small modern utils | Preference CLIs (`gh`, `glab`, …) → **kits** / in-box update |
-| `/etc/sbx-agent-env.sh` + persistent env | Docker Engine → future **`-docker`** / VPS host |
-| | Agent CLIs → **agent layers** (layout bootstrap only) |
+| git (+ lfs), curl/wget, ssh client, zip/zstd | Preference CLIs (`gh`, `glab`, …) → **kits** / in-box update |
+| C toolchain (`build-essential`) for native addons | Docker Engine → future **`-docker`** / VPS host |
+| rg/fd/jq/sqlite3 + small debug utils | Agent CLIs → **agent layers** (layout bootstrap only) |
 
 ## Docker layer cache
 

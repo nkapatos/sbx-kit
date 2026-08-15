@@ -7,8 +7,8 @@ normal use. Stock recipes need **no** image pin; `sbx` uses the official kind.
 
 | Layer | Rebuild when | Holds |
 | --- | --- | --- |
-| OS / essential apt | Debian major/minor | bash, curl, git, locales, tini, sudo |
-| Modern utils | Occasional floor adds | jq, ripgrep, fd, sqlite3, … |
+| OS / essential apt | Debian major/minor | bash, curl, git, ssh client, build-essential, zip/zstd, tini, sudo |
+| Modern utils | Occasional floor adds | jq, ripgrep, fd, sqlite3, openssl, ping, … |
 | sbx glue + mise binary | Glue or mise binary bumps | user, persistent-env, `/usr/local/bin/mise` |
 | **kit-shell** | Almost never | tini PID 1 + login bash only |
 | Agent layer | Intentional layout bootstrap only | Cursor (and later other agents) — **not** daily releases |

@@ -42,8 +42,44 @@ commands:
               'export SBX_KIT_STATE_MANIFEST="${SBX_KIT_STATE_MANIFEST:-/home/agent/.local/share/sbx-kit/state.manifest}"' \
               >> /etc/sandbox-persistent.sh
           fi
+          # Live Hub vs custom cheat-sheet. Not exported with --keep-state.
+          sudo mkdir -p /etc/sbx-kit
+          {
+            echo "# sbx-kit floor (this box; regenerated at kit startup)"
+            echo
+            if [ -f /etc/sbx-kit-agent ]; then
+              echo "kind: custom"
+              echo "layer: $(tr -d '[:space:]' < /etc/sbx-kit-agent)"
+              echo "languages: mise when present; do not apt Go/Node/Rust/Python"
+              echo "clis: only this image + kits — do not assume Hub gh/npm/go"
+            else
+              echo "kind: official"
+              echo "languages: use this Hub image's preinstalled toolchains"
+              echo "clis: use what the image shipped; do not add a parallel mise stack unless mise: yes"
+            fi
+            echo
+            if [ -x /usr/local/bin/mise ] && [ -d /mise ]; then echo "mise: yes"; else echo "mise: no"; fi
+            if command -v gh >/dev/null 2>&1; then echo "gh: yes"; else echo "gh: no"; fi
+            if command -v npm >/dev/null 2>&1; then echo "npm: yes"; else echo "npm: no"; fi
+            if command -v go >/dev/null 2>&1; then echo "go: yes"; else echo "go: no"; fi
+          } | sudo tee /etc/sbx-kit/floor.md >/dev/null
+          sudo chmod 644 /etc/sbx-kit/floor.md
 
 agentContext: |
+  ## This sandbox's floor
+
+  Follow **`/etc/sbx-kit/floor.md`** (written at create/start from *this* box).
+  Official Hub images and sbx-kit custom images do **not** have the same tools.
+
+  - **custom** (`/etc/sbx-kit-agent` exists, or floor.md `kind: custom`): lean
+    floor. Languages via **mise** when `mise: yes`. Do not assume Hub CLIs
+    (`gh`, global `npm`, Go, …).
+  - **official** (no `/etc/sbx-kit-agent`): Docker Hub template. Use the
+    image's preinstalled tools. Do not apt/mise a second toolchain unless
+    floor.md says `mise: yes`.
+
+  Other kits' agentContext still applies; floor.md wins on what is installed.
+
   ## Agent workplace state (sbx-kit)
 
   **Portable docs/refs** (agent-first, not the git tree):

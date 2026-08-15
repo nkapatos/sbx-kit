@@ -69,9 +69,11 @@ commands:
 agentContext: |
   ## Tooling (mise)
 
-  This sandbox uses **mise** for language runtimes when the project has
-  `mise.toml`, `.mise.toml`, or `.tool-versions`. The kit is runtime-agnostic
-  (Cursor, OpenCode, shell/Pi/Hermes, etc.).
+  This kit is for boxes with **mise** (custom sbx-kit images). If
+  `/etc/sbx-kit/floor.md` says `mise: no`, ignore this section and use the
+  Hub image's preinstalled tools.
+
+  When the project has `mise.toml`, `.mise.toml`, or `.tool-versions`:
 
   **First session (required once per new sandbox):**
   1. `cd` to the project workspace (the mounted host project path).
@@ -88,8 +90,11 @@ agentContext: |
   - Prefer mise-managed tools (`mise exec -- <cmd>` or shims). Do **not**
     `apt-get install` Go, Node, Rust, or Python toolchains for this project.
   - Match versions to the project pins; do not upgrade casually.
-  - Docker Engine inside the sandbox is fine for compose/build when using a `-docker` template.
-  - VCS is **git + gh** (non-interactive). Do not introduce jj unless a dedicated kit is loaded.
+  - `gh` is **not** on the lean floor unless a kit installed it — use
+    `command -v gh` (or floor.md) before calling it. Git over HTTPS +
+    `sbx secret` is enough.
+  - Docker Engine inside the sandbox only if this image includes it
+    (future `-docker` / VPS). Do not assume it.
 
   If tools are still missing after create, the human can run once:
   `sbx exec -it <sandbox> -- bash -lc 'cd <workspace> && mise trust mise.toml; mise install'`.

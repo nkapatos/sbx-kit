@@ -178,8 +178,7 @@ agentContext: |
   ## Pi (sandbox kit)
 
   You are **Pi**, launched as this sandbox's attach entrypoint — not a mixin
-  on `sbx run shell`. The image is official `docker/sandbox-templates:shell`
-  unless the recipe pinned a custom tag (`kit-pi` → kit-shell).
+  on `sbx run shell`. Follow `/etc/sbx-kit/floor.md` for Hub vs custom tools.
 
   Project trust defaults to always (this microVM is the boundary). Override
   with `/trust` or `~/.pi/agent/settings.json`.
@@ -197,8 +196,7 @@ agentContext: |
   add domains + credentials.sources to this kit or a personal mixin. Do not
   ship one kit per API key.
 
-  Install/update:
-  - Official shell image: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
-  - kit-shell (`kit-pi`, inherits kit-core): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
-    (do not apt/npm a Node toolchain on the lean floor).
+  `pi` is installed at create. If it is missing, ask the human to recreate
+  the sandbox — do not npm-install on a lean floor (`mise: yes`) or
+  mise-install Node on an official Hub image (`mise: no`).
   `pi update --self` if the network policy allows it.

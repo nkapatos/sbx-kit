@@ -32,5 +32,9 @@ want the binary present even without the kit.
 
 ## Pairing
 
-Always stack with `mise-workspace` on mise-prepared templates. Catalog defaults
-include both.
+Catalog **default** is this kit only. Stack `mise-workspace` on custom images
+that ship `/usr/local/bin/mise` (`kit-shell`, `kit-cursor`, `kit-pi`). Official
+Hub recipes do not get mise — they keep the image's own toolchains.
+
+At startup this kit writes `/etc/sbx-kit/floor.md` from live probes (Hub vs
+custom). That file is not part of `--keep-state` exports.

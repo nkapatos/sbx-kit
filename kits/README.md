@@ -47,3 +47,10 @@ overrides `sandbox.image`. Use `mise-workspace` only on images that ship
 
 Recipes in [`config/agents.yaml`](../config/agents.yaml). Catalog defaults list
 `agent-workspace`; recipe `kits:` are extra (mise-workspace, pi, …).
+
+**agentContext:** sbx concatenates each attached kit's blob at create. There is
+no Hub-vs-custom field in kit spec v1. Split by **which kits attach**
+(`mise-workspace` only on custom images) plus a live `/etc/sbx-kit/floor.md`
+from `agent-workspace` (probes `/etc/sbx-kit-agent`, mise, gh, npm, go). Do not
+inventory Hub toolchains in YAML — they drift. Dual-path kits (pi) stay
+detection-oriented.

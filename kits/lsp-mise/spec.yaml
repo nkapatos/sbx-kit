@@ -49,4 +49,5 @@ agentContext: |
   Global mise config: `/mise/config.toml` (box capabilities, not the project).
   Project language pins remain in the workspace `mise.toml`.
   After editing `/mise/config.toml`: `mise install` then `mise ls`.
+  Skip this if `/etc/sbx-kit/floor.md` says `mise: no`.
   Do not apt-install language servers when mise can provide them.

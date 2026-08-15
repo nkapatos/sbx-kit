@@ -3,7 +3,7 @@ kind: mixin
 name: apt-extras
 displayName: Apt extras
 description: >
-  Optional Linux packages via apt (sandbox is Ubuntu-based — not Homebrew).
+  Optional Linux packages via apt (sandbox is a Debian/Ubuntu VM — not Homebrew).
   Keep this lean; heavy stacks (Playwright, cloud CLIs) get their own kits.
 
 commands:
@@ -25,5 +25,8 @@ agentContext: |
   ## Apt extras
 
   Extra Linux packages were installed via the apt-extras kit (not Homebrew).
-  Prefer **mise** for language runtimes and LSPs. Use apt only for system
-  libraries and small CLI utilities that are not mise-managed.
+  This VM is Debian/Ubuntu — use apt, not host Homebrew.
+  Prefer **mise** for language runtimes and LSPs when floor.md says `mise: yes`.
+  Use apt only for system libraries and small CLI utilities that are not
+  mise-managed. On official Hub images, do not apt a second copy of a
+  toolchain the image already shipped.

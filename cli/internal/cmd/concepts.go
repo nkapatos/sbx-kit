@@ -23,14 +23,19 @@ func conceptsText() string {
 	return `sbx and sbx-kit use the same words for the same things.
 
   agent      (sbx)     What you run: shell, cursor, … Each boots from a template image.
-  template   (sbx)     The image behind an agent (Hub/official, or one you load).
+  template   (sbx)     The image behind an agent — official Hub, a registry tag, or
+                       one you build and load locally.
   kit        (sbx)     Create-time customization (network, credentials, startup, …).
 
   recipe     (sbx-kit) Named shortcut: which agent (+ optional template) + which kits.
                        So you do not pass kit paths by hand on every create.
 
 sbx-kit sits on top of sbx: recipes, kit placement, portable state, and thin
-helpers (template ls, check). It does not replace sbx secret, sbx run, or Hub pulls.
+helpers (template ls / load, check). It does not replace sbx secret, sbx run,
+or registry/Hub pulls.
+
+  template load   build + import a Dockerfile into sbx (dev / unpublished)
+  recipe image    may pin local/… or a published registry tag the same way
 
 Typical flow:
   sbx-kit recipes              # catalog shortcuts

@@ -12,8 +12,9 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
    images come from obvious.
 3. **Portable agent state** — survive recreate, host moves, and recipe changes
    (`upgrade` / export / import).
-4. **Own lean images when you want them** — rare rebuilds; mise for langs; kits
-   for preference CLIs; host-side agent refresh (not mid-session).
+4. **Own custom images when you want them** — build/load for development;
+   publish to a registry and pin tags in recipes; rare rebuilds; mise for langs;
+   kits for preference CLIs; host-side agent refresh (not mid-session).
 5. Keep the brew/share tree small and teachable.
 
 ## Two paths
@@ -21,7 +22,7 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 | Path | How |
 | --- | --- |
 | **Hub + kits** | Stock `sbx` agent/template; recipes attach kits (incl. sandbox kits that start agents Hub doesn’t ship). Secrets via `sbx secret` / proxyManaged. |
-| **Custom floor** | `kit-core` (+ optional baked agent layers like `kit-cursor`). Same pattern later for Pi/Hermès/… — pull local or remote; not Hub workarounds. |
+| **Custom floor** | `kit-core` (+ optional baked agent layers like `kit-cursor`). Build/load locally or pull from a registry; same pattern later for other agents. |
 
 ## Layering rule (local / custom images)
 

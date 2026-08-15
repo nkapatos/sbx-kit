@@ -76,7 +76,7 @@ For composed shortcuts (agent + kits), use: sbx-kit recipes`,
 			}
 
 			fmt.Fprintln(out)
-			fmt.Fprintln(out, "==> custom / local templates pinned by recipes")
+			fmt.Fprintln(out, "==> custom templates pinned by recipes (local or registry tags)")
 			if len(local) == 0 {
 				fmt.Fprintln(out, "  (none)")
 			} else {

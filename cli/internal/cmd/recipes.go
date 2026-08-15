@@ -19,8 +19,8 @@ func newRecipesCmd() *cobra.Command {
 		Long: `Recipes are sbx-kit shortcuts: an sbx agent, optional template override, and kits.
 
 SOURCE:
-  hub     stock agent template from sbx (no local image)
-  local   recipe pins image_name / template_fallback
+  stock    sbx stock agent template (no image pin in the recipe)
+  custom   recipe pins image_name / template_fallback (local/… or a registry tag)
 
 Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 		Example: `  sbx-kit recipes
@@ -65,11 +65,11 @@ Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 
 func recipeSource(a catalog.Agent) (source, image string) {
 	if a.ImageName == "" && a.TemplateFallback == "" {
-		return "hub", "-"
+		return "stock", "-"
 	}
 	image = a.ImageName
 	if image == "" {
 		image = a.TemplateFallback
 	}
-	return "local", image
+	return "custom", image
 }

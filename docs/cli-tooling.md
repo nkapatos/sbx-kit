@@ -1,7 +1,7 @@
 # Toolkit CLI (`sbx-kit`)
 
 Convenience layer on Docker AI Sandboxes (`sbx`): **recipes**, kit placement,
-portable state, and optional local template builds.
+portable state, and custom templates (build/load locally or pin a registry tag).
 
 Same words as sbx for **agent**, **template**, and **kit**. **Recipe** is the
 only sbx-kit-specific idea (named agent + kits shortcut). Run `sbx-kit concepts`

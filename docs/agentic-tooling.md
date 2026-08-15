@@ -59,7 +59,10 @@ CLI: recipes, placement, state export/import/upgrade; later recipe registry
 
 ---
 
-## First-party local templates (optional)
+## First-party templates (optional custom images)
+
+Build with `template load` while iterating; publish to a registry and pin the
+tag in the recipe when ready.
 
 | Image tag | Role | Recipe |
 | --- | --- | --- |

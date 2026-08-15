@@ -43,7 +43,8 @@ func newRunCmd() *cobra.Command {
   sbx-kit run --recipe <id> [--path <dir>]
       CREATE. Friendly sbx name defaults to the project dirname.
       --yes skips prompts (dirname or --sandbox-name).
-      Hub recipes use the stock agent template; local recipes use template_fallback.
+      Stock recipes use the sbx agent template; custom recipes may pin
+      a local/… tag or a published registry image.
 
   sbx-kit run --name <sandbox>
       ATTACH by friendly sbx name (what sbx ls shows).

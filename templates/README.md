@@ -1,8 +1,9 @@
 # Templates
 
-Optional **local** images — a lean floor for sbx when you do not want fat
-official `docker/sandbox-templates:*` bases. Hub recipes need **no** entry
-here; `sbx` pulls the official agent template.
+Optional **custom** images — lean floor when you do not want fat official
+`docker/sandbox-templates:*` bases. Develop with `sbx-kit template load`;
+**publish to a registry** and pin the tag in a recipe for normal use. Stock
+Hub recipes need **no** image pin; `sbx` uses the official agent template.
 
 | Layer | Rebuild when | Holds |
 | --- | --- | --- |

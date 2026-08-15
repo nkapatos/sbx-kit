@@ -55,6 +55,9 @@ and portable state. Same words as sbx for agent, template, and kit.
   sbx-kit check | status
   sbx-kit template ls | template load --engine docker <name>
 
+  template load builds/imports unpublished images; recipes may also pin
+  registry tags once images are published.
+
 Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
 Docs: docs/cli-tooling.md  ·  Override tree: SBX_TREE=`
 }

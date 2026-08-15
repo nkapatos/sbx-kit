@@ -45,7 +45,7 @@ Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"
 sbx-kit version   # sbx-kit + required range + detected sbx
 sbx-kit recipes
 
-# Hub path (no local build):
+# Stock Hub agent + kits (no custom image pin):
 cd ~/my-project
 sbx-kit init --agent cursor-hub .    # optional
 sbx-kit run --recipe cursor-hub --yes

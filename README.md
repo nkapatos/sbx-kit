@@ -1,8 +1,8 @@
 # sbx-kit
 
-Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): **kits** (create-time YAML), **recipes**, optional **local templates**, and the **`sbx-kit`** CLI.
+Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): **kits**, **recipes**, optional **custom templates** (build locally or publish to a registry), and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace.** Use this CLI to compose kits on top of **official Hub templates** (the supported Docker customization path) or on **local lean images** you build yourself. Recipes and portable state work for both.
+**Sandbox = agent workplace; host = human workplace.** Compose kits on **official Hub agents** or on **custom template images** (local `template load` today; registry tags when published). Recipes and portable state work for both.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 
@@ -13,17 +13,17 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 | Term | Meaning |
 | --- | --- |
 | **Agent** | What `sbx` runs (`shell`, `cursor`, …) — boots from a **template** image. |
-| **Template** | Image behind an agent (Hub via `sbx`, or local/`template load`). |
+| **Template** | Image behind an agent (official Hub, registry tag, or local `template load`). |
 | **Kit** | Create-time customization (`spec.yaml`). Not an image. |
-| **Recipe** | Named sbx-kit shortcut: agent (+ optional template) + kits. |
+| **Recipe** | Named sbx-kit shortcut: agent (+ optional template pin) + kits. |
 | **CLI** | `sbx-kit` — recipes, placement, state; see `sbx-kit concepts`. |
 
 ## Two ways to get a template
 
 | Path | When | What you do |
 | --- | --- | --- |
-| **Official / registry** | Day-to-day experiments, Docker’s supported model | Recipe with no local image → `sbx` uses the Hub agent template; kits layer on top |
-| **Custom (local or remote)** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit template load` and/or a registry tag in the recipe |
+| **Official / stock** | Day-to-day on Hub agents | Recipe with no image pin → `sbx` uses the stock agent template; kits layer on top |
+| **Custom** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit template load` while developing, and/or pin a **registry** tag in the recipe once published |
 
 ## Catalog
 
@@ -34,8 +34,8 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State + mise mixins (mise needs a mise-ready image) |
 | Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/deepseek-creds`](kits/deepseek-creds/) | Optional / trial mixins |
-| Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Optional lean local floor (not required for Hub recipes) |
-| Follow-up | Hub UX + recipe/kit discovery; one-shot local `template load`; agent refresh vs upgrade | |
+| Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Custom floor examples (load locally; publish to registry later) |
+| Follow-up | Registry publish for templates; recipe/kit discovery; agent refresh vs upgrade | |
 
 ## Layout
 
@@ -46,7 +46,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 ├── config/                      # agents.yaml + resource profiles
 ├── docs/                        # architecture, homebrew, CLI
 ├── kits/<name>/                 # mixins
-└── templates/<name>/Dockerfile  # optional local images (kit-core, kit-cursor, …)
+└── templates/<name>/Dockerfile  # custom images (build/load; publish to registry)
 ```
 
 Homebrew installs the binary plus `share/sbx-kit/{config,kits,templates,docs}`.
@@ -122,7 +122,7 @@ Host **git worktrees** are for parallel host-visible checkouts. For VM-private a
 
 ## Reference
 
-### Import engines (local builds only)
+### Import engines (`template load`)
 
 | Host | Command |
 | --- | --- |

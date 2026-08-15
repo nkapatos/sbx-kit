@@ -22,8 +22,7 @@ hot-swap mid-session.
 sbx-kit run cursor --yes
 sbx-kit run pi --yes
 
-# Custom images (load floor first):
-sbx-kit image load --engine docker kit-core
+# Custom images (loadable images only; kit-core is a FROM parent):
 sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 sbx-kit run kit-shell --yes
@@ -33,8 +32,8 @@ sbx-kit run kit-cursor --yes
 
 | Dir | Image tag | Recipe | Role |
 | --- | --- | --- | --- |
-| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | (parent; optional smoke) | `FROM` this to bake images |
-| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Hub-shell counterpart: tinishell; add **kits** |
+| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | — (not imported) | Docker `FROM` parent; later VPS host floor |
+| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Minimum empty image you load; add **kits** |
 | [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Cursor CLI **FROM kit-core** |
 
 Recipes: stock `shell` / `cursor` / `pi`; custom `kit-shell` / `kit-cursor` / `kit-pi`.

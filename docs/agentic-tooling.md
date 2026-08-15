@@ -3,8 +3,8 @@
 **Audience:** contributors and users of this toolkit.  
 **Goal:** recipes + kits on **official** or **custom** templates; portable state;
 optional lean **OS → utils → glue/mise → agent** images. CLI owns lifecycle and
-migrate. VPS/Compose packaging is parked for later (same image idea, different
-runtime).
+migrate. VPS/Compose packaging is parked for later (same **kit-core** parent,
+different runtime).
 
 ---
 
@@ -29,9 +29,9 @@ are `FROM kit-core`, pulled local or remote — not a substitute for Hub+kits.
 
 ```text
                     ┌── Hub shell / kit-shell  → add kits (pi, mixins, …)
-sbx agent + kits ───┤
+sbx agent + kits ───┤     kit-shell = minimum image imported into sbx
                     └── FROM kit-core → baked agent image (kit-cursor, …)
-                              pull local (image load) or remote (image pull)
+                              kit-core = Docker parent only (later VPS hosts)
 
 kits: agent-workspace (default) | mise-workspace | pi (sandbox + provider secrets) | …
 CLI: recipes, placement, state export/import/upgrade; later recipe registry
@@ -66,8 +66,8 @@ in the recipe when ready.
 
 | Image tag | Role | Recipe |
 | --- | --- | --- |
-| `local/sbx-kit-core:latest` | Parent (`FROM`) for baked images | smoke only |
-| `local/sbx-kit-shell:latest` | Hub-shell counterpart; add kits | `kit-shell` / `kit-pi` |
+| `local/sbx-kit-core:latest` | Parent (`FROM`); never imported | — |
+| `local/sbx-kit-shell:latest` | Minimum empty image; add kits | `kit-shell` / `kit-pi` |
 | `local/sbx-kit-cursor:latest` | Cursor bootstrap **FROM kit-core** | `kit-cursor` |
 
 Stock: `shell`, `cursor`, `pi` (kits on official shell).
@@ -79,8 +79,7 @@ sbx-kit recipes
 sbx-kit run shell --yes
 sbx-kit run pi --yes
 sbx-kit check
-# custom image:
-sbx-kit image load --engine docker kit-core
+# custom image (kit-core is docker-built as FROM parent, not imported):
 sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 sbx-kit run kit-shell --yes

@@ -6,8 +6,7 @@
 # the HOST before attach (recreate / future sbx-kit update), never hot-swap
 # mid-session. Preference CLIs stay in kits, not this image.
 #
-# Load parent first:
-#   sbx-kit image load --engine docker kit-core
+# Load parent first (docker-built automatically by image load kit-cursor):
 #   sbx-kit image load --engine docker kit-cursor
 #
 # Tag: local/sbx-kit-cursor:latest

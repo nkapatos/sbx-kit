@@ -14,8 +14,9 @@ as PID 1 and a login bash. No extra packages, no Node, no agent CLI.
 Baked agents (Cursor) `FROM` kit-core, not this image.
 
 ```bash
-sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-shell
 sbx-kit run kit-shell --yes
 sbx-kit run kit-pi --yes
 ```
+
+`image load kit-shell` docker-builds kit-core first (not imported).

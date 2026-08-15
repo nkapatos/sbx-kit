@@ -25,7 +25,7 @@ Prefer the catalog CLI (pulls this kit automatically):
 
 ```bash
 sbx-kit run cursor --yes
-sbx-kit run kit-core --yes
+sbx-kit run kit-shell --yes
 ```
 
 Long form:

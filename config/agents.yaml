@@ -41,15 +41,8 @@ agents:
     kits:
       - pi
 
-  # Parent image (FROM for kit-cursor, etc.). Optional smoke attach only.
-  kit-core:
-    sbx_agent: shell
-    image_name: sbx-kit-core
-    template_fallback: local/sbx-kit-core:latest
-    kits:
-      - mise-workspace
-
   # Emulates Hub shell: tinishell on kit-core. Add stuff with kits, not layers.
+  # Minimum custom image you import into sbx (kit-core is FROM-only).
   kit-shell:
     sbx_agent: shell
     image_name: sbx-kit-shell

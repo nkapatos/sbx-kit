@@ -55,14 +55,15 @@ func newImageLsCmd() *cobra.Command {
 				return nil
 			}
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-			fmt.Fprintln(w, "NAME\tDEFAULT_TAG")
+			fmt.Fprintln(w, "NAME\tDEFAULT_TAG\tROLE")
 			for _, img := range imgs {
-				fmt.Fprintf(w, "%s\t%s\n", img.Name, img.ImageTag)
+				fmt.Fprintf(w, "%s\t%s\t%s\n", img.Name, img.ImageTag, img.Role)
 			}
 			if err := w.Flush(); err != nil {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout())
+			fmt.Fprintln(cmd.OutOrStdout(), "ROLE parent = Docker FROM only (not imported). load = sbx template load.")
 			fmt.Fprintln(cmd.OutOrStdout(), "Imported into sbx: sbx template ls")
 			return nil
 		},
@@ -85,15 +86,16 @@ Engines:
   container   Apple container + skopeo (OCI → docker-archive)
 
 Names resolve under the toolkit root (Brew share or SBX_TREE):
-  sbx-kit image load --engine docker kit-core
   sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
 
+kit-core is a Docker FROM parent (also the intended VPS host floor later).
+It is docker-built automatically; do not import it into sbx.
+
 Not supported: OrbStack, Podman.`,
-		Example: `  sbx-kit image load --engine docker kit-core
-  sbx-kit image load --engine docker kit-shell
+		Example: `  sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
-  sbx-kit image load --engine container templates/kit-core
+  sbx-kit image load --engine container templates/kit-shell
   sbx-kit image load --engine docker kit-cursor local/sbx-kit-cursor:dev`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -136,7 +138,7 @@ sbx cannot pull arbitrary registries easily; this is the workaround.
 Engine is docker (Docker Desktop / Colima). Apple container is not supported
 for pull yet.`,
 		Example: `  sbx-kit image pull ghcr.io/example/sbx-kit-cursor:latest
-  sbx-kit image pull --engine docker ghcr.io/example/sbx-kit-core:latest`,
+  sbx-kit image pull --engine docker ghcr.io/example/sbx-kit-shell:latest`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return template.Pull(template.PullOpts{

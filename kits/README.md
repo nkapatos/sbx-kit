@@ -37,10 +37,11 @@ set any you use. See `sbx-kit concepts`.
 
 **Custom shell + kits:** `kit-shell` (same as Hub shell: add kits, don’t bake).
 
-**Custom image on core:** `FROM kit-core` (`kit-cursor`, …). `image load` locally
-or `image pull` a registry tag; pin it in the recipe. Same sandbox kit as Hub;
-the recipe `-t` overrides `sandbox.image`. Use `mise-workspace` only on images
-that ship `/usr/local/bin/mise`.
+**Custom image on core:** `FROM kit-core` (`kit-cursor`, …). Load the **child**
+into sbx (`image load kit-cursor`); kit-core is never imported. Pin a registry
+tag in the recipe once published. Same sandbox kit as Hub; the recipe `-t`
+overrides `sandbox.image`. Use `mise-workspace` only on images that ship
+`/usr/local/bin/mise`.
 
 ## Composition
 

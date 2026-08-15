@@ -3,6 +3,7 @@ package template_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/template"
@@ -86,6 +87,67 @@ func TestListLocal(t *testing.T) {
 	}
 	if got["kit-cursor"] != "local/sbx-kit-cursor:latest" {
 		t.Fatalf("kit-cursor: %#v", got)
+	}
+	roles := map[string]string{}
+	for _, img := range imgs {
+		roles[img.Name] = img.Role
+	}
+	if roles["kit-core"] != "parent" {
+		t.Fatalf("kit-core role: %#v", roles)
+	}
+	if roles["kit-shell"] != "load" || roles["kit-cursor"] != "load" {
+		t.Fatalf("loadable roles: %#v", roles)
+	}
+}
+
+func TestParentOnlyAndParentName(t *testing.T) {
+	root := findRepoRoot(t)
+	core, err := template.ResolveBuild(root, "kit-core", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !template.IsParentOnly(core.TemplateDir) {
+		t.Fatal("kit-core should be parent-only")
+	}
+	name, err := template.ParentTemplateName(core.Dockerfile)
+	if err != nil || name != "" {
+		t.Fatalf("kit-core parent name: %q %v", name, err)
+	}
+
+	shell, err := template.ResolveBuild(root, "kit-shell", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if template.IsParentOnly(shell.TemplateDir) {
+		t.Fatal("kit-shell should be loadable")
+	}
+	name, err = template.ParentTemplateName(shell.Dockerfile)
+	if err != nil || name != "kit-core" {
+		t.Fatalf("kit-shell parent: %q %v", name, err)
+	}
+
+	cur, err := template.ResolveBuild(root, "kit-cursor", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	name, err = template.ParentTemplateName(cur.Dockerfile)
+	if err != nil || name != "kit-core" {
+		t.Fatalf("kit-cursor parent: %q %v", name, err)
+	}
+}
+
+func TestLoadRejectsParentImage(t *testing.T) {
+	root := findRepoRoot(t)
+	err := template.Load(template.LoadOpts{
+		Root:       root,
+		Engine:     "docker",
+		NameOrPath: "kit-core",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "not imported") {
+		t.Fatalf("got: %v", err)
 	}
 }
 

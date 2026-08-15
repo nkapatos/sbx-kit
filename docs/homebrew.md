@@ -52,7 +52,6 @@ sbx-kit run cursor --yes
 
 # Custom images (optional):
 sbx-kit image ls
-sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 sbx template ls
@@ -61,7 +60,7 @@ sbx-kit run kit-cursor --yes
 
 Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.
 
-`image load` imports **local** Dockerfiles into sbx. `image pull` does the same for a registry tag. Stock recipes skip both — `sbx` uses the Hub image for that kind. Images resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → registry publish and Formula version tags are a later release step.
+`image load` imports **loadable** Dockerfiles into sbx (`kit-shell`, `kit-cursor`). `kit-core` is a FROM parent (docker-built automatically, never imported). `image pull` does the same for a registry tag of a loadable image. Stock recipes skip both — `sbx` uses the Hub image for that kind. Images resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → registry publish and Formula version tags are a later release step.
 
 ## Update / remove
 

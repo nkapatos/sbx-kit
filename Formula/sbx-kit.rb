@@ -65,7 +65,6 @@ class SbxKit < Formula
 
       Custom images (optional):
         sbx-kit image ls
-        sbx-kit image load --engine docker kit-core
         sbx-kit image load --engine docker kit-shell
         sbx-kit image load --engine docker kit-cursor
         sbx template ls

@@ -36,7 +36,6 @@ fall back to npm there. `mise-workspace` must stay on the `kit-pi` recipe.
 ```bash
 sbx secret set anthropic    # and/or openai, deepseek, …
 sbx-kit run pi --yes
-sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-shell
 sbx-kit run kit-pi --yes
 ```

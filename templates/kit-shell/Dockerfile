@@ -1,9 +1,8 @@
 # syntax=docker/dockerfile:1
 # Custom counterpart to docker/sandbox-templates:shell.
-# Floor is kit-core. This layer only: tini → login bash, and mark the kind
-# as shell. No extra packages, no Node, no agent CLI.
+# Floor is kit-core (Docker FROM parent, not imported). This layer only:
+# tini → login bash, and mark the kind as shell. Minimum image you load.
 #
-#   sbx-kit image load --engine docker kit-core
 #   sbx-kit image load --engine docker kit-shell
 #   sbx-kit run kit-shell --yes
 #

@@ -88,6 +88,46 @@ func resolveTemplateDir(root, nameOrPath string) (string, error) {
 	return cand, nil
 }
 
+const parentMarker = "PARENT"
+
+// IsParentOnly is true when the template is a Docker FROM base and must not be
+// imported into sbx (no sandbox recipe).
+func IsParentOnly(templateDir string) bool {
+	st, err := os.Stat(filepath.Join(templateDir, parentMarker))
+	return err == nil && !st.IsDir()
+}
+
+// ParentTemplateName reads ARG PARENT_IMAGE=local/sbx-<name>:… from a
+// Dockerfile. Empty means no in-tree parent to docker-build first.
+func ParentTemplateName(dockerfile string) (string, error) {
+	f, err := os.Open(dockerfile)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		rest, ok := strings.CutPrefix(line, "ARG PARENT_IMAGE=")
+		if !ok {
+			continue
+		}
+		val := strings.Trim(strings.TrimSpace(rest), `"'`)
+		return localSbxTemplateName(val), nil
+	}
+	return "", sc.Err()
+}
+
+func localSbxTemplateName(imageTag string) string {
+	const p = "local/sbx-"
+	if !strings.HasPrefix(imageTag, p) {
+		return ""
+	}
+	name, _, _ := strings.Cut(strings.TrimPrefix(imageTag, p), ":")
+	return name
+}
+
 func readBakeBaseImage(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {

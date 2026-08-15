@@ -22,13 +22,13 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 | Path | How |
 | --- | --- |
 | **Shell + kits** | Official Hub `shell` or our `kit-shell`. Add stuff with **kits** (Pi, mixins). Do not bake a new image. |
-| **Image on core** | `FROM kit-core` for custom images you own (e.g. `kit-cursor`). Build/load locally or pull a registry tag. |
+| **Image on core** | `FROM kit-core` for custom images you own (e.g. `kit-cursor`). **Do not** import kit-core into sbx. |
 
 ## Layering rule (local / custom images)
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **kit-core** | Parent image: OS, utils, sbx glue, mise **binary** | `FROM` for `kit-cursor` (and later baked agents) |
+| **kit-core** | Parent image: OS, utils, sbx glue, mise **binary**. Never `sbx template load`. | `FROM` for `kit-shell`, `kit-cursor`; later Docker-on-VPS |
 | **kit-shell** | Hub-shell counterpart: tini + login bash only | Kits on top (`kit-pi`), same as official `shell` |
 | **Agent image** | Bootstrap install/layout only | `kit-cursor` **FROM kit-core**, not via kit-shell |
 | **Mixin kit** | Activate, allowlists, state, preference CLIs | `mise-workspace`, `agent-workspace`, `apt-extras` |
@@ -39,14 +39,14 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 ## In scope
 
 - Kits + recipes; Hub-first create path; local `image load` / `image pull` when needed
-- `templates/kit-core`, `templates/kit-shell`, `templates/kit-cursor` as optional lean floor examples
+- `templates/kit-core` (FROM parent, not imported), `templates/kit-shell` (minimum load), `templates/kit-cursor`
 - Mixins: mise-workspace, agent-workspace (default on every recipe); optional lsp-mise, apt-extras
 - Sandbox kit example: `kits/pi` (install + provider secrets in the same kit) on official shell (`pi`) and kit-shell (`kit-pi`)
 - CLI lifecycle + vault; `image ls` of our Dockerfiles; `check` over sbx
 
 ## Out of scope / parked
 
-- Docker Compose / VPS twin under `deploy/` (archived out of tree; revisit later)
+- Docker Compose / VPS twin under `deploy/` (archived; same **kit-core** parent when it returns)
 - Official-base + apt purge; thin “creds-only” Pi mixins as Hub workarounds
 - Baking `gh` alone (or any preference CLI) into core “for parity”
 - Daily image rebuilds for agent CLI churn

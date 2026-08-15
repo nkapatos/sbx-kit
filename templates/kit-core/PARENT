@@ -1,0 +1,7 @@
+kit-core is a Docker FROM parent only.
+
+Do not import this image into sbx (`sbx-kit image load` / `sbx template load`).
+Load kit-shell (minimum empty sandbox image) or an agent image (kit-cursor).
+Those builds docker-build this parent automatically.
+
+Same floor is the intended base for Docker-on-VPS hosts later.

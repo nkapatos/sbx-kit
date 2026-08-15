@@ -56,6 +56,10 @@ class SbxKit < Formula
         sbx-kit version
 
       Hub path (no local build):
+        sbx-kit template ls
+        sbx-kit secrets --agent shell-hub
+        sbx secret set deepseek          # host store; see hints
+        sbx-kit run --agent shell-hub --yes
         sbx-kit run --agent cursor-hub --yes
 
       Local lean images (optional):
@@ -68,7 +72,9 @@ class SbxKit < Formula
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
-    assert_match "cursor-hub", shell_output("#{bin}/sbx-kit agents")
+    assert_match "shell-hub", shell_output("#{bin}/sbx-kit agents")
+    assert_match "deepseek", shell_output("#{bin}/sbx-kit secrets --agent shell-hub")
     assert_match "load", shell_output("#{bin}/sbx-kit template load --help")
+    assert_match "ls", shell_output("#{bin}/sbx-kit template ls --help")
   end
 end

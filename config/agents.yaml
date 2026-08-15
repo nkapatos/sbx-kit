@@ -10,7 +10,7 @@
 #   - Set image_name / template_fallback → local or registry tag resolved via
 #     `sbx template ls`, else the fallback.
 #
-# Optional capability mixins (not in defaults): lsp-mise, apt-extras.
+# Optional capability mixins (not in defaults): lsp-mise, apt-extras, deepseek-creds.
 # Product scope: docs/product-scope.md
 
 defaults:
@@ -20,6 +20,13 @@ defaults:
     - agent-workspace
 
 agents:
+  # Hub shell + DeepSeek proxy creds (no agent install). Trial for kit-declared secrets.
+  shell-hub:
+    sbx_agent: shell
+    kits:
+      - agent-workspace
+      - deepseek-creds
+
   # Official Cursor template from sbx/Hub + portable state kit only.
   # No local image build. Add more kits in your own recipe to experiment.
   cursor-hub:

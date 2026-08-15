@@ -1,0 +1,48 @@
+schemaVersion: "1"
+kind: mixin
+name: deepseek-creds
+displayName: DeepSeek credentials
+description: >
+  Minimal Hub-path trial kit: allow api.deepseek.com and declare a deepseek
+  service so the host proxy can inject DEEPSEEK_API_KEY. Does not install any
+  agent — use with the stock sbx shell (or any) template to prove secrets.
+
+network:
+  allowedDomains:
+    - api.deepseek.com
+  serviceDomains:
+    api.deepseek.com: deepseek
+  serviceAuth:
+    deepseek:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+
+credentials:
+  sources:
+    deepseek:
+      env:
+        - DEEPSEEK_API_KEY
+
+environment:
+  proxyManaged:
+    - DEEPSEEK_API_KEY
+
+agentContext: |
+  ## DeepSeek (proxy-managed)
+
+  Inside the box, `DEEPSEEK_API_KEY` should be a sentinel (`proxy-managed` or
+  similar) — not your real key. The host proxy rewrites `Authorization` on
+  requests to `api.deepseek.com`.
+
+  Host (before or at create; recreate if you set a global secret later):
+
+      sbx secret set deepseek
+      # or:  pass show api/deepseek | sbx secret set deepseek
+
+  Smoke test from a shell sandbox:
+
+      echo "DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY-<unset>}"
+      curl -sS -o /tmp/ds.txt -w "%{http_code}\n" \
+        -H "Authorization: Bearer ${DEEPSEEK_API_KEY}" \
+        https://api.deepseek.com/user/balance
+      head -c 400 /tmp/ds.txt; echo

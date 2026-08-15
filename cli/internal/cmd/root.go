@@ -34,6 +34,7 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(newStateCmd())
 	root.AddCommand(newStatusCmd())
 	root.AddCommand(newInitCmd())
+	root.AddCommand(newSecretsCmd())
 	root.AddCommand(newTemplateCmd())
 	root.AddCommand(newVersionCmd())
 
@@ -60,14 +61,17 @@ Host vault (created on demand):
 
 Day-to-day:
   sbx-kit agents
-  sbx-kit run --agent cursor-hub --yes    # Hub template + kits
+  sbx-kit template ls                     # → sbx template ls
+  sbx-kit secrets --agent shell-hub       # guide: sbx secret set …
+  sbx-kit run --agent shell-hub --yes     # Hub shell + deepseek-creds trial
+  sbx-kit run --agent cursor-hub --yes
   sbx-kit run --agent cursor --yes        # after local template load
   sbx-kit run
   sbx-kit run --name my-project
-  sbx-kit rm --agent cursor-hub --keep-state
-  sbx-kit upgrade --agent cursor-hub
+  sbx-kit rm --agent shell-hub --keep-state
+  sbx-kit upgrade --agent shell-hub
   sbx-kit status
-  sbx-kit init --agent cursor-hub .
+  sbx-kit init --agent shell-hub .
   sbx-kit template load --engine docker kit-core
   sbx-kit template load --engine docker kit-cursor`
 }

@@ -5,20 +5,48 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/template"
 )
 
 func newTemplateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "template",
-		Short: "Build and import local sandbox template images",
-		Long:  `Maintainer helpers for local template images. Hub recipes skip this — sbx pulls the stock agent template.`,
+		Short: "List sbx templates or build/import local images",
+		Long: `Convenience over sbx for templates:
+
+  sbx-kit template ls     → sbx template ls (Hub + loaded local)
+  sbx-kit template load   → build a local Dockerfile and import into sbx
+
+Hub recipes do not need load — sbx already has the stock agent image.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
 	}
+	cmd.AddCommand(newTemplateLsCmd())
 	cmd.AddCommand(newTemplateLoadCmd())
 	return cmd
+}
+
+func newTemplateLsCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "ls",
+		Short: "List templates known to sbx (pass-through)",
+		Long: `Runs sbx template ls. Requires the Docker sbx CLI on PATH and a signed-in
+Docker/sbx session when pulling Hub images.
+
+sbx-kit does not reimplement template discovery — this is a thin convenience.`,
+		Aliases: []string{"list"},
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			r := sbxutil.Default()
+			if _, err := r.LookPath(); err != nil {
+				return fmt.Errorf("sbx not found on PATH (install/sign in to Docker AI Sandboxes CLI)")
+			}
+			fmt.Println("==> sbx template ls")
+			return r.RunInteractive("template", "ls")
+		},
+	}
 }
 
 func newTemplateLoadCmd() *cobra.Command {

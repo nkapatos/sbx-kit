@@ -37,6 +37,8 @@ Bump the floor in `cli/internal/sbxcompat` when we depend on newer sbx.
 
 ```text
 sbx-kit agents
+sbx-kit template ls                              # → sbx template ls
+sbx-kit secrets --agent <recipe>                 # print sbx secret set … hints
 sbx-kit run                                      # attach sole binding for cwd
 sbx-kit run --agent <recipe> [--path <dir>] [--sandbox-name <name>] [--yes] [--clone] [--restore-state] [-- sbx-args...]
 sbx-kit run --name <sandbox> [--restore-state]   # attach only
@@ -76,6 +78,8 @@ basename — same idea as stock sbx. An opaque **profile id**
 | `--name` | **Attach** (or rm/state) by friendly sbx name — no create |
 
 ```bash
+sbx-kit run --agent shell-hub --yes       # Hub shell + deepseek-creds trial
+sbx-kit secrets --agent shell-hub         # guide: sbx secret set deepseek
 sbx-kit run --agent cursor-hub --yes      # Hub template + kits
 sbx-kit run --agent cursor --yes          # local kit-cursor image
 sbx-kit run                               # re-attach sole cwd binding
@@ -85,6 +89,18 @@ sbx-kit run --name my-project             # attach from anywhere
 If `--agent` is used and that sbx name already exists, the CLI errors (sbx
 owns uniqueness). To “rename”: `rm --keep-state`, recreate with a new
 `--sandbox-name`, `--restore-state`.
+
+## Host secrets (convenience only)
+
+Kits may declare credential **services**. `sbx-kit` reads those fields and
+prints the matching `sbx secret set <service>` commands — it does **not**
+store keys. Password managers stay in the user’s hands, e.g.
+`pass show api/deepseek | sbx secret set deepseek`.
+
+```bash
+sbx-kit secrets --agent shell-hub
+# also printed automatically before sbx-kit run --agent shell-hub
+```
 
 ## Portable state
 
@@ -129,11 +145,12 @@ go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=d
   -o ../bin/sbx-kit ./cmd/sbx-kit
 export SBX_TREE=/path/to/sbx-kit
 ../bin/sbx-kit agents
-../bin/sbx-kit run --agent cursor-hub --yes
+../bin/sbx-kit secrets --agent shell-hub
+../bin/sbx-kit run --agent shell-hub --yes
 ../bin/sbx-kit template load --engine docker kit-core
 ../bin/sbx-kit template load --engine docker kit-cursor
 ../bin/sbx-kit run --agent cursor --yes
-../bin/sbx-kit init --agent cursor-hub /tmp/demo
+../bin/sbx-kit init --agent shell-hub /tmp/demo
 ```
 
 Or: `go install github.com/nkapatos/sbx-kit/cli/cmd/sbx-kit@latest`

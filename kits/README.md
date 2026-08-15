@@ -20,11 +20,12 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 | [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. |
 | [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers. |
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
+| [deepseek-creds](deepseek-creds/) | mixin | **Trial.** Hub-path proxy creds for `api.deepseek.com` (no agent). |
 
-**Hub path:** attach kits to the stock `sbx` agent template (see recipe
-`cursor-hub`) — no local image. Extra agents (Pi, etc.) belong as **sandbox
-kits** on an official shell (or similar) template, with secrets via
-`sbx secret` / proxyManaged — not as leftover creds mixins in this tree.
+**Hub path:** attach kits to the stock `sbx` agent template (see recipes
+`shell-hub`, `cursor-hub`) — no local image. Extra agents (Pi, etc.) belong as
+**sandbox kits** on an official shell template, with secrets via `sbx secret` /
+proxyManaged — use `sbx-kit secrets --agent <recipe>` for the exact commands.
 
 **Local path:** lean images under `templates/` (`kit-core` → `kit-cursor`,
 later other baked agents). Use `mise-workspace` only on images that ship

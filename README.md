@@ -32,7 +32,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | --- | --- | --- |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State + mise mixins (mise needs a mise-ready image) |
-| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional mixins |
+| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/deepseek-creds`](kits/deepseek-creds/) | Optional / trial mixins |
 | Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Optional lean local floor (not required for Hub recipes) |
 | Follow-up | Hub UX + recipe/kit discovery; one-shot local `template load`; agent refresh vs upgrade | |
 
@@ -70,8 +70,11 @@ No local image build. `sbx` pulls/uses the stock agent template; kits attach at 
 
 ```bash
 cd ~/my-project
-sbx-kit run --agent cursor-hub --yes    # stock cursor + agent-workspace
-# or mix more kits via your own recipe in config/agents.yaml
+sbx-kit template ls                    # → sbx template ls (needs Docker/sbx login)
+sbx-kit secrets --agent shell-hub      # prints: sbx secret set deepseek
+sbx secret set deepseek                # store on host before create
+sbx-kit run --agent shell-hub --yes    # stock shell + deepseek-creds (+ state kit)
+# or: sbx-kit run --agent cursor-hub --yes
 ```
 
 ### 2b. Local lean templates (optional)

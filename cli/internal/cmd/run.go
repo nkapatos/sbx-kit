@@ -12,6 +12,7 @@ import (
 
 	"github.com/nkapatos/sbx-kit/cli/internal/binding"
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
+	"github.com/nkapatos/sbx-kit/cli/internal/kitcreds"
 	"github.com/nkapatos/sbx-kit/cli/internal/resources"
 	"github.com/nkapatos/sbx-kit/cli/internal/run"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxname"
@@ -54,13 +55,13 @@ Intents (do not mix):
 
 Pass-through after -- goes to sbx:
   sbx-kit run --agent cursor-hub --yes -- --memory 8g`,
-		Example: `  sbx-kit run
+		Example: `  sbx-kit run --agent shell-hub --yes
   sbx-kit run --agent cursor-hub --yes
   sbx-kit run --agent cursor --yes
-  sbx-kit run --agent cursor-hub --sandbox-name my-mocks --yes
-  sbx-kit run --agent cursor-hub --path ~/my-project --yes --restore-state
+  sbx-kit run --agent shell-hub --sandbox-name ds-creds --yes
+  sbx-kit run --agent shell-hub --path ~/my-project --yes --restore-state
   sbx-kit run --name my-project
-  sbx-kit run --agent cursor-hub --yes -- --memory 8g`,
+  sbx-kit run --agent shell-hub --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)
@@ -167,6 +168,13 @@ func runCreateRecipe(agent, projectPath, sandboxName, resourcesProfile string, c
 
 	if clone && !containsFlag(extra, "--clone") {
 		extra = append([]string{"--clone"}, extra...)
+	}
+
+	if needs, err := kitcreds.ScanSpecs(kitPaths); err != nil {
+		return err
+	} else if len(needs) > 0 {
+		kitcreds.PrintHints(os.Stdout, agent, needs)
+		fmt.Println()
 	}
 
 	overrideKey := "SBX_" + strings.ToUpper(agent) + "_TEMPLATE"

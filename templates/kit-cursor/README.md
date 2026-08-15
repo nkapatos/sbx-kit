@@ -1,16 +1,16 @@
 # Template: kit-cursor
 
 **Tag:** `local/sbx-kit-cursor:latest`  
-**FROM:** `local/sbx-kit-shell:latest`  
+**FROM:** `local/sbx-kit-core:latest`  
 **sbx agent:** `cursor`
 
-Bootstrap install of the Cursor agent CLI on the lean floor. **Do not** rebuild
-this image for every Cursor lab release — refresh the agent from the **host**
-before attach (recreate box / future `sbx-kit` update). Updating the binary
-under a live session is unsafe.
+Bootstrap install of the Cursor agent CLI on the lean **floor** (not via
+kit-shell). **Do not** rebuild this image for every Cursor lab release —
+refresh the agent from the **host** before attach. Updating the binary under
+a live session is unsafe.
 
 ```bash
-sbx-kit image load --engine docker kit-shell
+sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-cursor
 # if blocked: sbx policy allow network downloads.cursor.com
 sbx-kit run kit-cursor --yes

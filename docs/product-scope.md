@@ -22,14 +22,15 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 | Path | How |
 | --- | --- |
 | **Hub + kits** | Stock `sbx` kind; recipes attach kits (incl. sandbox kits that start agents Hub doesn’t ship). Secrets via `sbx secret` / proxyManaged. |
-| **Custom floor** | `kit-shell` (+ optional baked agent layers like `kit-cursor`). Build/load locally or pull from a registry; same pattern later for other agents. |
+| **Custom floor** | `kit-core` → `kit-shell` (tini + bash) or `kit-cursor`. Build/load locally or pull from a registry. |
 
 ## Layering rule (local / custom images)
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
-| **kit-shell** | OS essentials, modern utils, sbx glue, mise **binary** | `templates/kit-shell` |
-| **Agent image** | Bootstrap install/layout only | `kit-cursor`; later other agents on kit-shell |
+| **kit-core** | OS essentials, modern utils, sbx glue, mise **binary** | `templates/kit-core` |
+| **kit-shell** | Almost nothing: tini + login bash (Hub shell counterpart) | `templates/kit-shell` |
+| **Agent image** | Bootstrap install/layout only | `kit-cursor` on kit-core |
 | **Mixin kit** | Activate, allowlists, state, preference CLIs | `mise-workspace`, `agent-workspace`, `apt-extras` |
 | **Sandbox kit** | Agent Hub doesn’t ship: image + entrypoint + install + provider secrets | `kits/pi` (recipes `pi` / `kit-pi`) |
 | **Project** | Language pins | `mise.toml` |
@@ -38,7 +39,7 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 ## In scope
 
 - Kits + recipes; Hub-first create path; local `image load` / `image pull` when needed
-- `templates/kit-shell`, `templates/kit-cursor` as optional lean floor examples
+- `templates/kit-core`, `templates/kit-shell`, `templates/kit-cursor` as optional lean floor examples
 - Mixins: mise-workspace, agent-workspace (default on every recipe); optional lsp-mise, apt-extras
 - Sandbox kit example: `kits/pi` (install + provider secrets in the same kit) on official shell (`pi`) and kit-shell (`kit-pi`)
 - CLI lifecycle + vault; `image ls` of our Dockerfiles; `check` over sbx

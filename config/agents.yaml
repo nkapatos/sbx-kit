@@ -41,7 +41,15 @@ agents:
     kits:
       - pi
 
-  # Custom shell image (lean floor vs official docker/sandbox-templates:shell).
+  # Custom floor (bare minimum). Agent layers and kit-shell sit on this.
+  kit-core:
+    sbx_agent: shell
+    image_name: sbx-kit-core
+    template_fallback: local/sbx-kit-core:latest
+    kits:
+      - mise-workspace
+
+  # Custom counterpart to official shell: kit-core + tini + login bash.
   kit-shell:
     sbx_agent: shell
     image_name: sbx-kit-shell
@@ -49,7 +57,7 @@ agents:
     kits:
       - mise-workspace
 
-  # Custom Cursor layer on kit-shell.
+  # Custom Cursor layer on kit-core (not via kit-shell).
   kit-cursor:
     sbx_agent: cursor
     image_name: sbx-kit-cursor
@@ -57,7 +65,8 @@ agents:
     kits:
       - mise-workspace
 
-  # Same Pi sandbox kit on kit-shell. Install uses mise node@22 + pnpm (no image npm).
+  # Same Pi sandbox kit on kit-shell (parallel to official shell).
+  # Install uses mise node@22 + pnpm (no image npm).
   kit-pi:
     sbx_agent: pi
     image_name: sbx-kit-shell

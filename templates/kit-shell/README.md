@@ -1,31 +1,19 @@
 # Template: kit-shell
 
 **Tag:** `local/sbx-kit-shell:latest`  
-**FROM:** `debian:bookworm-slim`  
+**FROM:** `local/sbx-kit-core:latest`  
 **sbx agent:** `shell`
 
-## Why this image
+Custom counterpart to official `docker/sandbox-templates:shell`. The floor is
+[kit-core](../kit-core/). This image adds **almost nothing**: tini as PID 1 and
+a login bash. No extra packages, no Node, no agent CLI.
 
-Official `docker/sandbox-templates:*` ship language toolchains we will not
-maintain. This floor is intentionally thin:
-
-| In image | Out of image (on purpose) |
-| --- | --- |
-| sbx glue, `agent`+sudo, mise **binary** | Project languages → **mise** |
-| git (+ lfs), curl, small modern utils | Preference CLIs (`gh`, `glab`, …) → **kits** / in-box update |
-| `/etc/sbx-agent-env.sh` + persistent env | Docker Engine → future **`-docker`** variant |
-| | Agent CLIs → **agent layers** (layout bootstrap only) |
-
-## Docker layer cache
-
-Rebuild only the layer you change: CA → essential OS → modern utils → user →
-env glue → mise. See comments in `Dockerfile`.
-
-## Use
+Pi (create-time sandbox kit) sits on this image, same as official Pi sits on
+Hub shell.
 
 ```bash
+sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-shell
 sbx-kit run kit-shell --yes
+sbx-kit run kit-pi --yes
 ```
-
-Agent layers (e.g. [kit-cursor](../kit-cursor/)) `FROM` this image.

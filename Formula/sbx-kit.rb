@@ -65,9 +65,11 @@ class SbxKit < Formula
 
       Custom images (optional):
         sbx-kit image ls
+        sbx-kit image load --engine docker kit-core
         sbx-kit image load --engine docker kit-shell
         sbx-kit image load --engine docker kit-cursor
         sbx template ls
+        sbx-kit run kit-shell --yes
         sbx-kit run kit-cursor --yes
         sbx-kit run kit-pi --yes
     EOS

@@ -8,6 +8,26 @@ import (
 	"github.com/nkapatos/sbx-kit/cli/internal/template"
 )
 
+func TestResolveBuildKitCoreDockerfile(t *testing.T) {
+	root := findRepoRoot(t)
+	b, err := template.ResolveBuild(root, "kit-core", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.ImageTag != "local/sbx-kit-core:latest" {
+		t.Fatalf("tag: %s", b.ImageTag)
+	}
+	if filepath.Base(b.Context) != "kit-core" {
+		t.Fatalf("context: %s", b.Context)
+	}
+	if filepath.Base(b.Dockerfile) != "Dockerfile" {
+		t.Fatalf("dockerfile: %s", b.Dockerfile)
+	}
+	if len(b.BuildArgs) != 0 {
+		t.Fatalf("unexpected build args: %#v", b.BuildArgs)
+	}
+}
+
 func TestResolveBuildKitShellDockerfile(t *testing.T) {
 	root := findRepoRoot(t)
 	b, err := template.ResolveBuild(root, "kit-shell", "")
@@ -19,12 +39,6 @@ func TestResolveBuildKitShellDockerfile(t *testing.T) {
 	}
 	if filepath.Base(b.Context) != "kit-shell" {
 		t.Fatalf("context: %s", b.Context)
-	}
-	if filepath.Base(b.Dockerfile) != "Dockerfile" {
-		t.Fatalf("dockerfile: %s", b.Dockerfile)
-	}
-	if len(b.BuildArgs) != 0 {
-		t.Fatalf("unexpected build args: %#v", b.BuildArgs)
 	}
 }
 
@@ -44,7 +58,7 @@ func TestResolveBuildKitCursorDockerfile(t *testing.T) {
 
 func TestResolveBuildByPath(t *testing.T) {
 	root := findRepoRoot(t)
-	rel := filepath.Join(root, "templates", "kit-shell")
+	rel := filepath.Join(root, "templates", "kit-core")
 	b, err := template.ResolveBuild(root, rel, "local/custom:dev")
 	if err != nil {
 		t.Fatal(err)
@@ -64,6 +78,9 @@ func TestListLocal(t *testing.T) {
 	for _, img := range imgs {
 		got[img.Name] = img.ImageTag
 	}
+	if got["kit-core"] != "local/sbx-kit-core:latest" {
+		t.Fatalf("kit-core: %#v", got)
+	}
 	if got["kit-shell"] != "local/sbx-kit-shell:latest" {
 		t.Fatalf("kit-shell: %#v", got)
 	}
@@ -78,7 +95,6 @@ func findRepoRoot(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// cli/internal/template → repo root
 	root := filepath.Clean(filepath.Join(wd, "../../.."))
 	if _, err := os.Stat(filepath.Join(root, "config", "agents.yaml")); err != nil {
 		t.Fatalf("repo root not found from %s: %v", wd, err)

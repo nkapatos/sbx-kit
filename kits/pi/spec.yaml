@@ -100,7 +100,7 @@ environment:
 
 commands:
   install:
-    - description: Install pi (official npm, or mise node+pnpm on kit-shell)
+    - description: Install pi (official npm, or mise node+pnpm on the lean floor)
       user: "1000"
       command: |
         set -euo pipefail
@@ -162,13 +162,13 @@ commands:
           fi
         }
         if [ -x /usr/local/bin/mise ] && [ -d /mise ]; then
-          echo "==> kit-shell floor: mise node@22 + pnpm, then pnpm add -g $PKG"
+          echo "==> lean floor (kit-core/kit-shell): mise node@22 + pnpm, then pnpm add -g $PKG"
           install_mise_pnpm
         elif command -v npm >/dev/null 2>&1; then
           echo "==> official template: npm install -g $PKG"
           install_official_npm
         else
-          echo "pi kit: official images need npm; kit-shell needs /usr/local/bin/mise and /mise (mise-workspace)." >&2
+          echo "pi kit: official images need npm; lean floor needs /usr/local/bin/mise and /mise (mise-workspace)." >&2
           exit 1
         fi
         command -v pi >/dev/null 2>&1
@@ -199,6 +199,6 @@ agentContext: |
 
   Install/update:
   - Official shell image: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
-  - kit-shell (`kit-pi`): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
+  - kit-shell (`kit-pi`, inherits kit-core): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
     (do not apt/npm a Node toolchain on the lean floor).
   `pi update --self` if the network policy allows it.

@@ -1,169 +1,21 @@
 # syntax=docker/dockerfile:1
-# sbx-kit-shell — lean floor for local sbx templates (optional vs Hub agents).
+# Custom counterpart to docker/sandbox-templates:shell.
+# Floor is kit-core. This layer only: tini → login bash, and mark the kind
+# as shell. No extra packages, no Node, no agent CLI.
 #
-# Why (not official docker/sandbox-templates:*):
-#   Official images ship language toolchains we cannot maintain. We own a thin
-#   floor; languages → mise; preference CLIs (gh/glab/…) → kits / in-box update;
-#   agent binaries → thin layers with HOST-side refresh (not daily image rebuilds).
-#
-# Layer cache (rebuild only what changed):
-#   1) CA bootstrap
-#   2) Essential OS packages (rare: OS / major bumps)
-#   3) Modern utils (occasional: add/remove floor tools)
-#   4) agent user + sudo / proxy env_keep
-#   5) sbx persistent-env + UX
-#   6) mise binary (occasional: mise releases)
-#
-# Not here: Node/Go/Java/Rust, gh/glab, Docker Engine (future -docker variant).
-#
-# Tag: local/sbx-kit-shell:latest
+#   sbx-kit image load --engine docker kit-core
 #   sbx-kit image load --engine docker kit-shell
 #   sbx-kit run kit-shell --yes
+#
+# Tag: local/sbx-kit-shell:latest
 
-ARG DEBIAN_VERSION=bookworm-slim
-FROM debian:${DEBIAN_VERSION}
+ARG PARENT_IMAGE=local/sbx-kit-core:latest
+FROM ${PARENT_IMAGE}
 
-ARG ENABLE_SUDO=1
-ARG TARGETARCH
+USER root
+RUN printf 'shell\n' > /etc/sbx-kit-agent && chmod 644 /etc/sbx-kit-agent
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    HOME=/home/agent \
-    PATH=/home/agent/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    NO_PROXY=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
-    no_proxy=localhost,127.0.0.1,::1,172.17.0.0/16,gateway.docker.internal \
-    MISE_DATA_DIR=/mise \
-    MISE_CONFIG_DIR=/mise \
-    MISE_CACHE_DIR=/mise/cache \
-    MISE_INSTALL_PATH=/usr/local/bin/mise \
-    PAGER=cat \
-    GIT_PAGER=cat \
-    EDITOR=true \
-    VISUAL=true
-
-# --- 1) CA bootstrap (bookworm-slim has none; cleartext apt often blocked) ---
-RUN set -eux; \
-    if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
-      sed -i 's|http://|https://|g' /etc/apt/sources.list.d/debian.sources; \
-    fi; \
-    if [ -f /etc/apt/sources.list ]; then \
-      sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' /etc/apt/sources.list; \
-    fi; \
-    apt-get -o Acquire::https::Verify-Peer=false \
-            -o Acquire::https::Verify-Host=false update; \
-    apt-get -o Acquire::https::Verify-Peer=false \
-            -o Acquire::https::Verify-Host=false \
-            install -y --no-install-recommends ca-certificates; \
-    rm -rf /var/lib/apt/lists/*
-
-# --- 2) Essential OS (rebuild rarely: debian / major floor changes) ---
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-      bash \
-      curl \
-      git \
-      locales \
-      tini \
-      unzip \
-      xz-utils \
-    ; \
-    if [ "${ENABLE_SUDO}" = "1" ]; then \
-      apt-get install -y --no-install-recommends sudo; \
-    fi; \
-    sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen; \
-    locale-gen en_US.UTF-8; \
-    update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8; \
-    rm -rf /var/lib/apt/lists/*
-
-# --- 3) Modern utils (floor tools; preference CLIs stay in kits) ---
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-      dnsutils \
-      fd-find \
-      git-lfs \
-      iproute2 \
-      jq \
-      less \
-      lsof \
-      make \
-      procps \
-      ripgrep \
-      rsync \
-      socat \
-      sqlite3 \
-    ; \
-    ln -sf "$(command -v fdfind)" /usr/local/bin/fd; \
-    git lfs install --system; \
-    rm -rf /var/lib/apt/lists/*
-
-# --- 4) Workplace user (uid 1000) + sudo / proxy env_keep ---
-RUN set -eux; \
-    groupadd --gid 1000 agent; \
-    useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash agent; \
-    if [ "${ENABLE_SUDO}" = "1" ]; then \
-      usermod -aG sudo agent; \
-      echo 'agent ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/agent; \
-      chmod 0440 /etc/sudoers.d/agent; \
-      printf '%s\n' \
-        'Defaults:agent env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
-        'Defaults:%sudo env_keep += "http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY SSL_CERT_FILE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE JAVA_TOOL_OPTIONS"' \
-        > /etc/sudoers.d/proxyconfig; \
-      chmod 0440 /etc/sudoers.d/proxyconfig; \
-    fi; \
-    mkdir -p /home/agent/.local/bin /home/agent/.docker/sandbox/locks; \
-    chown -R agent:agent /home/agent
-
-# --- 5) sbx persistent-env + UX (no secrets, no completions) ---
-COPY agent-env.sh /etc/sbx-agent-env.sh
-RUN set -eux; \
-    chmod 644 /etc/sbx-agent-env.sh; \
-    touch /etc/sandbox-persistent.sh; \
-    chmod 644 /etc/sandbox-persistent.sh; \
-    chown agent:agent /etc/sandbox-persistent.sh; \
-    if ! grep -qF 'sbx-agent-env.sh' /etc/sandbox-persistent.sh; then \
-      printf '\n# sbx-agent-ux\n[ -f /etc/sbx-agent-env.sh ] && . /etc/sbx-agent-env.sh\n' \
-        >> /etc/sandbox-persistent.sh; \
-    fi; \
-    printf '%s\n' \
-      '# sbx-kit-shell' \
-      'umask 027' \
-      > /etc/profile.d/sbx-kit-shell.sh; \
-    chmod 644 /etc/profile.d/sbx-kit-shell.sh; \
-    printf '%s\n' \
-      'if [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi' \
-      'export BASH_ENV=/etc/sandbox-persistent.sh' \
-      | tee /etc/profile.d/sandbox-persistent.sh >/dev/null; \
-    chmod 644 /etc/profile.d/sandbox-persistent.sh; \
-    if [ -f /etc/bash.bashrc ] && ! grep -qF 'sandbox-persistent.sh' /etc/bash.bashrc; then \
-      printf '\n# sbx-kit-shell\nif [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi\nexport BASH_ENV=/etc/sandbox-persistent.sh\n' \
-        >> /etc/bash.bashrc; \
-    fi; \
-    if ! grep -qF 'sandbox-persistent.sh' /home/agent/.bashrc 2>/dev/null; then \
-      printf '%s\n' \
-        'if [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi' \
-        'export BASH_ENV=/etc/sandbox-persistent.sh' \
-        | cat - /home/agent/.bashrc > /tmp/agent-bashrc; \
-      mv /tmp/agent-bashrc /home/agent/.bashrc; \
-      chown agent:agent /home/agent/.bashrc; \
-    fi; \
-    printf 'core\n' > /etc/sbx-kit-agent; \
-    chmod 644 /etc/sbx-kit-agent
-
-ENV BASH_ENV=/etc/sandbox-persistent.sh
-
-# --- 6) Mise binary only (activate/shims → kits/mise-workspace) ---
-RUN set -eux; \
-    curl -fsSL https://mise.run | sh; \
-    test -x /usr/local/bin/mise; \
-    mkdir -p /mise/cache /mise/installs /mise/shims; \
-    chown -R agent:agent /mise; \
-    /usr/local/bin/mise --version
-
-WORKDIR /home/agent
 USER agent
-
+WORKDIR /home/agent
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["bash", "-l"]

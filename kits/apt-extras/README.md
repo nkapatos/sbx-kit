@@ -5,7 +5,7 @@ apt here, not host Homebrew).
 
 Default set is light (`tree`, `zip`, archive helpers, etc.). Use this kit (or a
 team fork) for **preference CLIs** such as `gh` / `glab` — they are **not**
-baked into `kit-shell`. Do **not** put Go/Node/Rust/Python toolchains here —
+baked into `kit-core`. Do **not** put Go/Node/Rust/Python toolchains here —
 that is mise + project `mise.toml`.
 
 ```bash

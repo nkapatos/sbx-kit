@@ -11,7 +11,7 @@ func PrintHints(w io.Writer, recipe string, needs []Need) {
 	if len(needs) == 0 {
 		return
 	}
-	fmt.Fprintln(w, "==> host secrets for this recipe (proxy-managed in the sandbox)")
+	fmt.Fprintln(w, "==> host secrets declared by this recipe's kits (set any you use)")
 	if recipe != "" {
 		fmt.Fprintf(w, "    recipe=%s\n", recipe)
 	}
@@ -27,6 +27,7 @@ func PrintHints(w io.Writer, recipe string, needs []Need) {
 			fmt.Fprintf(w, "    # kit %s\n", from)
 		}
 	}
-	fmt.Fprintln(w, "  # Global secrets apply at create; recreate after changing them.")
+	fmt.Fprintln(w, "  # Not all services are required. Extra APIs belong in the kit (or a mixin),")
+	fmt.Fprintln(w, "  # not a kit-per-provider. Global secrets apply at create; recreate after changes.")
 	fmt.Fprintln(w, "  # Optional: pass show api/<service> | sbx secret set <service>")
 }

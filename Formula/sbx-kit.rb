@@ -58,8 +58,8 @@ class SbxKit < Formula
       Stock recipes (sbx kind + kits):
         sbx-kit concepts
         sbx-kit recipes
-        sbx secret set deepseek
         sbx-kit run shell --yes
+        sbx secret set anthropic   # any providers declared by the recipe's kits
         sbx-kit run pi --yes
         sbx-kit check
 

@@ -4,8 +4,9 @@ name: pi
 displayName: Pi
 description: >
   Pi coding agent on a shell-class image. Installs @earendil-works/pi-coding-agent
-  at create; attach entrypoint is pi. Pair with mixin kits (agent-workspace,
-  deepseek-creds, mise-workspace) via a recipe. Do not bake Pi into the image.
+  at create; attach entrypoint is pi. Provider API keys are declared here
+  (proxy-managed); set any of them on the host with sbx secret set. Do not bake
+  Pi into the image.
 
 sandbox:
   image: docker/sandbox-templates:shell
@@ -24,6 +25,78 @@ network:
     - github.com
     - "**.github.com"
     - objects.githubusercontent.com
+    - api.anthropic.com
+    - api.openai.com
+    - api.deepseek.com
+    - openrouter.ai
+    - api.groq.com
+    - api.mistral.ai
+    - api.x.ai
+    - api.together.xyz
+  serviceDomains:
+    api.anthropic.com: anthropic
+    api.openai.com: openai
+    api.deepseek.com: deepseek
+    openrouter.ai: openrouter
+    api.groq.com: groq
+    api.mistral.ai: mistral
+    api.x.ai: xai
+    api.together.xyz: together
+  serviceAuth:
+    anthropic:
+      headerName: x-api-key
+      valueFormat: "%s"
+    openai:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    deepseek:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    openrouter:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    groq:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    mistral:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    xai:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+    together:
+      headerName: Authorization
+      valueFormat: "Bearer %s"
+
+credentials:
+  sources:
+    anthropic:
+      env: [ANTHROPIC_API_KEY]
+    openai:
+      env: [OPENAI_API_KEY]
+    deepseek:
+      env: [DEEPSEEK_API_KEY]
+    openrouter:
+      env: [OPENROUTER_API_KEY]
+    groq:
+      env: [GROQ_API_KEY]
+    mistral:
+      env: [MISTRAL_API_KEY]
+    xai:
+      env: [XAI_API_KEY]
+    together:
+      env: [TOGETHER_API_KEY]
+
+environment:
+  proxyManaged:
+    - ANTHROPIC_API_KEY
+    - OPENAI_API_KEY
+    - DEEPSEEK_API_KEY
+    - OPENROUTER_API_KEY
+    - GROQ_API_KEY
+    - MISTRAL_API_KEY
+    - XAI_API_KEY
+    - TOGETHER_API_KEY
 
 commands:
   install:
@@ -111,9 +184,18 @@ agentContext: |
   Project trust defaults to always (this microVM is the boundary). Override
   with `/trust` or `~/.pi/agent/settings.json`.
 
-  Provider keys stay on the host (`sbx secret set …`). Inside the box, env
-  vars from mixin kits (e.g. `DEEPSEEK_API_KEY`) are proxy sentinels — do not
-  paste real keys or run provider `/login` unless you intend host-side OAuth.
+  Provider keys stay on the host. This kit declares several common APIs; set
+  **any** you use (not all required):
+
+      sbx secret set anthropic
+      sbx secret set openai
+      sbx secret set deepseek
+      # also: openrouter, groq, mistral, xai, together
+
+  Inside the box those env vars are proxy sentinels — do not paste real keys
+  or run provider `/login` unless you intend host-side OAuth. Extra providers:
+  add domains + credentials.sources to this kit or a personal mixin. Do not
+  ship one kit per API key.
 
   Install/update:
   - Official shell image: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`

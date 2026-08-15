@@ -20,7 +20,6 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 | [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. **Catalog default** on every recipe. |
 | [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers. |
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
-| [deepseek-creds](deepseek-creds/) | mixin | **Trial.** Hub-path proxy creds for `api.deepseek.com` (no agent). |
 
 ## Sandbox kits
 
@@ -28,9 +27,13 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 | --- | --- | --- |
 | [pi](pi/) | sandbox | Official shell (`pi`, npm -g) or kit-core (`kit-pi`, mise node@22 + pnpm). `sbx_agent` is `pi`, not `shell`. |
 
-A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack. Credentials stay in kits; `sbx secret set` is host-side.
+A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack.
+Credentials belong on the kit that needs them (many `sbx secret set` services per
+kit). Do not ship a mixin per API key. Create-time `run` lists declared services;
+set any you use. See `sbx-kit concepts`.
 
-**Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose `sandbox.image` is an official template. Create-time `run` prints `sbx secret set …`; `sbx-kit check` shows declared services. See `sbx-kit concepts`.
+**Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose
+`sandbox.image` is an official template.
 
 **Custom path:** images under `templates/` (`kit-core` → `kit-cursor`, …).
 `sbx-kit image load` for local build/import; `sbx-kit image pull` for a registry
@@ -41,4 +44,4 @@ Use `mise-workspace` only on images that ship `/usr/local/bin/mise`.
 ## Composition
 
 Recipes in [`config/agents.yaml`](../config/agents.yaml). Catalog defaults list
-`agent-workspace`; recipe `kits:` are extra (mise-workspace, pi, deepseek-creds, …).
+`agent-workspace`; recipe `kits:` are extra (mise-workspace, pi, …).

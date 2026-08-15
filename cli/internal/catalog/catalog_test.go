@@ -11,7 +11,7 @@ func TestResolveKitsMergesDefaults(t *testing.T) {
 	if got := ResolveKits(nil, defaults); !reflect.DeepEqual(got, defaults) {
 		t.Fatalf("empty recipe: %v", got)
 	}
-	if got := ResolveKits([]string{"pi", "deepseek-creds"}, defaults); !reflect.DeepEqual(got, []string{"pi", "deepseek-creds", "agent-workspace"}) {
+	if got := ResolveKits([]string{"pi", "mise-workspace"}, defaults); !reflect.DeepEqual(got, []string{"pi", "mise-workspace", "agent-workspace"}) {
 		t.Fatalf("merge: %v", got)
 	}
 	if got := ResolveKits([]string{"mise-workspace", "agent-workspace"}, defaults); !reflect.DeepEqual(got, []string{"mise-workspace", "agent-workspace"}) {

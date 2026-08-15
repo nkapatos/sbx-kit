@@ -16,8 +16,12 @@ changes what the first `sbx run` argument is:
 Do **not** write `sbx_agent: shell` for this kit. The sandbox kit's `name: pi`
 is the kind. Official shell is the **image** (`sandbox.image`), not the kind.
 
-Credentials live in kits (`network` + `proxyManaged` / `credentials.sources`).
-The recipe only lists kits; the host stores values with `sbx secret set`.
+Credentials live **on this kit** (many providers, one spec). The recipe does
+not name APIs. On the host, `sbx secret set <service>` for **any** you use:
+
+`anthropic`, `openai`, `deepseek`, `openrouter`, `groq`, `mistral`, `xai`,
+`together`. Extra APIs: extend this kit or add a personal mixin — not a
+kit-per-key.
 
 ## Install paths
 
@@ -30,7 +34,7 @@ The kit detects the lean floor (`/usr/local/bin/mise` + `/mise`) and does **not*
 fall back to npm there. `mise-workspace` must stay on the `kit-pi` recipe.
 
 ```bash
-sbx secret set deepseek
+sbx secret set anthropic    # and/or openai, deepseek, …
 sbx-kit run pi --yes
 sbx-kit image load --engine docker kit-core
 sbx-kit run kit-pi --yes

@@ -8,17 +8,16 @@
 #   mixin kits     stack on a Hub kind (cursor, shell, …)
 #   sandbox kits   ARE the kind: sbx_agent must match the kit's name:
 #                  sbx run pi --kit …/kits/pi  (not sbx run shell --kit pi)
-#   credentials    live in kits (network + proxyManaged); host: sbx secret set
+#   credentials    live on the kit that needs them (many services per kit);
+#                  host: sbx secret set <service> for any you use
 #
 # Catalog defaults.kits (agent-workspace) are always attached, then recipe kits.
-# List extra kits on the recipe; do not repeat agent-workspace unless you want
-# it first.
 #
 # Template source (SOURCE column in sbx-kit recipes):
 #   - Omit image_name + template_fallback → stock (sbx kind / kit image)
 #   - Set image_name / template_fallback → custom (local/… or registry tag)
 #
-# Optional mixins: lsp-mise, apt-extras, deepseek-creds.
+# Optional mixins: lsp-mise, apt-extras.
 # Product scope: docs/product-scope.md
 
 defaults:
@@ -27,22 +26,20 @@ defaults:
     - agent-workspace
 
 agents:
-  # Stock sbx shell + DeepSeek proxy creds trial (no custom image).
+  # Stock sbx shell (agent-workspace from defaults).
   shell:
     sbx_agent: shell
-    kits:
-      - deepseek-creds
 
   # Stock sbx cursor + portable state (agent-workspace from defaults).
   cursor:
     sbx_agent: cursor
 
   # Official shell image + Pi sandbox kit (kind is pi, not shell).
+  # Provider keys are declared on kits/pi, not a creds mixin.
   pi:
     sbx_agent: pi
     kits:
       - pi
-      - deepseek-creds
 
   # Custom lean floor (build/load or registry pin).
   kit-core:
@@ -68,4 +65,3 @@ agents:
     kits:
       - pi
       - mise-workspace
-      - deepseek-creds

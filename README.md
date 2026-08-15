@@ -33,7 +33,7 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | --- | --- | --- |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State (default on every recipe) + mise mixins |
-| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/deepseek-creds`](kits/deepseek-creds/) | Optional / trial mixins |
+| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional mixins |
 | Shipped | [`kits/pi`](kits/pi/) | Sandbox kit; recipes `pi` (official shell) and `kit-pi` (kit-core) |
 | Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Custom floor examples (load locally; publish to registry later) |
 | Follow-up | Registry publish for templates; recipe/kit discovery; agent refresh vs upgrade | |
@@ -75,7 +75,6 @@ No local image build. `sbx` uses the stock Hub image; kits attach at create:
 cd ~/my-project
 sbx-kit concepts
 sbx-kit recipes
-sbx secret set deepseek
 sbx-kit run shell --yes
 sbx-kit check
 ```

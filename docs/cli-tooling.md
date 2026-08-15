@@ -75,8 +75,9 @@ sbx-kit run --name my-project
 ## Host secrets
 
 On **create**, `run` prints `sbx secret set <service>` for services declared in
-the recipe’s kits. `check` runs `sbx secret ls` (sandbox-scoped when the box
-exists).
+the recipe’s kits. Set **any** you use; they are not all required. Extra APIs
+belong in that kit (or a personal mixin), not a kit per key. `check` runs
+`sbx secret ls` (sandbox-scoped when the box exists).
 
 ## Portable state
 

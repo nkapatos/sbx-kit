@@ -33,8 +33,8 @@ func conceptsText() string {
 sbx's first argument is the sandbox kind. A recipe picks that for you.
 Mixin kits stack on a Hub kind. A sandbox kit (pi) *is* the kind — the recipe's
 sbx_agent matches the kit name, and the shell image lives in the kit (or a
-recipe -t pin). Credentials live in kits; the host stores them with
-sbx secret set.
+recipe -t pin). Credentials live on the kit that needs them (many services
+per kit); the host stores values with sbx secret set (any you use).
 
 Catalog default kit: agent-workspace (portable state / sbx-kit-state).
 

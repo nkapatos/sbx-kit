@@ -34,7 +34,7 @@ sbx agent + kits ───┤     sandbox kits start extra agents on shell, etc.
                     └── custom: kit-core → kit-cursor | (later other agent layers)
                               pull local (image load) or remote registry (image pull)
 
-kits: agent-workspace (default) | mise-workspace | deepseek-creds | pi (sandbox) | …
+kits: agent-workspace (default) | mise-workspace | pi (sandbox + provider secrets) | …
 CLI: recipes, placement, state export/import/upgrade; later recipe registry
 ```
 
@@ -69,7 +69,7 @@ in the recipe when ready.
 | `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
 | `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `kit-cursor` |
 
-Stock recipes: `shell` (shell + deepseek-creds trial), `cursor`, `pi` (sandbox kit on official shell).
+Stock recipes: `shell`, `cursor`, `pi` (sandbox kit on official shell; provider keys on the kit).
 Custom: `kit-core`, `kit-cursor`, `kit-pi` (same Pi kit, kit-core image).
 
 ```bash

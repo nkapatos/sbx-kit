@@ -60,7 +60,7 @@ agents:
     kits:
       - mise-workspace
 
-  # Same Pi sandbox kit on kit-core (recipe -t overrides kit sandbox.image).
+  # Same Pi sandbox kit on kit-core. Install uses mise node@22 + pnpm (no image npm).
   kit-pi:
     sbx_agent: pi
     image_name: sbx-kit-core

@@ -26,7 +26,7 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 
 | Directory | Kind | Used with |
 | --- | --- | --- |
-| [pi](pi/) | sandbox | Official shell image (recipe `pi`) or kit-core (recipe `kit-pi`). `sbx_agent` is `pi`, not `shell`. |
+| [pi](pi/) | sandbox | Official shell (`pi`, npm -g) or kit-core (`kit-pi`, mise node@22 + pnpm). `sbx_agent` is `pi`, not `shell`. |
 
 A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack. Credentials stay in kits; `sbx secret set` is host-side.
 

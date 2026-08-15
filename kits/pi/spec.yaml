@@ -19,49 +19,87 @@ network:
     - "**.npmjs.org"
     - nodejs.org
     - "**.nodejs.org"
+    - mise.jdx.dev
+    - "**.jdx.dev"
     - github.com
     - "**.github.com"
     - objects.githubusercontent.com
 
 commands:
   install:
-    - description: Ensure Node >= 22 and install pi globally
+    - description: Install pi (official npm, or mise node+pnpm on kit-core)
       user: "1000"
       command: |
         set -euo pipefail
-        ensure_npm() {
-          if command -v npm >/dev/null 2>&1; then
-            return 0
-          fi
-          if command -v mise >/dev/null 2>&1; then
-            export MISE_DATA_DIR="${MISE_DATA_DIR:-/mise}"
-            export MISE_CONFIG_DIR="${MISE_CONFIG_DIR:-/mise}"
-            export MISE_CACHE_DIR="${MISE_CACHE_DIR:-/mise/cache}"
-            mise install node@22
-            mise use -g node@22
-            export PATH="${MISE_DATA_DIR}/shims:${PATH}"
-            hash -r
-            command -v npm >/dev/null 2>&1
-            return
-          fi
-          echo "pi kit needs npm (Node >= 22). Official shell should ship it; kit-core recipes must include mise-workspace." >&2
-          exit 1
+        PKG="@earendil-works/pi-coding-agent"
+        retry() {
+          i=0
+          while [ "$i" -lt 5 ]; do
+            if "$@"; then
+              return 0
+            fi
+            i=$((i + 1))
+            echo "Retrying ($i/5): $*"
+          done
+          return 1
         }
-        ensure_npm
-        if [ -n "${HTTP_PROXY:-}${HTTPS_PROXY:-}" ]; then
-          npm config set proxy "${HTTP_PROXY:-${HTTPS_PROXY}}"
-          npm config set https-proxy "${HTTPS_PROXY:-${HTTP_PROXY}}"
-        fi
-        npm_cmd="npm install -g --ignore-scripts --maxsockets=1 @earendil-works/pi-coding-agent"
-        i=0
-        while [ "$i" -lt 5 ]; do
-          if $npm_cmd || sudo -E env "PATH=$PATH" $npm_cmd; then
-            break
+        link_pi() {
+          local src="$1"
+          if [ ! -x "$src" ]; then
+            echo "pi binary not executable: $src" >&2
+            return 1
           fi
-          i=$((i + 1))
-          echo "Retrying pi install ($i/5)..."
-        done
+          sudo ln -sfn "$src" /usr/local/bin/pi
+        }
+        install_official_npm() {
+          if [ -n "${HTTP_PROXY:-}${HTTPS_PROXY:-}" ]; then
+            npm config set proxy "${HTTP_PROXY:-${HTTPS_PROXY}}"
+            npm config set https-proxy "${HTTPS_PROXY:-${HTTP_PROXY}}"
+          fi
+          retry npm install -g --ignore-scripts --maxsockets=1 "$PKG" \
+            || retry sudo -E env "PATH=$PATH" npm install -g --ignore-scripts --maxsockets=1 "$PKG"
+          command -v pi >/dev/null 2>&1
+        }
+        install_mise_pnpm() {
+          export MISE_DATA_DIR="${MISE_DATA_DIR:-/mise}"
+          export MISE_CONFIG_DIR="${MISE_CONFIG_DIR:-/mise}"
+          export MISE_CACHE_DIR="${MISE_CACHE_DIR:-/mise/cache}"
+          export PATH="/mise/shims:/usr/local/bin:${PATH}"
+          /usr/local/bin/mise use -g node@22 pnpm
+          hash -r
+          command -v node >/dev/null 2>&1
+          command -v pnpm >/dev/null 2>&1
+          export PNPM_HOME="${PNPM_HOME:-/home/agent/.local/share/pnpm}"
+          mkdir -p "$PNPM_HOME"
+          pnpm config set global-bin-dir "$PNPM_HOME"
+          retry pnpm add -g --ignore-scripts "$PKG"
+          gbin="$(pnpm bin -g)"
+          if [ -x "$gbin/pi" ]; then
+            link_pi "$gbin/pi"
+          else
+            link_pi "$PNPM_HOME/pi"
+          fi
+          sudo touch /etc/sandbox-persistent.sh
+          if ! sudo grep -qF '# sbx-pi-pnpm' /etc/sandbox-persistent.sh; then
+            printf '%s\n' \
+              '# sbx-pi-pnpm' \
+              'export PNPM_HOME="${PNPM_HOME:-/home/agent/.local/share/pnpm}"' \
+              'export PATH="${PNPM_HOME}:${PATH}"' \
+              | sudo tee -a /etc/sandbox-persistent.sh >/dev/null
+          fi
+        }
+        if [ -x /usr/local/bin/mise ] && [ -d /mise ]; then
+          echo "==> kit-core floor: mise node@22 + pnpm, then pnpm add -g $PKG"
+          install_mise_pnpm
+        elif command -v npm >/dev/null 2>&1; then
+          echo "==> official template: npm install -g $PKG"
+          install_official_npm
+        else
+          echo "pi kit: official images need npm; kit-core needs /usr/local/bin/mise and /mise (mise-workspace)." >&2
+          exit 1
+        fi
         command -v pi >/dev/null 2>&1
+
 
 agentContext: |
   ## Pi (sandbox kit)
@@ -77,5 +115,8 @@ agentContext: |
   vars from mixin kits (e.g. `DEEPSEEK_API_KEY`) are proxy sentinels — do not
   paste real keys or run provider `/login` unless you intend host-side OAuth.
 
-  Install/update: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
-  (or `pi update --self` if the network policy allows it).
+  Install/update:
+  - Official shell image: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
+  - kit-core (`kit-pi`): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
+    (do not apt/npm a Node toolchain on the lean floor).
+  `pi update --self` if the network policy allows it.

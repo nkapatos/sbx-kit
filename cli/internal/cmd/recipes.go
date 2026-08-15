@@ -18,8 +18,12 @@ func newRecipesCmd() *cobra.Command {
 		Short: "List catalog recipes (kind + kits shortcuts)",
 		Long: `Recipes are sbx-kit shortcuts: an sbx kind, optional custom image, and kits.
 
+Mixin kits stack on a Hub kind (cursor, shell). A sandbox kit IS the kind:
+sbx_agent must match the kit name (pi → sbx run pi --kit …/pi), not shell.
+Catalog defaults (agent-workspace) are always attached.
+
 SOURCE:
-  stock    sbx stock kind (no image pin in the recipe)
+  stock    no image pin (Hub kind, or sandbox kit owns sandbox.image)
   custom   recipe pins image_name / template_fallback (local/… or a registry tag)
 
 Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
@@ -50,10 +54,7 @@ Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 				if a.Stub {
 					status = "stub"
 				}
-				kits := a.Kits
-				if len(kits) == 0 {
-					kits = cat.Defaults.Kits
-				}
+				kits := catalog.ResolveKits(a.Kits, cat.Defaults.Kits)
 				source, image := recipeSource(a)
 				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
 					name, a.SbxAgent, source, image, strings.Join(kits, ","), status)

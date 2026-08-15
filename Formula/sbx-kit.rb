@@ -60,6 +60,7 @@ class SbxKit < Formula
         sbx-kit recipes
         sbx secret set deepseek
         sbx-kit run shell --yes
+        sbx-kit run pi --yes
         sbx-kit check
 
       Custom images (optional):
@@ -68,12 +69,14 @@ class SbxKit < Formula
         sbx-kit image load --engine docker kit-cursor
         sbx template ls
         sbx-kit run kit-cursor --yes
+        sbx-kit run kit-pi --yes
     EOS
   end
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
     assert_match "shell", shell_output("#{bin}/sbx-kit recipes")
+    assert_match "pi", shell_output("#{bin}/sbx-kit recipes")
     assert_match "recipe", shell_output("#{bin}/sbx-kit concepts")
     assert_match "check", shell_output("#{bin}/sbx-kit check --help")
     assert_match "load", shell_output("#{bin}/sbx-kit image load --help")

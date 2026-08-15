@@ -1,0 +1,81 @@
+schemaVersion: "1"
+kind: sandbox
+name: pi
+displayName: Pi
+description: >
+  Pi coding agent on a shell-class image. Installs @earendil-works/pi-coding-agent
+  at create; attach entrypoint is pi. Pair with mixin kits (agent-workspace,
+  deepseek-creds, mise-workspace) via a recipe. Do not bake Pi into the image.
+
+sandbox:
+  image: docker/sandbox-templates:shell
+  aiFilename: AGENTS.md
+  entrypoint:
+    run: [pi]
+
+network:
+  allowedDomains:
+    - registry.npmjs.org
+    - "**.npmjs.org"
+    - nodejs.org
+    - "**.nodejs.org"
+    - github.com
+    - "**.github.com"
+    - objects.githubusercontent.com
+
+commands:
+  install:
+    - description: Ensure Node >= 22 and install pi globally
+      user: "1000"
+      command: |
+        set -euo pipefail
+        ensure_npm() {
+          if command -v npm >/dev/null 2>&1; then
+            return 0
+          fi
+          if command -v mise >/dev/null 2>&1; then
+            export MISE_DATA_DIR="${MISE_DATA_DIR:-/mise}"
+            export MISE_CONFIG_DIR="${MISE_CONFIG_DIR:-/mise}"
+            export MISE_CACHE_DIR="${MISE_CACHE_DIR:-/mise/cache}"
+            mise install node@22
+            mise use -g node@22
+            export PATH="${MISE_DATA_DIR}/shims:${PATH}"
+            hash -r
+            command -v npm >/dev/null 2>&1
+            return
+          fi
+          echo "pi kit needs npm (Node >= 22). Official shell should ship it; kit-core recipes must include mise-workspace." >&2
+          exit 1
+        }
+        ensure_npm
+        if [ -n "${HTTP_PROXY:-}${HTTPS_PROXY:-}" ]; then
+          npm config set proxy "${HTTP_PROXY:-${HTTPS_PROXY}}"
+          npm config set https-proxy "${HTTPS_PROXY:-${HTTP_PROXY}}"
+        fi
+        npm_cmd="npm install -g --ignore-scripts --maxsockets=1 @earendil-works/pi-coding-agent"
+        i=0
+        while [ "$i" -lt 5 ]; do
+          if $npm_cmd || sudo -E env "PATH=$PATH" $npm_cmd; then
+            break
+          fi
+          i=$((i + 1))
+          echo "Retrying pi install ($i/5)..."
+        done
+        command -v pi >/dev/null 2>&1
+
+agentContext: |
+  ## Pi (sandbox kit)
+
+  You are **Pi**, launched as this sandbox's attach entrypoint — not a mixin
+  on `sbx run shell`. The image is official `docker/sandbox-templates:shell`
+  unless the recipe pinned a custom tag (`kit-pi` → kit-core).
+
+  Project trust defaults to always (this microVM is the boundary). Override
+  with `/trust` or `~/.pi/agent/settings.json`.
+
+  Provider keys stay on the host (`sbx secret set …`). Inside the box, env
+  vars from mixin kits (e.g. `DEEPSEEK_API_KEY`) are proxy sentinels — do not
+  paste real keys or run provider `/login` unless you intend host-side OAuth.
+
+  Install/update: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
+  (or `pi update --self` if the network policy allows it).

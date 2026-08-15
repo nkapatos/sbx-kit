@@ -1,20 +1,29 @@
 # Recipe catalog for sbx-kit (see docs/cli-tooling.md).
 #
-# Each key is a RECIPE id. Prefer stock recipe ids that match the sbx agent
-# name (shell, cursor, …). Prefix custom-image recipes with kit- (or your own
-# namespace) so they do not collide with stock names.
+# Each key is a RECIPE id. Prefer stock recipe ids that match the sbx kind
+# (shell, cursor) or a sandbox-kit name (pi). Prefix custom-image recipes
+# with kit- so they do not collide with stock names.
+#
+# A recipe is always: sbx kind + kits + optional image pin.
+#   mixin kits     stack on a Hub kind (cursor, shell, …)
+#   sandbox kits   ARE the kind: sbx_agent must match the kit's name:
+#                  sbx run pi --kit …/kits/pi  (not sbx run shell --kit pi)
+#   credentials    live in kits (network + proxyManaged); host: sbx secret set
+#
+# Catalog defaults.kits (agent-workspace) are always attached, then recipe kits.
+# List extra kits on the recipe; do not repeat agent-workspace unless you want
+# it first.
 #
 # Template source (SOURCE column in sbx-kit recipes):
-#   - Omit image_name + template_fallback → stock (sbx agent template)
+#   - Omit image_name + template_fallback → stock (sbx kind / kit image)
 #   - Set image_name / template_fallback → custom (local/… or registry tag)
 #
-# Optional mixins (not in defaults): lsp-mise, apt-extras, deepseek-creds.
+# Optional mixins: lsp-mise, apt-extras, deepseek-creds.
 # Product scope: docs/product-scope.md
 
 defaults:
   resources: remote-llm
   kits:
-    - mise-workspace
     - agent-workspace
 
 agents:
@@ -22,14 +31,18 @@ agents:
   shell:
     sbx_agent: shell
     kits:
-      - agent-workspace
       - deepseek-creds
 
-  # Stock sbx cursor + portable state.
+  # Stock sbx cursor + portable state (agent-workspace from defaults).
   cursor:
     sbx_agent: cursor
+
+  # Official shell image + Pi sandbox kit (kind is pi, not shell).
+  pi:
+    sbx_agent: pi
     kits:
-      - agent-workspace
+      - pi
+      - deepseek-creds
 
   # Custom lean floor (build/load or registry pin).
   kit-core:
@@ -38,7 +51,6 @@ agents:
     template_fallback: local/sbx-kit-core:latest
     kits:
       - mise-workspace
-      - agent-workspace
 
   # Custom Cursor layer on kit-core.
   kit-cursor:
@@ -47,4 +59,13 @@ agents:
     template_fallback: local/sbx-kit-cursor:latest
     kits:
       - mise-workspace
-      - agent-workspace
+
+  # Same Pi sandbox kit on kit-core (recipe -t overrides kit sandbox.image).
+  kit-pi:
+    sbx_agent: pi
+    image_name: sbx-kit-core
+    template_fallback: local/sbx-kit-core:latest
+    kits:
+      - pi
+      - mise-workspace
+      - deepseek-creds

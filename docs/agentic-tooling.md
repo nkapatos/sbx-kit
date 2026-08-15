@@ -34,7 +34,7 @@ sbx agent + kits ───┤     sandbox kits start extra agents on shell, etc.
                     └── custom: kit-core → kit-cursor | (later other agent layers)
                               pull local (image load) or remote registry (image pull)
 
-kits: mise-workspace | agent-workspace | apt-extras | …   (mixins)
+kits: agent-workspace (default) | mise-workspace | deepseek-creds | pi (sandbox) | …
 CLI: recipes, placement, state export/import/upgrade; later recipe registry
 ```
 
@@ -69,18 +69,20 @@ in the recipe when ready.
 | `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
 | `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `kit-cursor` |
 
-Stock recipes: `shell` (shell + deepseek-creds trial), `cursor` (cursor + agent-workspace).
-Custom: `kit-core`, `kit-cursor`.
+Stock recipes: `shell` (shell + deepseek-creds trial), `cursor`, `pi` (sandbox kit on official shell).
+Custom: `kit-core`, `kit-cursor`, `kit-pi` (same Pi kit, kit-core image).
 
 ```bash
 sbx-kit concepts
 sbx-kit recipes
 sbx-kit run shell --yes
+sbx-kit run pi --yes
 sbx-kit check
 # custom image:
 sbx-kit image load --engine docker kit-core
 sbx-kit image load --engine docker kit-cursor
 sbx-kit run kit-cursor --yes
+sbx-kit run kit-pi --yes
 ```
 
 ---
@@ -95,7 +97,7 @@ sbx-kit run kit-cursor --yes
 | `image ls` / `load` / `pull` + create-time secret hints + `check` | Done |
 | Recipe/kit discovery (remote tree or registry) | Open |
 | One-command local `image load` for agent images | Open |
-| Example sandbox kit on official shell (community pattern) | Open |
+| Example sandbox kit on official shell (community pattern) | Done (`pi` / `kit-pi`) |
 | Baked agents beyond cursor on kit-core (local/remote pull) | Later |
 | Kits for preference CLIs (`gh`/`glab`/…) | Open |
 | Host agent refresh (distinct from `upgrade`) | Open |

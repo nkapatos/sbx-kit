@@ -161,14 +161,8 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		return err
 	}
 
-	kits := ag.Kits
-	if len(kits) == 0 {
-		kits = cat.Defaults.Kits
-	}
-	kitPaths := make([]string, 0, len(kits))
-	for _, k := range kits {
-		kitPaths = append(kitPaths, filepath.Join(root, "kits", k))
-	}
+	kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
+	kitPaths := catalog.KitPaths(root, kits)
 
 	if clone && !containsFlag(extra, "--clone") {
 		extra = append([]string{"--clone"}, extra...)

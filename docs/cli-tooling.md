@@ -89,8 +89,9 @@ sbx-kit upgrade --recipe cursor
 ## Catalog
 
 Recipes live in [`config/agents.yaml`](../config/agents.yaml) (filename kept for
-now). Stock ids match sbx kinds (`shell`, `cursor`); custom images use a
-`kit-` prefix. `sbx-kit recipes` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS`.
+now). Stock ids match sbx kinds (`shell`, `cursor`) or a sandbox-kit name (`pi`);
+custom images use a `kit-` prefix. Catalog default kit is `agent-workspace`.
+`sbx-kit recipes` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS`.
 
 ## Custom images
 

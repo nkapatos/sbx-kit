@@ -62,14 +62,8 @@ func runCheck(recipeID, path, name string) error {
 		cat, err := catalog.Load(filepath.Join(rs.Root, "config", "agents.yaml"))
 		if err == nil {
 			if ag, ok := cat.Agents[rs.AgentName]; ok {
-				kits := ag.Kits
-				if len(kits) == 0 {
-					kits = cat.Defaults.Kits
-				}
-				kitPaths = make([]string, 0, len(kits))
-				for _, k := range kits {
-					kitPaths = append(kitPaths, filepath.Join(rs.Root, "kits", k))
-				}
+				kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
+				kitPaths = catalog.KitPaths(rs.Root, kits)
 			}
 		}
 	}

@@ -31,7 +31,7 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 | **kit-core** | OS essentials, modern utils, sbx glue, mise **binary** | `templates/kit-core` |
 | **Agent image** | Bootstrap install/layout only | `kit-cursor`; later other agents on core |
 | **Mixin kit** | Activate, allowlists, state, preference CLIs | `mise-workspace`, `agent-workspace`, `apt-extras` |
-| **Sandbox kit** | Official-path agent entry (startup on shell, etc.) | Community / user kits; not shipped here yet |
+| **Sandbox kit** | Agent Hub doesn’t ship: image + entrypoint + install | `kits/pi` (recipes `pi` / `kit-pi`) |
 | **Project** | Language pins | `mise.toml` |
 | **Host / CLI** | Recipes, kit placement, state; later agent refresh | |
 
@@ -39,8 +39,9 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 - Kits + recipes; Hub-first create path; local `image load` / `image pull` when needed
 - `templates/kit-core`, `templates/kit-cursor` as optional lean floor examples
-- Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras;
+- Mixins: mise-workspace, agent-workspace (default on every recipe); optional lsp-mise, apt-extras;
   deepseek-creds (Hub secret trial)
+- Sandbox kit example: `kits/pi` on official shell (`pi`) and kit-core (`kit-pi`)
 - CLI lifecycle + vault; `image ls` of our Dockerfiles; `check` over sbx
 
 ## Out of scope / parked

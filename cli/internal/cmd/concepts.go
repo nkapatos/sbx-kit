@@ -31,11 +31,17 @@ func conceptsText() string {
                      then import so they show up in sbx template ls
 
 sbx's first argument is the sandbox kind. A recipe picks that for you.
-Kits attach at create. Custom images are ours; once imported they are just
-another -t for sbx.
+Mixin kits stack on a Hub kind. A sandbox kit (pi) *is* the kind — the recipe's
+sbx_agent matches the kit name, and the shell image lives in the kit (or a
+recipe -t pin). Credentials live in kits; the host stores them with
+sbx secret set.
+
+Catalog default kit: agent-workspace (portable state / sbx-kit-state).
 
   sbx-kit recipes              catalog
   sbx-kit run cursor --yes     recipe named cursor → sbx run cursor --kit …
+  sbx-kit run pi --yes         sandbox kit → sbx run pi --kit pi --kit …
+  sbx-kit run kit-pi --yes     same kit, custom image -t
   sbx-kit run kit-cursor --yes custom image pin → sbx run cursor -t … --kit …
   sbx-kit image ls|load|pull   manage custom images (not sbx template ls)
   sbx-kit check | status

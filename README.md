@@ -32,8 +32,9 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Status | Name | Notes |
 | --- | --- | --- |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
-| Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State + mise mixins (mise needs a mise-ready image) |
+| Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State (default on every recipe) + mise mixins |
 | Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/deepseek-creds`](kits/deepseek-creds/) | Optional / trial mixins |
+| Shipped | [`kits/pi`](kits/pi/) | Sandbox kit; recipes `pi` (official shell) and `kit-pi` (kit-core) |
 | Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Custom floor examples (load locally; publish to registry later) |
 | Follow-up | Registry publish for templates; recipe/kit discovery; agent refresh vs upgrade | |
 

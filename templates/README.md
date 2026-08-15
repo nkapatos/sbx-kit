@@ -31,6 +31,6 @@ sbx-kit run kit-cursor --yes
 | [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `kit-core` | Floor; cache-split Dockerfile |
 | [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Bootstrap Cursor layout on core |
 
-Recipes: stock `shell` / `cursor`; custom `kit-core` / `kit-cursor`. Further
+Recipes: stock `shell` / `cursor` / `pi`; custom `kit-core` / `kit-cursor` / `kit-pi`. Further
 baked agents on kit-core (local or registry) come later — Hub extras use
-sandbox kits, not this tree’s old workaround mixins.
+sandbox kits (`kits/pi`), not workaround mixins.

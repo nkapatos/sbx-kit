@@ -17,24 +17,28 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 | Directory | Kind | Used with |
 | --- | --- | --- |
 | [mise-workspace](mise-workspace/) | mixin | Templates with `/usr/local/bin/mise` (kit-core). Allowlists, `MISE_*`, activate. Never sets `environment.variables.PATH`. |
-| [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. |
+| [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. **Catalog default** on every recipe. |
 | [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers. |
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
 | [deepseek-creds](deepseek-creds/) | mixin | **Trial.** Hub-path proxy creds for `api.deepseek.com` (no agent). |
 
-**Hub path:** attach kits to the stock `sbx` kind (see recipes
-`shell`, `cursor`) — no custom image pin. Extra agents (Pi, etc.) belong as
-**sandbox kits** on an official shell kind, with secrets via `sbx secret` /
-proxyManaged. Create-time `run` prints `sbx secret set …`; `sbx-kit check` shows declared
-services and passes through `sbx secret ls`. See `sbx-kit concepts`.
+## Sandbox kits
+
+| Directory | Kind | Used with |
+| --- | --- | --- |
+| [pi](pi/) | sandbox | Official shell image (recipe `pi`) or kit-core (recipe `kit-pi`). `sbx_agent` is `pi`, not `shell`. |
+
+A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack. Credentials stay in kits; `sbx secret set` is host-side.
+
+**Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose `sandbox.image` is an official template. Create-time `run` prints `sbx secret set …`; `sbx-kit check` shows declared services. See `sbx-kit concepts`.
 
 **Custom path:** images under `templates/` (`kit-core` → `kit-cursor`, …).
 `sbx-kit image load` for local build/import; `sbx-kit image pull` for a registry
-tag. Pin the tag in the recipe once published.
+tag. Pin the tag in the recipe once published. Same sandbox kit as Hub; the
+recipe `-t` overrides `sandbox.image`.
 Use `mise-workspace` only on images that ship `/usr/local/bin/mise`.
 
 ## Composition
 
 Recipes in [`config/agents.yaml`](../config/agents.yaml). Catalog defaults list
-`mise-workspace` + `agent-workspace`; Hub example recipes often override kits
-(e.g. `agent-workspace` only).
+`agent-workspace`; recipe `kits:` are extra (mise-workspace, pi, deepseek-creds, …).

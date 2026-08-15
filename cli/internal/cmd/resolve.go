@@ -63,14 +63,8 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		}
 	}
 
-	kits := agent.Kits
-	if len(kits) == 0 {
-		kits = cat.Defaults.Kits
-	}
-	kitPaths := make([]string, 0, len(kits))
-	for _, k := range kits {
-		kitPaths = append(kitPaths, filepath.Join(root, "kits", k))
-	}
+	kits := catalog.ResolveKits(agent.Kits, cat.Defaults.Kits)
+	kitPaths := catalog.KitPaths(root, kits)
 
 	resProfile := cat.Defaults.Resources
 	if resProfile == "" {

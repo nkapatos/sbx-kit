@@ -26,8 +26,8 @@ func newRmCmd() *cobra.Command {
 vault, then sbx rm.
 
 Without --keep-state, /home/agent workplace state is discarded with the box.`,
-		Example: `  sbx-kit rm --recipe shell-hub --keep-state
-  sbx-kit rm --recipe cursor-hub --path ~/proj --keep-state
+		Example: `  sbx-kit rm --recipe shell --keep-state
+  sbx-kit rm --recipe cursor --path ~/proj --keep-state
   sbx-kit rm --name my-project --keep-state --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

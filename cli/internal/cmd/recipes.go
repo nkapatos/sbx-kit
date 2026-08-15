@@ -24,7 +24,7 @@ SOURCE:
 
 Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 		Example: `  sbx-kit recipes
-  sbx-kit run --recipe shell-hub --yes`,
+  sbx-kit run --recipe shell --yes`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root, err := requireToolkitRoot()

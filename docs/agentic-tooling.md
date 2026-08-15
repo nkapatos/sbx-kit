@@ -67,20 +67,20 @@ tag in the recipe when ready.
 | Image tag | Role | Recipe |
 | --- | --- | --- |
 | `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
-| `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `cursor` / `kit-cursor` |
+| `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `kit-cursor` |
 
-Hub example recipes: `shell-hub` (stock shell + deepseek-creds trial),
-`cursor-hub` (stock cursor + agent-workspace).
+Stock recipes: `shell` (shell + deepseek-creds trial), `cursor` (cursor + agent-workspace).
+Custom: `kit-core`, `kit-cursor`.
 
 ```bash
 sbx-kit concepts
 sbx-kit recipes
-sbx-kit run --recipe shell-hub --yes
+sbx-kit run --recipe shell --yes
 sbx-kit check
-# local custom:
+# custom image:
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
-sbx-kit run --recipe cursor --yes
+sbx-kit run --recipe kit-cursor --yes
 ```
 
 ---

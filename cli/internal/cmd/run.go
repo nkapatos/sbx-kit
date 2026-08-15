@@ -50,12 +50,12 @@ func newRunCmd() *cobra.Command {
       ATTACH by friendly sbx name (what sbx ls shows).
 
 Pass-through after -- goes to sbx.`,
-		Example: `  sbx-kit run --recipe shell-hub --yes
-  sbx-kit run --recipe cursor-hub --yes
+		Example: `  sbx-kit run --recipe shell --yes
   sbx-kit run --recipe cursor --yes
-  sbx-kit run --recipe shell-hub --sandbox-name ds-creds --yes
+  sbx-kit run --recipe kit-cursor --yes
+  sbx-kit run --recipe shell --sandbox-name ds-creds --yes
   sbx-kit run --name my-project
-  sbx-kit run --recipe shell-hub --yes -- --memory 8g`,
+  sbx-kit run --recipe shell --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)

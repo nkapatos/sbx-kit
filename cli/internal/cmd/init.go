@@ -18,7 +18,7 @@ func newInitCmd() *cobra.Command {
 		Long:  `Writes or updates a short "## Docker Sandbox" section using a catalog recipe.`,
 		Example: `  sbx-kit init
   sbx-kit init ~/my-project
-  sbx-kit init --recipe shell-hub .`,
+  sbx-kit init --recipe shell .`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectDir := "."
@@ -30,7 +30,7 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			if recipeID == "" {
-				recipeID = "shell-hub"
+				recipeID = "shell"
 			}
 			root, err := requireToolkitRoot()
 			if err != nil {

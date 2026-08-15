@@ -28,7 +28,8 @@ func conceptsText() string {
   kit        (sbx)     Create-time customization (network, credentials, startup, …).
 
   recipe     (sbx-kit) Named shortcut: which agent (+ optional template) + which kits.
-                       So you do not pass kit paths by hand on every create.
+                       Stock recipe ids match the sbx agent (shell, cursor, …).
+                       Custom-image recipes use a kit- prefix (kit-core, kit-cursor).
 
 sbx-kit sits on top of sbx: recipes, kit placement, portable state, and thin
 helpers (template ls / load, check). It does not replace sbx secret, sbx run,

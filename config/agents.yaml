@@ -1,16 +1,14 @@
 # Recipe catalog for sbx-kit (see docs/cli-tooling.md).
 #
-# Each key is a RECIPE id (user-chosen). sbx_agent is the underlying sbx agent.
-# This file ships example recipes for this toolkit tree — bring your own catalog
-# when pointing SBX_TREE at another templates/kits repo.
+# Each key is a RECIPE id. Prefer stock recipe ids that match the sbx agent
+# name (shell, cursor, …). Prefix custom-image recipes with kit- (or your own
+# namespace) so they do not collide with stock names.
 #
-# Template source:
-#   - Omit image_name + template_fallback → Hub / stock sbx agent template
-#     (official customization path: kits on top of what sbx already provides).
-#   - Set image_name / template_fallback → local or registry tag resolved via
-#     `sbx template ls`, else the fallback.
+# Template source (SOURCE column in sbx-kit recipes):
+#   - Omit image_name + template_fallback → stock (sbx agent template)
+#   - Set image_name / template_fallback → custom (local/… or registry tag)
 #
-# Optional capability mixins (not in defaults): lsp-mise, apt-extras, deepseek-creds.
+# Optional mixins (not in defaults): lsp-mise, apt-extras, deepseek-creds.
 # Product scope: docs/product-scope.md
 
 defaults:
@@ -20,21 +18,20 @@ defaults:
     - agent-workspace
 
 agents:
-  # Hub shell + DeepSeek proxy creds (no agent install). Trial for kit-declared secrets.
-  shell-hub:
+  # Stock sbx shell + DeepSeek proxy creds trial (no custom image).
+  shell:
     sbx_agent: shell
     kits:
       - agent-workspace
       - deepseek-creds
 
-  # Official Cursor template from sbx/Hub + portable state kit only.
-  # No local image build. Add more kits in your own recipe to experiment.
-  cursor-hub:
+  # Stock sbx cursor + portable state.
+  cursor:
     sbx_agent: cursor
     kits:
       - agent-workspace
 
-  # Lean floor: debian + sbx glue + mise (no project language toolchains).
+  # Custom lean floor (build/load or registry pin).
   kit-core:
     sbx_agent: shell
     image_name: sbx-kit-core
@@ -43,16 +40,7 @@ agents:
       - mise-workspace
       - agent-workspace
 
-  # Cursor agent layered on kit-core (local build).
-  cursor:
-    sbx_agent: cursor
-    image_name: sbx-kit-cursor
-    template_fallback: local/sbx-kit-cursor:latest
-    kits:
-      - mise-workspace
-      - agent-workspace
-
-  # Same image as cursor (early testing name).
+  # Custom Cursor layer on kit-core.
   kit-cursor:
     sbx_agent: cursor
     image_name: sbx-kit-cursor

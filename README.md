@@ -76,11 +76,11 @@ sbx-kit concepts
 sbx-kit recipes
 sbx-kit template ls
 sbx secret set deepseek
-sbx-kit run --recipe shell-hub --yes
+sbx-kit run --recipe shell --yes
 sbx-kit check
 ```
 
-### 2b. Local lean templates (optional)
+### 2b. Custom templates (optional)
 
 ```bash
 sbx-kit template load --engine docker kit-core
@@ -88,7 +88,7 @@ sbx-kit template load --engine docker kit-cursor
 # Apple container: --engine container (needs skopeo)
 # Cursor package download: allow downloads.cursor.com if policy blocks it
 sbx template ls
-sbx-kit run --recipe cursor --yes
+sbx-kit run --recipe kit-cursor --yes
 ```
 
 ### 3. Day-to-day
@@ -96,8 +96,8 @@ sbx-kit run --recipe cursor --yes
 ```bash
 sbx-kit run                  # re-attach sole binding for cwd
 sbx-kit run --name <id>      # attach by friendly sbx name
-sbx-kit rm --recipe cursor-hub --keep-state
-sbx-kit upgrade --recipe cursor-hub
+sbx-kit rm --recipe cursor --keep-state
+sbx-kit upgrade --recipe cursor
 ```
 
 ### Git workspace modes

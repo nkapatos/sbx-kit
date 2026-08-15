@@ -23,7 +23,7 @@ identity, credential services declared by recipe kits, and run
 sbx secret ls (--sandbox when the box exists).`,
 		Example: `  sbx-kit check
   sbx-kit check --name my-project
-  sbx-kit check --recipe shell-hub --path ~/proj`,
+  sbx-kit check --recipe shell --path ~/proj`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)

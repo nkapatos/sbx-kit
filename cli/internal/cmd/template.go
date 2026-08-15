@@ -56,7 +56,7 @@ func newTemplateLoadCmd() *cobra.Command {
 		Long: `Build a local template directory (Dockerfile, or bake.env → sibling _bake for
 external trees), then import via sbx template load.
 
-Not needed for Hub recipes (e.g. cursor-hub): sbx already has the stock agent image.
+Not needed for Hub recipes (e.g. cursor): sbx already has the stock agent image.
 
 Engines:
   docker      Docker Desktop or Colima (docker CLI)

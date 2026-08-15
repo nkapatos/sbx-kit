@@ -61,7 +61,7 @@ sbx-kit version
 
 ```bash
 sbx-kit recipes
-sbx-kit run --recipe shell-hub --yes
+sbx-kit run --recipe shell --yes
 sbx-kit check
 sbx-kit run --name my-project
 ```
@@ -75,15 +75,16 @@ exists).
 ## Portable state
 
 ```bash
-sbx-kit rm --recipe cursor-hub --keep-state
-sbx-kit run --recipe cursor-hub --yes --restore-state
-sbx-kit upgrade --recipe cursor-hub
+sbx-kit rm --recipe cursor --keep-state
+sbx-kit run --recipe cursor --yes --restore-state
+sbx-kit upgrade --recipe cursor
 ```
 
 ## Catalog
 
 Recipes live in [`config/agents.yaml`](../config/agents.yaml) (filename kept for
-now). `sbx-kit recipes` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS`.
+now). Stock ids match sbx agents (`shell`, `cursor`); custom images use a
+`kit-` prefix. `sbx-kit recipes` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS`.
 
 ## Develop from a checkout
 
@@ -94,5 +95,5 @@ go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=d
 export SBX_TREE=/path/to/sbx-kit
 ../bin/sbx-kit concepts
 ../bin/sbx-kit recipes
-../bin/sbx-kit run --recipe shell-hub --yes
+../bin/sbx-kit run --recipe shell --yes
 ```

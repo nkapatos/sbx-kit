@@ -17,20 +17,20 @@ Hub recipes need **no** image pin; `sbx` uses the official agent template.
 hot-swap mid-session.
 
 ```bash
-# Hub (no local build):
-sbx-kit run --recipe cursor-hub --yes
-
-# Local:
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor   # after kit-core
+# Hub (stock agent, no custom image pin):
 sbx-kit run --recipe cursor --yes
+
+# Custom image (after template load or registry pin):
+sbx-kit template load --engine docker kit-core
+sbx-kit template load --engine docker kit-cursor
+sbx-kit run --recipe kit-cursor --yes
 ```
 
 | Dir | Image tag | Recipe | Role |
 | --- | --- | --- | --- |
 | [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `kit-core` | Floor; cache-split Dockerfile |
-| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `cursor` | Bootstrap Cursor layout on core |
+| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Bootstrap Cursor layout on core |
 
-Recipes: `cursor-hub` (official), `kit-core`, `cursor` / `kit-cursor`. Further
-baked agents on kit-core (local or remote pull) come later — Hub extras use
+Recipes: stock `shell` / `cursor`; custom `kit-core` / `kit-cursor`. Further
+baked agents on kit-core (local or registry) come later — Hub extras use
 sandbox kits, not this tree’s old workaround mixins.

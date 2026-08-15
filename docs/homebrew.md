@@ -47,14 +47,14 @@ sbx-kit recipes
 
 # Stock Hub agent + kits (no custom image pin):
 cd ~/my-project
-sbx-kit init --agent cursor-hub .    # optional
-sbx-kit run --recipe cursor-hub --yes
+sbx-kit init --recipe cursor .    # optional
+sbx-kit run --recipe cursor --yes
 
-# Local lean images (optional):
+# Custom images (optional):
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
 sbx template ls
-sbx-kit run --recipe cursor --yes
+sbx-kit run --recipe kit-cursor --yes
 ```
 
 Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.

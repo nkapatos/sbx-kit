@@ -14,7 +14,7 @@ import (
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "sbx-kit",
-		Short:         "Compose custom sbx templates/kits and manage portable sandbox state",
+		Short:         "Recipes and kits for Docker AI Sandboxes (Hub or local templates) + portable state",
 		Long:          longHelp(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -41,10 +41,15 @@ func NewRoot() *cobra.Command {
 }
 
 func longHelp() string {
-	return `sbx-kit helps you compose custom Docker AI Sandboxes templates and kits,
-give sandboxes stable identity, and export/restore workplace state across
-teardown. This repo ships a few example recipes — point SBX_TREE (or a future
-external tree) at your own templates/kits/catalog when you outgrow them.
+	return `sbx-kit sits on top of the Docker sbx CLI: recipes, kit placement, and
+portable agent state. Use official Hub templates (sbx pulls them) or local
+images you build — same commands either way.
+
+  Hub / official   recipe without a local image → sbx stock agent + your kits
+  Local build      sbx-kit template load … then a recipe with image_name/fallback
+
+This tree ships a few example recipes. Point SBX_TREE at your own
+config/kits/templates when you want a different catalog.
 
 macOS install:  brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit && brew install sbx-kit
 Docs:           docs/homebrew.md, docs/cli-tooling.md, docs/product-scope.md
@@ -55,13 +60,14 @@ Host vault (created on demand):
 
 Day-to-day:
   sbx-kit agents
-  sbx-kit run --agent cursor --yes
+  sbx-kit run --agent cursor-hub --yes    # Hub template + kits
+  sbx-kit run --agent cursor --yes        # after local template load
   sbx-kit run
   sbx-kit run --name my-project
-  sbx-kit rm --agent cursor --keep-state
-  sbx-kit upgrade --agent cursor
+  sbx-kit rm --agent cursor-hub --keep-state
+  sbx-kit upgrade --agent cursor-hub
   sbx-kit status
-  sbx-kit init --agent cursor .
+  sbx-kit init --agent cursor-hub .
   sbx-kit template load --engine docker kit-core
   sbx-kit template load --engine docker kit-cursor`
 }

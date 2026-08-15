@@ -4,6 +4,12 @@
 # This file ships example recipes for this toolkit tree — bring your own catalog
 # when pointing SBX_TREE at another templates/kits repo.
 #
+# Template source:
+#   - Omit image_name + template_fallback → Hub / stock sbx agent template
+#     (official customization path: kits on top of what sbx already provides).
+#   - Set image_name / template_fallback → local or registry tag resolved via
+#     `sbx template ls`, else the fallback.
+#
 # Optional capability mixins (not in defaults): lsp-mise, apt-extras.
 # Product scope: docs/product-scope.md
 
@@ -14,6 +20,13 @@ defaults:
     - agent-workspace
 
 agents:
+  # Official Cursor template from sbx/Hub + portable state kit only.
+  # No local image build. Add more kits in your own recipe to experiment.
+  cursor-hub:
+    sbx_agent: cursor
+    kits:
+      - agent-workspace
+
   # Lean floor: debian + sbx glue + mise (no project language toolchains).
   kit-core:
     sbx_agent: shell
@@ -22,7 +35,8 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-  # Cursor agent layered on kit-core.
+
+  # Cursor agent layered on kit-core (local build).
   cursor:
     sbx_agent: cursor
     image_name: sbx-kit-cursor
@@ -30,6 +44,7 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
+
   # Same image as cursor (early testing name).
   kit-cursor:
     sbx_agent: cursor
@@ -38,4 +53,5 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
+
   # Next: kit-pi image layer on kit-core (not create-time install).

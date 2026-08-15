@@ -1,12 +1,8 @@
 # sbx-kit
 
-Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): reusable **templates** (sandbox images), **kits** (create-time YAML), and the **`sbx-kit`** CLI.
+Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): **kits** (create-time YAML), **recipes**, optional **local templates**, and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace** by default. First-party
-images are a **lean core** (debian + sbx glue + mise) with thin agent layers —
-not fat official `docker/sandbox-templates:*` bases. This repo ships a few
-**example** recipes (core / cursor + mise mixins + portable state). Bring
-your own templates/kits/catalog when you want a different stack.
+**Sandbox = agent workplace; host = human workplace.** Use this CLI to compose kits on top of **official Hub templates** (the supported Docker customization path) or on **local lean images** you build yourself. Recipes and portable state work for both.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 
@@ -16,12 +12,17 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 
 | Term | Meaning |
 | --- | --- |
-| **Template** | Linux image the sandbox boots from (`templates/kit-core`, `templates/kit-cursor`, …). |
-| **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin or sandbox agent). Not an image. |
-| **Import** | `sbx-kit template load` — build → save → load into sbx’s store (`docker` or Apple `container`). |
-| **CLI** | `sbx-kit` — compose template + kits + resources; stamp project READMEs; migrate state |
+| **Template** | Linux image the sandbox boots from — Hub/official via `sbx`, or a local build under `templates/`. |
+| **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin). Not an image. Official way to adjust any template. |
+| **Recipe** | Named combo in `config/agents.yaml`: which `sbx` agent, which template source, which kits. |
+| **CLI** | `sbx-kit` — recipes + kit placement + state migrate; `template load` only when you build locally |
 
-Image tags: `local/sbx-<name>:latest` (e.g. `local/sbx-kit-cursor:latest`).
+## Two ways to get a template
+
+| Path | When | What you do |
+| --- | --- | --- |
+| **Official / registry** | Day-to-day experiments, Docker’s supported model | Recipe with no local image → `sbx` uses the Hub agent template; kits layer on top |
+| **Local build** | Lean floor (`kit-core` / `kit-cursor`) or your own Dockerfile | `sbx-kit template load --engine docker <name>` then run that recipe |
 
 ## Catalog
 
@@ -29,14 +30,11 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 
 | Status | Name | Notes |
 | --- | --- | --- |
-| Shipped | [`templates/kit-core`](templates/kit-core/) | Lean floor (cache-split); sbx + later VPS |
-| Shipped | [`templates/kit-cursor`](templates/kit-cursor/) | Cursor bootstrap on kit-core (refresh agent on host) |
-| Shipped | [`deploy/`](deploy/) | Docker/Compose VPS twin — see [`deploy/docs/vps-setup.md`](deploy/docs/vps-setup.md) |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
-| Shipped | [`kits/mise-workspace`](kits/mise-workspace/), [`kits/agent-workspace`](kits/agent-workspace/) | Default mixins |
-| Shipped | [`kits/pi`](kits/pi/) | Thin DeepSeek mixin for future kit-pi image |
-| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional capability mixins |
-| Follow-up | CI → Hub images, Compose export from CLI, SSH auth socket, more agent layers | |
+| Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State + mise mixins (mise needs a mise-ready image) |
+| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/pi`](kits/pi/) | Optional mixins |
+| Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Optional lean local floor (not required for Hub recipes) |
+| Follow-up | Clearer Hub recipe UX, one-shot local `template load` for agent images, agent refresh vs upgrade | |
 
 ## Layout
 
@@ -45,10 +43,9 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 ├── Formula/sbx-kit.rb           # Homebrew formula (macOS)
 ├── cli/                         # Go toolkit CLI (sbx-kit)
 ├── config/                      # agents.yaml + resource profiles
-├── deploy/                      # Docker/Compose VPS twin (converges with kit-core)
 ├── docs/                        # architecture, homebrew, CLI
-├── kits/<name>/                 # mixins (and optional sandbox kits)
-└── templates/<name>/Dockerfile  # kit-core, kit-cursor, …
+├── kits/<name>/                 # mixins
+└── templates/<name>/Dockerfile  # optional local images (kit-core, kit-cursor, …)
 ```
 
 Homebrew installs the binary plus `share/sbx-kit/{config,kits,templates,docs}`.
@@ -67,7 +64,17 @@ You still need the Docker **`sbx` CLI >= 0.34.0** signed in (kits authored as
 schemaVersion `"1"` until released sbx accepts v2). `sbx-kit version` reports
 the required range. Details: [docs/homebrew.md](docs/homebrew.md).
 
-### 2. Import templates (until Hub publishes images)
+### 2a. Official template + kits (first path)
+
+No local image build. `sbx` pulls/uses the stock agent template; kits attach at create:
+
+```bash
+cd ~/my-project
+sbx-kit run --agent cursor-hub --yes    # stock cursor + agent-workspace
+# or mix more kits via your own recipe in config/agents.yaml
+```
+
+### 2b. Local lean templates (optional)
 
 ```bash
 sbx-kit template load --engine docker kit-core
@@ -75,17 +82,16 @@ sbx-kit template load --engine docker kit-cursor
 # Apple container: --engine container (needs skopeo)
 # Cursor package download: allow downloads.cursor.com if policy blocks it
 sbx template ls
+sbx-kit run --agent cursor --yes
 ```
 
-### 3. Run a recipe in a project
+### 3. Day-to-day
 
 ```bash
-cd ~/my-project
-sbx-kit init --agent cursor .   # optional README stamp
-sbx-kit run --agent cursor --yes
-# later: sbx-kit run                  # re-attach sole binding
-# or:    sbx-kit run --name <id>
-# parallel / isolated: sbx-kit run --agent cursor --yes --clone
+sbx-kit run                  # re-attach sole binding for cwd
+sbx-kit run --name <id>      # attach by friendly sbx name
+sbx-kit rm --agent cursor-hub --keep-state
+sbx-kit upgrade --agent cursor-hub   # recreate from recipe + restore state
 ```
 
 ### Git workspace modes
@@ -101,17 +107,16 @@ Host **git worktrees** are for parallel host-visible checkouts. For VM-private a
 
 ---
 
-## Adding a template
+## Adding a kit or recipe
 
-1. Add `templates/<name>/Dockerfile` (usually `FROM local/sbx-kit-core:latest`).
-2. Add a short `README.md`.
-3. Import: `sbx-kit template load --engine <docker|container> <name>` (load `kit-core` first when needed).
-4. Pair with mixin kits (`mise-workspace`, …).
-5. Add an entry in [`config/agents.yaml`](config/agents.yaml) and [templates/README.md](templates/README.md).
+1. Add `kits/<name>/spec.yaml` (and optional `files/`).
+2. Reference it from [`config/agents.yaml`](config/agents.yaml) on a Hub or local recipe.
+3. For a **local** image: add `templates/<name>/Dockerfile`, then `sbx-kit template load`.
+4. Run: `sbx-kit run --agent <recipe> --yes`.
 
 ## Reference
 
-### Import engines
+### Import engines (local builds only)
 
 | Host | Command |
 | --- | --- |
@@ -125,6 +130,10 @@ Apple `container image save` → OCI; `sbx template load` expects docker-archive
 ### Long form (no sbx-kit)
 
 ```bash
+# Official agent + kit paths:
+sbx run cursor --kit "$(brew --prefix)/share/sbx-kit/kits/agent-workspace" .
+
+# Local template:
 sbx run cursor \
   --template local/sbx-kit-cursor:latest \
   --kit "$(brew --prefix)/share/sbx-kit/kits/mise-workspace" \
@@ -142,7 +151,7 @@ sbx run cursor \
 | Wrong toolchain versions | Ensure `mise.toml` exists; agent or `sbx exec … mise install`; then `mise ls` |
 | Removed pin still on PATH | `mise install && mise prune -y`; fresh `bash -l -c '…'` if env looks stale |
 | Downloads blocked | `sbx policy log` / kit allowlist; Cursor package: `downloads.cursor.com` |
-| `cursor-agent` missing after load | Rebuild `kit-core` then `kit-cursor` |
+| `cursor-agent` missing after local load | Rebuild `kit-core` then `kit-cursor` |
 
 ## License
 

@@ -2,8 +2,7 @@
 
 **Tag:** `local/sbx-kit-core:latest`  
 **FROM:** `debian:bookworm-slim`  
-**sbx agent:** `shell`  
-**Also:** intended VPS/Compose floor later (`deploy/` convergence)
+**sbx agent:** `shell`
 
 ## Why this image
 

@@ -34,7 +34,7 @@ func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Create a recipe sandbox or attach an existing one",
-		Long: `Lifecycle helper for custom template/kit recipes (examples ship here; bring your own tree).
+		Long: `Lifecycle helper for recipe sandboxes (Hub or local templates + kits).
 
 Intents (do not mix):
 
@@ -46,18 +46,21 @@ Intents (do not mix):
       Interactive: ask for a custom name, then confirm create.
       --yes: skip prompts; use dirname (or --sandbox-name).
       Opaque profile id stays in the host vault — not the sbx name.
+      Hub recipes (no image_name) let sbx use the stock agent template.
+      Local recipes resolve via sbx template ls / template_fallback.
 
   sbx-kit run --name <sandbox>
       ATTACH only by friendly sbx name (what sbx ls shows).
 
 Pass-through after -- goes to sbx:
-  sbx-kit run --agent cursor --yes -- --memory 8g`,
+  sbx-kit run --agent cursor-hub --yes -- --memory 8g`,
 		Example: `  sbx-kit run
+  sbx-kit run --agent cursor-hub --yes
   sbx-kit run --agent cursor --yes
-  sbx-kit run --agent cursor --sandbox-name my-mocks --yes
-  sbx-kit run --agent cursor --path ~/my-project --yes --restore-state
+  sbx-kit run --agent cursor-hub --sandbox-name my-mocks --yes
+  sbx-kit run --agent cursor-hub --path ~/my-project --yes --restore-state
   sbx-kit run --name my-project
-  sbx-kit run --agent cursor --yes -- --memory 8g`,
+  sbx-kit run --agent cursor-hub --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)

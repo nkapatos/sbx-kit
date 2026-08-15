@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# sbx-kit-core — lean floor for sbx templates AND (later) VPS/Compose.
+# sbx-kit-core — lean floor for local sbx templates (optional vs Hub agents).
 #
 # Why (not official docker/sandbox-templates:*):
 #   Official images ship language toolchains we cannot maintain. We own a thin

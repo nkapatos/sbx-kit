@@ -54,7 +54,11 @@ class SbxKit < Formula
 
       You still need the Docker `sbx` CLI (>= 0.34.0; kits are schemaVersion 1). Check with:
         sbx-kit version
-      Until images are on a registry:
+
+      Hub path (no local build):
+        sbx-kit run --agent cursor-hub --yes
+
+      Local lean images (optional):
         sbx-kit template load --engine docker kit-core
         sbx-kit template load --engine docker kit-cursor
         sbx-kit run --agent cursor --yes
@@ -64,7 +68,7 @@ class SbxKit < Formula
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
-    assert_match "cursor", shell_output("#{bin}/sbx-kit agents")
+    assert_match "cursor-hub", shell_output("#{bin}/sbx-kit agents")
     assert_match "load", shell_output("#{bin}/sbx-kit template load --help")
   end
 end

@@ -5,13 +5,18 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 ## Goals
 
-1. **Own lean images** for sbx and (later) VPS — not fat official templates.
-2. **Clear update ownership** — rare image rebuilds; mise for langs; kits for
-   preference CLIs; **host-side agent refresh** before attach.
-3. **Lifecycle** — names, portable state, migrate; later Compose export.
-4. Keep the brew/share tree small and teachable.
+1. **Recipes + kits for everyone** — novices and power users; works on **official
+   Hub templates** (Docker’s supported customization path) and on **local**
+   images you build.
+2. **Clear template ownership** — Hub/registry vs local build; CLI makes where
+   images come from obvious.
+3. **Portable agent state** — survive recreate, host moves, and recipe changes
+   (`upgrade` / export / import).
+4. **Own lean images when you want them** — rare rebuilds; mise for langs; kits
+   for preference CLIs; host-side agent refresh (not mid-session).
+5. Keep the brew/share tree small and teachable.
 
-## Layering rule
+## Layering rule (local images)
 
 | Layer | Owns | Examples |
 | --- | --- | --- |
@@ -19,21 +24,23 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 | **Agent image** | Bootstrap install/layout only | `kit-cursor` (next `kit-pi`) |
 | **Mixin kit** | Activate, allowlists, state, preference CLIs, creds | `mise-workspace`, `agent-workspace`, `apt-extras`, `pi` |
 | **Project** | Language pins | `mise.toml` |
-| **Host / CLI** | Agent binary refresh before run; later update reports | (future `sbx-kit update`) |
+| **Host / CLI** | Recipes, kit placement, state; later agent refresh | |
 
-Languages → mise. Preference CLIs (`gh`, `glab`, …) → kits / in-box — **not**
-special-cased into core. Agent version churn → host refresh, not daily rebake.
+On **Hub** templates, kits alone adjust the box — no local Dockerfile required.
+Languages → mise (when the image has mise). Preference CLIs → kits. Agent
+version churn on local images → host refresh, not daily rebake.
 
 ## In scope
 
-- `templates/kit-core`, `templates/kit-cursor`
+- Kits + recipes; Hub-first create path; local `template load` when needed
+- `templates/kit-core`, `templates/kit-cursor` as optional lean floor examples
 - Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras; pi creds
-- CLI lifecycle + vault; docs for why/layers/updates
-- `deploy/` converging on the same floor
+- CLI lifecycle + vault
 
-## Out of scope / abandoned
+## Out of scope / parked
 
-- Official-base + apt purge
+- Docker Compose / VPS twin under `deploy/` (archived out of tree; revisit later)
+- Official-base + apt purge (abandoned)
 - Baking `gh` alone (or any preference CLI) into core “for parity”
 - Daily Hub rebuilds for Cursor/Pi releases
 - Hot-swapping the agent binary mid-session

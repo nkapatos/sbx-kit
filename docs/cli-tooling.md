@@ -1,13 +1,18 @@
 # Toolkit CLI (`sbx-kit`)
 
-Helper CLI for **custom** Docker AI Sandboxes templates/kits + lifecycle
-(stable identity, state export/restore, upgrade).
+Helper CLI for Docker AI Sandboxes: **recipes**, **kits**, **portable state**,
+and optional **local template builds**.
 
-This repository ships a **few example recipes** so the shape is obvious. It is
-not a large first-party agent catalog — point the toolkit root (`SBX_TREE` /
-Homebrew share today; more trees later) at your own or someone else’s
-`config/` + `kits/` + `templates/` when you want different stacks. Default Hub
-agents work fine with plain `sbx`.
+Two template paths (same lifecycle commands):
+
+1. **Official / Hub** — omit local image fields in the recipe; `sbx` uses the
+   stock agent template. Attach kits to experiment (Docker’s supported model).
+2. **Local / registry tag** — set `image_name` / `template_fallback`, or run
+   `sbx-kit template load` for images under `templates/`.
+
+This repository ships a **few example recipes**. Point the toolkit root
+(`SBX_TREE` / Homebrew share) at your own `config/` + `kits/` + `templates/`
+when you want different stacks.
 
 **Install (macOS):** [homebrew.md](homebrew.md) — `brew tap nkapatos/sbx-kit …`  
 **Go module:** `github.com/nkapatos/sbx-kit/cli`
@@ -71,8 +76,8 @@ basename — same idea as stock sbx. An opaque **profile id**
 | `--name` | **Attach** (or rm/state) by friendly sbx name — no create |
 
 ```bash
-sbx-kit run --agent cursor --yes          # create; name = dirname
-sbx-kit run --agent cursor                # interactive: name? then create?
+sbx-kit run --agent cursor-hub --yes      # Hub template + kits
+sbx-kit run --agent cursor --yes          # local kit-cursor image
 sbx-kit run                               # re-attach sole cwd binding
 sbx-kit run --name my-project             # attach from anywhere
 ```
@@ -92,20 +97,27 @@ Pack/unpack is **not** hardcoded in Go. The host CLI runs:
 `sbx-kit-state` and `state.manifest` ship in the **`agent-workspace` kit**. Manifest INCLUDE/EXCLUDE lists what survives recreate; caches are excluded.
 
 ```bash
-sbx-kit rm --agent cursor --keep-state
-sbx-kit run --agent cursor --yes --restore-state   # only when the box does not exist yet
+sbx-kit rm --agent cursor-hub --keep-state
+sbx-kit run --agent cursor-hub --yes --restore-state   # only when the box does not exist yet
 # or:
-sbx-kit upgrade --agent cursor                     # export → rm → create → restore → attach
+sbx-kit upgrade --agent cursor-hub                     # export → rm → create → restore → attach
 ```
+
+`upgrade` recreates the sandbox from the **current recipe** (template + kits).
+In-box agent binary refresh (distinct command) is still open.
 
 ## Catalog (recipes)
 
 Recipes are declared in [`config/agents.yaml`](../config/agents.yaml). Each key
-is a **user-chosen recipe id**; `sbx_agent` is the underlying sbx agent. Example
-entries (`cursor`, `opencode`, …) are starting points — rename or replace them
-in your own tree.
+is a **user-chosen recipe id**; `sbx_agent` is the underlying sbx agent.
 
-`sbx-kit agents` prints `RECIPE | SBX_AGENT | IMAGE | KITS | STATUS`.
+| Recipe fields | Meaning |
+| --- | --- |
+| No `image_name` / `template_fallback` | **Hub** — `sbx` uses the stock agent template |
+| `image_name` + `template_fallback` | Resolve from `sbx template ls`, else fallback tag |
+| `kits` | Mixin dirs under the toolkit `kits/` tree |
+
+`sbx-kit agents` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS | STATUS`.
 
 Resource profiles: [`config/resources-remote-llm.env`](../config/resources-remote-llm.env), [`config/resources-local-llm.env`](../config/resources-local-llm.env).
 
@@ -117,10 +129,11 @@ go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=d
   -o ../bin/sbx-kit ./cmd/sbx-kit
 export SBX_TREE=/path/to/sbx-kit
 ../bin/sbx-kit agents
-../bin/sbx-kit run --agent cursor --yes
+../bin/sbx-kit run --agent cursor-hub --yes
 ../bin/sbx-kit template load --engine docker kit-core
 ../bin/sbx-kit template load --engine docker kit-cursor
-../bin/sbx-kit init --agent cursor /tmp/demo
+../bin/sbx-kit run --agent cursor --yes
+../bin/sbx-kit init --agent cursor-hub /tmp/demo
 ```
 
 Or: `go install github.com/nkapatos/sbx-kit/cli/cmd/sbx-kit@latest`

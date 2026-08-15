@@ -44,18 +44,22 @@ Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"
 ```bash
 sbx-kit version   # sbx-kit + required range + detected sbx
 sbx-kit agents
+
+# Hub path (no local build):
+cd ~/my-project
+sbx-kit init --agent cursor-hub .    # optional
+sbx-kit run --agent cursor-hub --yes
+
+# Local lean images (optional):
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
 sbx template ls
-
-cd ~/my-project
-sbx-kit init --agent cursor .    # optional
 sbx-kit run --agent cursor --yes
 ```
 
 Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.
 
-Until images are published to a registry, `template load` is the local import path. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → Docker Hub publish and Formula version tags are the next release step (credentials/setup iterate separately).
+`template load` imports **local** Dockerfiles into sbx. Hub recipes skip it — `sbx` uses the stock agent template. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → registry publish and Formula version tags are a later release step.
 
 ## Update / remove
 

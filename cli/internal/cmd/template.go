@@ -11,8 +11,8 @@ import (
 func newTemplateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "template",
-		Short: "Build and import sandbox template images",
-		Long:  `Maintainer helpers for local template images (before a registry publish).`,
+		Short: "Build and import local sandbox template images",
+		Long:  `Maintainer helpers for local template images. Hub recipes skip this — sbx pulls the stock agent template.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -27,8 +27,10 @@ func newTemplateLoadCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "load <template-name-or-path> [image-tag]",
 		Short: "Build a template and import it into sbx",
-		Long: `Build a template directory (Dockerfile, or bake.env → sibling _bake for
+		Long: `Build a local template directory (Dockerfile, or bake.env → sibling _bake for
 external trees), then import via sbx template load.
+
+Not needed for Hub recipes (e.g. cursor-hub): sbx already has the stock agent image.
 
 Engines:
   docker      Docker Desktop or Colima (docker CLI)

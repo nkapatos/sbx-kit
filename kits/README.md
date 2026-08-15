@@ -22,9 +22,13 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
 | [pi](pi/) | mixin | DeepSeek creds for a future **kit-pi** image (no install). |
 
-Cursor is the **kit-cursor** image + `sbx_agent: cursor`. Agent binaries are
-baked in templates; kits stay thin.
+**Hub path:** attach kits to the stock `sbx` agent template (see recipe
+`cursor-hub`) — no local image. **Local path:** Cursor is the **kit-cursor**
+image + `sbx_agent: cursor`. Agent binaries stay in templates; kits stay thin.
+Use `mise-workspace` only on images that ship `/usr/local/bin/mise`.
 
 ## Composition
 
-Recipes in [`config/agents.yaml`](../config/agents.yaml). Defaults: `mise-workspace` + `agent-workspace`.
+Recipes in [`config/agents.yaml`](../config/agents.yaml). Catalog defaults list
+`mise-workspace` + `agent-workspace`; Hub example recipes often override kits
+(e.g. `agent-workspace` only).

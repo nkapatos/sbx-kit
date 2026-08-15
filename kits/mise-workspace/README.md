@@ -1,6 +1,6 @@
 # Mise workspace kit
 
-Runtime-agnostic **mixin** for any mise-prepared sbx template (`kit-core`, `cursor`, …). Configures mise; does not install language toolchains or bind to one agent image.
+Runtime-agnostic **mixin** for any mise-prepared sbx template (`kit-shell`, `cursor`, …). Configures mise; does not install language toolchains or bind to one agent image.
 
 ## What it does
 
@@ -17,7 +17,7 @@ Runtime-agnostic **mixin** for any mise-prepared sbx template (`kit-core`, `curs
 
 ## Prerequisites
 
-The template must provide the **mise** binary at `/usr/local/bin/mise` (see `templates/kit-core`).
+The template must provide the **mise** binary at `/usr/local/bin/mise` (see `templates/kit-shell`).
 
 ## Apply
 
@@ -25,7 +25,7 @@ Prefer the catalog CLI (pulls this kit automatically):
 
 ```bash
 sbx-kit run cursor --yes
-sbx-kit run kit-core --yes
+sbx-kit run kit-shell --yes
 ```
 
 Long form:

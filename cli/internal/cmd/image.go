@@ -85,13 +85,13 @@ Engines:
   container   Apple container + skopeo (OCI → docker-archive)
 
 Names resolve under the toolkit root (Brew share or SBX_TREE):
-  sbx-kit image load --engine docker kit-core
+  sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
 
 Not supported: OrbStack, Podman.`,
-		Example: `  sbx-kit image load --engine docker kit-core
+		Example: `  sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
-  sbx-kit image load --engine container templates/kit-core
+  sbx-kit image load --engine container templates/kit-shell
   sbx-kit image load --engine docker kit-cursor local/sbx-kit-cursor:dev`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -134,7 +134,7 @@ sbx cannot pull arbitrary registries easily; this is the workaround.
 Engine is docker (Docker Desktop / Colima). Apple container is not supported
 for pull yet.`,
 		Example: `  sbx-kit image pull ghcr.io/example/sbx-kit-cursor:latest
-  sbx-kit image pull --engine docker ghcr.io/example/sbx-kit-core:latest`,
+  sbx-kit image pull --engine docker ghcr.io/example/sbx-kit-shell:latest`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return template.Pull(template.PullOpts{

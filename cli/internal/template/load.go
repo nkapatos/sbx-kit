@@ -137,7 +137,7 @@ func importIntoSbx(imageTag, dockerTar string) error {
 
 	fmt.Println()
 	fmt.Println("Done. Confirm with sbx template ls (engine store).")
-	fmt.Printf("Typical next step:\n  sbx-kit run kit-cursor --yes   # or: kit-core\n")
+	fmt.Printf("Typical next step:\n  sbx-kit run kit-cursor --yes   # or: kit-shell\n")
 	fmt.Printf("(image tag: %s)\n", imageTag)
 	return nil
 }
@@ -225,7 +225,7 @@ func smokeAgentBinary(b *Build) error {
 	}
 	fmt.Printf("==> smoke: docker run --rm --entrypoint which %s %s\n", b.ImageTag, bin)
 	if err := runLogged("docker", "run", "--rm", "--entrypoint", "which", b.ImageTag, bin); err != nil {
-		return fmt.Errorf("image %s is missing %q on PATH (rebuild parent kit-core then this template): %w", b.ImageTag, bin, err)
+		return fmt.Errorf("image %s is missing %q on PATH (rebuild parent kit-shell then this template): %w", b.ImageTag, bin, err)
 	}
 	return nil
 }

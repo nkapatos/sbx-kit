@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Cursor agent layout on kit-core.
+# Cursor agent layout on kit-shell.
 #
 # Why a layer (not daily rebuilds): CURSOR_AGENT_VERSION is a bootstrap pin so
 # a fresh box has *some* agent. Cursor ships often — refresh the binary from
@@ -7,7 +7,7 @@
 # mid-session. Preference CLIs stay in kits, not this image.
 #
 # Load parent first:
-#   sbx-kit image load --engine docker kit-core
+#   sbx-kit image load --engine docker kit-shell
 #   sbx-kit image load --engine docker kit-cursor
 #
 # Tag: local/sbx-kit-cursor:latest
@@ -16,7 +16,7 @@
 # Build needs downloads.cursor.com:
 #   sbx policy allow network downloads.cursor.com
 
-ARG PARENT_IMAGE=local/sbx-kit-core:latest
+ARG PARENT_IMAGE=local/sbx-kit-shell:latest
 FROM ${PARENT_IMAGE}
 
 # Bootstrap pin only — bump when you intentionally refresh the baked layout.

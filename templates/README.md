@@ -21,16 +21,16 @@ hot-swap mid-session.
 sbx-kit run cursor --yes
 
 # Custom image (after image load or image pull):
-sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 sbx-kit run kit-cursor --yes
 ```
 
 | Dir | Image tag | Recipe | Role |
 | --- | --- | --- | --- |
-| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `kit-core` | Floor; cache-split Dockerfile |
-| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Bootstrap Cursor layout on core |
+| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Floor; cache-split Dockerfile |
+| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Bootstrap Cursor layout on kit-shell |
 
-Recipes: stock `shell` / `cursor` / `pi`; custom `kit-core` / `kit-cursor` / `kit-pi`. Further
-baked agents on kit-core (local or registry) come later — Hub extras use
+Recipes: stock `shell` / `cursor` / `pi`; custom `kit-shell` / `kit-cursor` / `kit-pi`. Further
+baked agents on kit-shell (local or registry) come later — Hub extras use
 sandbox kits (`kits/pi`), not workaround mixins.

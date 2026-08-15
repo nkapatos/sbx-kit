@@ -8,16 +8,16 @@ import (
 	"github.com/nkapatos/sbx-kit/cli/internal/template"
 )
 
-func TestResolveBuildKitCoreDockerfile(t *testing.T) {
+func TestResolveBuildKitShellDockerfile(t *testing.T) {
 	root := findRepoRoot(t)
-	b, err := template.ResolveBuild(root, "kit-core", "")
+	b, err := template.ResolveBuild(root, "kit-shell", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if b.ImageTag != "local/sbx-kit-core:latest" {
+	if b.ImageTag != "local/sbx-kit-shell:latest" {
 		t.Fatalf("tag: %s", b.ImageTag)
 	}
-	if filepath.Base(b.Context) != "kit-core" {
+	if filepath.Base(b.Context) != "kit-shell" {
 		t.Fatalf("context: %s", b.Context)
 	}
 	if filepath.Base(b.Dockerfile) != "Dockerfile" {
@@ -44,7 +44,7 @@ func TestResolveBuildKitCursorDockerfile(t *testing.T) {
 
 func TestResolveBuildByPath(t *testing.T) {
 	root := findRepoRoot(t)
-	rel := filepath.Join(root, "templates", "kit-core")
+	rel := filepath.Join(root, "templates", "kit-shell")
 	b, err := template.ResolveBuild(root, rel, "local/custom:dev")
 	if err != nil {
 		t.Fatal(err)
@@ -64,8 +64,8 @@ func TestListLocal(t *testing.T) {
 	for _, img := range imgs {
 		got[img.Name] = img.ImageTag
 	}
-	if got["kit-core"] != "local/sbx-kit-core:latest" {
-		t.Fatalf("kit-core: %#v", got)
+	if got["kit-shell"] != "local/sbx-kit-shell:latest" {
+		t.Fatalf("kit-shell: %#v", got)
 	}
 	if got["kit-cursor"] != "local/sbx-kit-cursor:latest" {
 		t.Fatalf("kit-cursor: %#v", got)

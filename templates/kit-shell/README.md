@@ -1,6 +1,6 @@
-# Template: kit-core
+# Template: kit-shell
 
-**Tag:** `local/sbx-kit-core:latest`  
+**Tag:** `local/sbx-kit-shell:latest`  
 **FROM:** `debian:bookworm-slim`  
 **sbx agent:** `shell`
 
@@ -24,8 +24,8 @@ env glue → mise. See comments in `Dockerfile`.
 ## Use
 
 ```bash
-sbx-kit image load --engine docker kit-core
-sbx-kit run kit-core --yes
+sbx-kit image load --engine docker kit-shell
+sbx-kit run kit-shell --yes
 ```
 
 Agent layers (e.g. [kit-cursor](../kit-cursor/)) `FROM` this image.

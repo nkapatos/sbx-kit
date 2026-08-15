@@ -100,7 +100,7 @@ environment:
 
 commands:
   install:
-    - description: Install pi (official npm, or mise node+pnpm on kit-core)
+    - description: Install pi (official npm, or mise node+pnpm on kit-shell)
       user: "1000"
       command: |
         set -euo pipefail
@@ -162,13 +162,13 @@ commands:
           fi
         }
         if [ -x /usr/local/bin/mise ] && [ -d /mise ]; then
-          echo "==> kit-core floor: mise node@22 + pnpm, then pnpm add -g $PKG"
+          echo "==> kit-shell floor: mise node@22 + pnpm, then pnpm add -g $PKG"
           install_mise_pnpm
         elif command -v npm >/dev/null 2>&1; then
           echo "==> official template: npm install -g $PKG"
           install_official_npm
         else
-          echo "pi kit: official images need npm; kit-core needs /usr/local/bin/mise and /mise (mise-workspace)." >&2
+          echo "pi kit: official images need npm; kit-shell needs /usr/local/bin/mise and /mise (mise-workspace)." >&2
           exit 1
         fi
         command -v pi >/dev/null 2>&1
@@ -179,7 +179,7 @@ agentContext: |
 
   You are **Pi**, launched as this sandbox's attach entrypoint — not a mixin
   on `sbx run shell`. The image is official `docker/sandbox-templates:shell`
-  unless the recipe pinned a custom tag (`kit-pi` → kit-core).
+  unless the recipe pinned a custom tag (`kit-pi` → kit-shell).
 
   Project trust defaults to always (this microVM is the boundary). Override
   with `/trust` or `~/.pi/agent/settings.json`.
@@ -199,6 +199,6 @@ agentContext: |
 
   Install/update:
   - Official shell image: `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
-  - kit-core (`kit-pi`): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
+  - kit-shell (`kit-pi`): `mise use -g node@22 pnpm` then `pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent`
     (do not apt/npm a Node toolchain on the lean floor).
   `pi update --self` if the network policy allows it.

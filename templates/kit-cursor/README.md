@@ -1,7 +1,7 @@
 # Template: kit-cursor
 
 **Tag:** `local/sbx-kit-cursor:latest`  
-**FROM:** `local/sbx-kit-core:latest`  
+**FROM:** `local/sbx-kit-shell:latest`  
 **sbx agent:** `cursor`
 
 Bootstrap install of the Cursor agent CLI on the lean floor. **Do not** rebuild
@@ -10,7 +10,7 @@ before attach (recreate box / future `sbx-kit` update). Updating the binary
 under a live session is unsafe.
 
 ```bash
-sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 # if blocked: sbx policy allow network downloads.cursor.com
 sbx-kit run kit-cursor --yes

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# sbx-kit-core — lean floor for local sbx templates (optional vs Hub agents).
+# sbx-kit-shell — lean floor for local sbx templates (optional vs Hub agents).
 #
 # Why (not official docker/sandbox-templates:*):
 #   Official images ship language toolchains we cannot maintain. We own a thin
@@ -16,9 +16,9 @@
 #
 # Not here: Node/Go/Java/Rust, gh/glab, Docker Engine (future -docker variant).
 #
-# Tag: local/sbx-kit-core:latest
-#   sbx-kit image load --engine docker kit-core
-#   sbx-kit run kit-core --yes
+# Tag: local/sbx-kit-shell:latest
+#   sbx-kit image load --engine docker kit-shell
+#   sbx-kit run kit-shell --yes
 
 ARG DEBIAN_VERSION=bookworm-slim
 FROM debian:${DEBIAN_VERSION}
@@ -128,17 +128,17 @@ RUN set -eux; \
         >> /etc/sandbox-persistent.sh; \
     fi; \
     printf '%s\n' \
-      '# sbx-kit-core' \
+      '# sbx-kit-shell' \
       'umask 027' \
-      > /etc/profile.d/sbx-kit-core.sh; \
-    chmod 644 /etc/profile.d/sbx-kit-core.sh; \
+      > /etc/profile.d/sbx-kit-shell.sh; \
+    chmod 644 /etc/profile.d/sbx-kit-shell.sh; \
     printf '%s\n' \
       'if [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi' \
       'export BASH_ENV=/etc/sandbox-persistent.sh' \
       | tee /etc/profile.d/sandbox-persistent.sh >/dev/null; \
     chmod 644 /etc/profile.d/sandbox-persistent.sh; \
     if [ -f /etc/bash.bashrc ] && ! grep -qF 'sandbox-persistent.sh' /etc/bash.bashrc; then \
-      printf '\n# sbx-kit-core\nif [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi\nexport BASH_ENV=/etc/sandbox-persistent.sh\n' \
+      printf '\n# sbx-kit-shell\nif [ -f /etc/sandbox-persistent.sh ]; then . /etc/sandbox-persistent.sh; fi\nexport BASH_ENV=/etc/sandbox-persistent.sh\n' \
         >> /etc/bash.bashrc; \
     fi; \
     if ! grep -qF 'sandbox-persistent.sh' /home/agent/.bashrc 2>/dev/null; then \

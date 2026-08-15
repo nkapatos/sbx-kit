@@ -16,7 +16,7 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 
 | Directory | Kind | Used with |
 | --- | --- | --- |
-| [mise-workspace](mise-workspace/) | mixin | Templates with `/usr/local/bin/mise` (kit-core). Allowlists, `MISE_*`, activate. Never sets `environment.variables.PATH`. |
+| [mise-workspace](mise-workspace/) | mixin | Templates with `/usr/local/bin/mise` (kit-shell). Allowlists, `MISE_*`, activate. Never sets `environment.variables.PATH`. |
 | [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. **Catalog default** on every recipe. |
 | [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers. |
 | [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
@@ -25,7 +25,7 @@ This tree authors **kit-spec v1** (`schemaVersion: "1"`).
 
 | Directory | Kind | Used with |
 | --- | --- | --- |
-| [pi](pi/) | sandbox | Official shell (`pi`, npm -g) or kit-core (`kit-pi`, mise node@22 + pnpm). `sbx_agent` is `pi`, not `shell`. |
+| [pi](pi/) | sandbox | Official shell (`pi`, npm -g) or kit-shell (`kit-pi`, mise node@22 + pnpm). `sbx_agent` is `pi`, not `shell`. |
 
 A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack.
 Credentials belong on the kit that needs them (many `sbx secret set` services per
@@ -35,7 +35,7 @@ set any you use. See `sbx-kit concepts`.
 **Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose
 `sandbox.image` is an official template.
 
-**Custom path:** images under `templates/` (`kit-core` → `kit-cursor`, …).
+**Custom path:** images under `templates/` (`kit-shell` → `kit-cursor`, …).
 `sbx-kit image load` for local build/import; `sbx-kit image pull` for a registry
 tag. Pin the tag in the recipe once published. Same sandbox kit as Hub; the
 recipe `-t` overrides `sandbox.image`.

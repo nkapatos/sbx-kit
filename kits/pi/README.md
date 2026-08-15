@@ -28,7 +28,7 @@ kit-per-key.
 | Recipe | Floor | How Pi gets on PATH |
 | --- | --- | --- |
 | `pi` | Official `docker/sandbox-templates:shell` (has npm) | `npm install -g` |
-| `kit-pi` | `kit-core` (mise binary only, no Node) | `mise use -g node@22 pnpm` then `pnpm add -g`; symlink `/usr/local/bin/pi` |
+| `kit-pi` | `kit-shell` (mise binary only, no Node) | `mise use -g node@22 pnpm` then `pnpm add -g`; symlink `/usr/local/bin/pi` |
 
 The kit detects the lean floor (`/usr/local/bin/mise` + `/mise`) and does **not**
 fall back to npm there. `mise-workspace` must stay on the `kit-pi` recipe.
@@ -36,7 +36,7 @@ fall back to npm there. `mise-workspace` must stay on the `kit-pi` recipe.
 ```bash
 sbx secret set anthropic    # and/or openai, deepseek, …
 sbx-kit run pi --yes
-sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-shell
 sbx-kit run kit-pi --yes
 ```
 

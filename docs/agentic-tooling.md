@@ -20,7 +20,7 @@ Agents Hub doesn’t ship (e.g. Pi) fit as **sandbox kits** on an official shell
 template (`startup` + trust args), with credentials through `sbx secret` /
 proxyManaged — not by stripping or rebaking Hub images.
 
-Local lean images (`kit-core` → baked agent layers) are for when you want a thin
+Local lean images (`kit-shell` → baked agent layers) are for when you want a thin
 floor or a custom agent image you pull **local or remote**. Same approach for
 future Pi/Hermès layers on core; not a substitute for the Hub+kits path.
 
@@ -31,7 +31,7 @@ future Pi/Hermès layers on core; not a substitute for the Hub+kits path.
 ```text
                     ┌── Hub / registry template (sbx pulls)
 sbx agent + kits ───┤     sandbox kits start extra agents on shell, etc.
-                    └── custom: kit-core → kit-cursor | (later other agent layers)
+                    └── custom: kit-shell → kit-cursor | (later other agent layers)
                               pull local (image load) or remote registry (image pull)
 
 kits: agent-workspace (default) | mise-workspace | pi (sandbox + provider secrets) | …
@@ -41,7 +41,7 @@ CLI: recipes, placement, state export/import/upgrade; later recipe registry
 | Concern | Lives in | Update cadence |
 | --- | --- | --- |
 | Official agent image | Hub via `sbx` | Upstream |
-| OS + floor utils + sbx glue + mise binary | **kit-core** (custom) | Rare / occasional |
+| OS + floor utils + sbx glue + mise binary | **kit-shell** (custom) | Rare / occasional |
 | Agent binary layout (custom) | **Agent layer** bootstrap pin | Rebake only when layout changes |
 | Agent version / new models (custom) | **Host refresh before attach** | As needed — not mid-session |
 | Extra agents on Hub shell | **Sandbox kit** + secrets | User / community kits |
@@ -51,7 +51,7 @@ CLI: recipes, placement, state export/import/upgrade; later recipe registry
 **Hard rules**
 
 1. `mise-workspace` is not Cursor-specific; never set `environment.variables.PATH`.
-2. Do not install preference CLIs or languages into kit-core “because official has them.”
+2. Do not install preference CLIs or languages into kit-shell “because official has them.”
 3. Agent layers bootstrap install paths; **do not** chase daily Hub rebuilds for agent churn.
 4. Never put secrets or bash completions in `/etc/sandbox-persistent.sh`.
 5. Keep `AGENT_CLI_CREDENTIAL_STORE=memory` on Cursor layers.
@@ -66,11 +66,11 @@ in the recipe when ready.
 
 | Image tag | Role | Recipe |
 | --- | --- | --- |
-| `local/sbx-kit-core:latest` | Lean floor | `kit-core` |
+| `local/sbx-kit-shell:latest` | Lean floor | `kit-shell` |
 | `local/sbx-kit-cursor:latest` | + Cursor bootstrap | `kit-cursor` |
 
 Stock recipes: `shell`, `cursor`, `pi` (sandbox kit on official shell; provider keys on the kit).
-Custom: `kit-core`, `kit-cursor`, `kit-pi` (same Pi kit, kit-core image).
+Custom: `kit-shell`, `kit-cursor`, `kit-pi` (same Pi kit, kit-shell image).
 
 ```bash
 sbx-kit concepts
@@ -79,7 +79,7 @@ sbx-kit run shell --yes
 sbx-kit run pi --yes
 sbx-kit check
 # custom image:
-sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 sbx-kit run kit-cursor --yes
 sbx-kit run kit-pi --yes
@@ -91,14 +91,14 @@ sbx-kit run kit-pi --yes
 
 | Item | Status |
 | --- | --- |
-| kit-core cache-split layers | Done |
+| kit-shell cache-split layers | Done |
 | kit-cursor bootstrap + host refresh policy | Done (docs) |
 | Hub-first recipes + clearer CLI navigation | Done |
 | `image ls` / `load` / `pull` + create-time secret hints + `check` | Done |
 | Recipe/kit discovery (remote tree or registry) | Open |
 | One-command local `image load` for agent images | Open |
 | Example sandbox kit on official shell (community pattern) | Done (`pi` / `kit-pi`) |
-| Baked agents beyond cursor on kit-core (local/remote pull) | Later |
+| Baked agents beyond cursor on kit-shell (local/remote pull) | Later |
 | Kits for preference CLIs (`gh`/`glab`/…) | Open |
 | Host agent refresh (distinct from `upgrade`) | Open |
 | SSH sock / host env allowlist | Open |

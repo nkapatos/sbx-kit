@@ -23,7 +23,7 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 | Path | When | What you do |
 | --- | --- | --- |
 | **Official / stock** | Day-to-day on Hub kinds | Recipe with no image pin → `sbx run <kind> --kit …` (no `-t`) |
-| **Custom** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit image load` while developing, or `sbx-kit image pull` for a registry tag; both import into sbx |
+| **Custom** | Lean floor (`kit-shell` / `kit-cursor`) or your own image | `sbx-kit image load` while developing, or `sbx-kit image pull` for a registry tag; both import into sbx |
 
 ## Catalog
 
@@ -34,8 +34,8 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State (default on every recipe) + mise mixins |
 | Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional mixins |
-| Shipped | [`kits/pi`](kits/pi/) | Sandbox kit; recipes `pi` (official shell) and `kit-pi` (kit-core) |
-| Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Custom floor examples (load locally; publish to registry later) |
+| Shipped | [`kits/pi`](kits/pi/) | Sandbox kit; recipes `pi` (official shell) and `kit-pi` (kit-shell) |
+| Shipped | [`templates/kit-shell`](templates/kit-shell/), [`templates/kit-cursor`](templates/kit-cursor/) | Custom floor examples (load locally; publish to registry later) |
 | Follow-up | Registry publish for templates; recipe/kit discovery; agent refresh vs upgrade | |
 
 ## Layout
@@ -83,7 +83,7 @@ sbx-kit check
 
 ```bash
 sbx-kit image ls
-sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
 # or: sbx-kit image pull ghcr.io/example/sbx-kit-cursor:latest
 # Apple container: --engine container (needs skopeo)
@@ -160,7 +160,7 @@ sbx run cursor \
 | Wrong toolchain versions | Ensure `mise.toml` exists; agent or `sbx exec … mise install`; then `mise ls` |
 | Removed pin still on PATH | `mise install && mise prune -y`; fresh `bash -l -c '…'` if env looks stale |
 | Downloads blocked | `sbx policy log` / kit allowlist; Cursor package: `downloads.cursor.com` |
-| `cursor-agent` missing after local load | Rebuild `kit-core` then `kit-cursor` |
+| `cursor-agent` missing after local load | Rebuild `kit-shell` then `kit-cursor` |
 
 ## License
 

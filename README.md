@@ -71,9 +71,9 @@ No local image build. `sbx` pulls/uses the stock agent template; kits attach at 
 ```bash
 cd ~/my-project
 sbx-kit template ls                    # → sbx template ls (needs Docker/sbx login)
-sbx-kit secrets --agent shell-hub      # prints: sbx secret set deepseek
-sbx secret set deepseek                # store on host before create
+sbx secret set deepseek                # host store (create also prints the command)
 sbx-kit run --agent shell-hub --yes    # stock shell + deepseek-creds (+ state kit)
+sbx-kit check                          # binding + declared services + sbx secret ls
 # or: sbx-kit run --agent cursor-hub --yes
 ```
 

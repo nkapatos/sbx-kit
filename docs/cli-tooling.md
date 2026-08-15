@@ -38,7 +38,6 @@ Bump the floor in `cli/internal/sbxcompat` when we depend on newer sbx.
 ```text
 sbx-kit agents
 sbx-kit template ls                              # → sbx template ls
-sbx-kit secrets --agent <recipe>                 # print sbx secret set … hints
 sbx-kit run                                      # attach sole binding for cwd
 sbx-kit run --agent <recipe> [--path <dir>] [--sandbox-name <name>] [--yes] [--clone] [--restore-state] [-- sbx-args...]
 sbx-kit run --name <sandbox> [--restore-state]   # attach only
@@ -47,7 +46,8 @@ sbx-kit rm --name <sandbox> [--keep-state] [--force]
 sbx-kit upgrade --agent <recipe> [--path <dir>] [--force]
 sbx-kit state export|import --agent <recipe> [--path <dir>]
 sbx-kit state export|import --name <sandbox>
-sbx-kit status [--path <dir>]
+sbx-kit status [--path <dir>]                    # recipe↔sandbox bindings
+sbx-kit check [--name|--agent/--path]            # diagnostics + sbx secret ls
 sbx-kit init [--agent <recipe>] [project-dir]
 sbx-kit template load --engine <docker|container> <name-or-path> [image-tag]
 sbx-kit version
@@ -79,7 +79,8 @@ basename — same idea as stock sbx. An opaque **profile id**
 
 ```bash
 sbx-kit run --agent shell-hub --yes       # Hub shell + deepseek-creds trial
-sbx-kit secrets --agent shell-hub         # guide: sbx secret set deepseek
+sbx-kit check --agent shell-hub           # or: sbx-kit check --name <sandbox>
+sbx-kit status
 sbx-kit run --agent cursor-hub --yes      # Hub template + kits
 sbx-kit run --agent cursor --yes          # local kit-cursor image
 sbx-kit run                               # re-attach sole cwd binding
@@ -90,16 +91,16 @@ If `--agent` is used and that sbx name already exists, the CLI errors (sbx
 owns uniqueness). To “rename”: `rm --keep-state`, recreate with a new
 `--sandbox-name`, `--restore-state`.
 
-## Host secrets (convenience only)
+## Host secrets
 
-Kits may declare credential **services**. `sbx-kit` reads those fields and
-prints the matching `sbx secret set <service>` commands — it does **not**
-store keys. Password managers stay in the user’s hands, e.g.
-`pass show api/deepseek | sbx secret set deepseek`.
+On **create**, `sbx-kit run` prints `sbx secret set <service>` for services
+declared in the recipe’s kits. `sbx-kit check` resolves the sandbox (cwd
+binding, `--name`, or `--agent`/`--path`) and runs `sbx secret ls` (sandbox
+scoped when the box exists). sbx-kit does not store keys.
 
 ```bash
-sbx-kit secrets --agent shell-hub
-# also printed automatically before sbx-kit run --agent shell-hub
+sbx-kit check
+sbx-kit check --name ds-creds-trial
 ```
 
 ## Portable state
@@ -145,7 +146,7 @@ go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=d
   -o ../bin/sbx-kit ./cmd/sbx-kit
 export SBX_TREE=/path/to/sbx-kit
 ../bin/sbx-kit agents
-../bin/sbx-kit secrets --agent shell-hub
+../bin/sbx-kit check --agent shell-hub
 ../bin/sbx-kit run --agent shell-hub --yes
 ../bin/sbx-kit template load --engine docker kit-core
 ../bin/sbx-kit template load --engine docker kit-cursor

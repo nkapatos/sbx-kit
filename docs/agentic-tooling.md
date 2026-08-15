@@ -70,8 +70,8 @@ Hub example recipes: `shell-hub` (stock shell + deepseek-creds trial),
 `cursor-hub` (stock cursor + agent-workspace).
 
 ```bash
-sbx-kit secrets --agent shell-hub
 sbx-kit run --agent shell-hub --yes
+sbx-kit check
 # local custom:
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
@@ -87,7 +87,7 @@ sbx-kit run --agent cursor --yes
 | kit-core cache-split layers | Done |
 | kit-cursor bootstrap + host refresh policy | Done (docs) |
 | Hub-first recipes + clearer CLI navigation | In progress |
-| `template ls` + `secrets` guide from kit schema | Done (thin) |
+| `template ls` + create-time secret hints + `check` | Done (thin) |
 | Recipe/kit discovery (remote tree or registry) | Open |
 | One-command local `template load` for agent images | Open |
 | Example sandbox kit on official shell (community pattern) | Open |

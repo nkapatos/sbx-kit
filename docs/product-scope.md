@@ -40,7 +40,7 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 - `templates/kit-core`, `templates/kit-cursor` as optional lean floor examples
 - Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras;
   deepseek-creds (Hub secret trial)
-- CLI lifecycle + vault; thin `template ls` / `secrets` guides over sbx
+- CLI lifecycle + vault; thin `template ls` / `check` over sbx
 
 ## Out of scope / parked
 

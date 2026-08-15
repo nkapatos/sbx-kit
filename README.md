@@ -13,7 +13,7 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 | Term | Meaning |
 | --- | --- |
 | **Template** | Linux image the sandbox boots from — Hub/official via `sbx`, or a local build under `templates/`. |
-| **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin). Not an image. Official way to adjust any template. |
+| **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin or sandbox). Not an image. Official way to adjust any template. |
 | **Recipe** | Named combo in `config/agents.yaml`: which `sbx` agent, which template source, which kits. |
 | **CLI** | `sbx-kit` — recipes + kit placement + state migrate; `template load` only when you build locally |
 
@@ -22,7 +22,7 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 | Path | When | What you do |
 | --- | --- | --- |
 | **Official / registry** | Day-to-day experiments, Docker’s supported model | Recipe with no local image → `sbx` uses the Hub agent template; kits layer on top |
-| **Local build** | Lean floor (`kit-core` / `kit-cursor`) or your own Dockerfile | `sbx-kit template load --engine docker <name>` then run that recipe |
+| **Custom (local or remote)** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit template load` and/or a registry tag in the recipe |
 
 ## Catalog
 
@@ -32,9 +32,9 @@ See [templates/README.md](templates/README.md) and [kits/README.md](kits/README.
 | --- | --- | --- |
 | Shipped | [`cli/`](cli/) + [`Formula/sbx-kit.rb`](Formula/sbx-kit.rb) | Toolkit CLI; macOS via Homebrew |
 | Shipped | [`kits/agent-workspace`](kits/agent-workspace/), [`kits/mise-workspace`](kits/mise-workspace/) | State + mise mixins (mise needs a mise-ready image) |
-| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/), [`kits/pi`](kits/pi/) | Optional mixins |
+| Shipped | [`kits/lsp-mise`](kits/lsp-mise/), [`kits/apt-extras`](kits/apt-extras/) | Optional mixins |
 | Shipped | [`templates/kit-core`](templates/kit-core/), [`templates/kit-cursor`](templates/kit-cursor/) | Optional lean local floor (not required for Hub recipes) |
-| Follow-up | Clearer Hub recipe UX, one-shot local `template load` for agent images, agent refresh vs upgrade | |
+| Follow-up | Hub UX + recipe/kit discovery; one-shot local `template load`; agent refresh vs upgrade | |
 
 ## Layout
 

@@ -53,5 +53,3 @@ agents:
     kits:
       - mise-workspace
       - agent-workspace
-
-  # Next: kit-pi image layer on kit-core (not create-time install).

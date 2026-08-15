@@ -9,7 +9,7 @@ here; `sbx` pulls the official agent template.
 | OS / essential apt | Debian major/minor | bash, curl, git, locales, tini, sudo |
 | Modern utils | Occasional floor adds | jq, ripgrep, fd, sqlite3, … |
 | sbx glue + mise binary | Glue or mise binary bumps | user, persistent-env, `/usr/local/bin/mise` |
-| Agent layer | Intentional layout bootstrap only | Cursor/Pi install paths — **not** daily releases |
+| Agent layer | Intentional layout bootstrap only | Cursor (and later other agents) — **not** daily releases |
 | Kits / in-box / CLI refresh | Preference + churn | `gh`/`glab`/…, lang tools via mise, agent refresh |
 
 **Agent updates run from the host before attach** (new models / CLI bits). Do not
@@ -30,4 +30,6 @@ sbx-kit run --agent cursor --yes
 | [kit-core](kit-core/) | `local/sbx-kit-core:latest` | `kit-core` | Floor; cache-split Dockerfile |
 | [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `cursor` | Bootstrap Cursor layout on core |
 
-Recipes: `cursor-hub` (official), `kit-core`, `cursor` / `kit-cursor`. Next local agent layer: `kit-pi`.
+Recipes: `cursor-hub` (official), `kit-core`, `cursor` / `kit-cursor`. Further
+baked agents on kit-core (local or remote pull) come later — Hub extras use
+sandbox kits, not this tree’s old workaround mixins.

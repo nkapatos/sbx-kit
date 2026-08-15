@@ -27,7 +27,7 @@ refuse an older `sbx`.
 ```bash
 sbx-kit version          # prints sbx-kit + required range + detected sbx
 brew upgrade docker/tap/sbx
-sbx kit validate kits/pi # expect VALID; deprecation WARNs are OK
+sbx kit validate kits/agent-workspace # expect VALID; deprecation WARNs are OK
 ```
 
 Escape hatch (not recommended): `SBX_KIT_SKIP_SBX_CHECK=1`.

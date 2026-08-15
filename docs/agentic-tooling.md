@@ -70,12 +70,14 @@ Hub example recipes: `shell-hub` (stock shell + deepseek-creds trial),
 `cursor-hub` (stock cursor + agent-workspace).
 
 ```bash
-sbx-kit run --agent shell-hub --yes
+sbx-kit concepts
+sbx-kit recipes
+sbx-kit run --recipe shell-hub --yes
 sbx-kit check
 # local custom:
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
-sbx-kit run --agent cursor --yes
+sbx-kit run --recipe cursor --yes
 ```
 
 ---

@@ -39,7 +39,7 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	}
 	agent, ok := cat.Agents[agentName]
 	if !ok {
-		return nil, fmt.Errorf("unknown recipe %q (try: sbx-kit agents)", agentName)
+		return nil, fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", agentName)
 	}
 	if agent.Stub {
 		return nil, fmt.Errorf("recipe %q is still a stub in config/agents.yaml", agentName)
@@ -118,13 +118,20 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 		return nil, err
 	}
 	if rec != nil {
-		return &resolvedSandbox{
-			AgentName:   rec.Agent,
-			ProjectDir:  rec.ProjectDir,
-			SandboxName: rec.SandboxName,
-			ProfileID:   rec.ProfileID,
-			Root:        root,
-		}, nil
+		full, err := resolveFromAgent(rec.Agent, rec.ProjectDir)
+		if err != nil {
+			// Binding exists but recipe missing from catalog — still useful for rm/check.
+			return &resolvedSandbox{
+				AgentName:   rec.Agent,
+				ProjectDir:  rec.ProjectDir,
+				SandboxName: rec.SandboxName,
+				ProfileID:   rec.ProfileID,
+				Root:        root,
+			}, nil
+		}
+		full.SandboxName = rec.SandboxName
+		full.ProfileID = rec.ProfileID
+		return full, nil
 	}
 	return &resolvedSandbox{
 		SandboxName: arg,

@@ -1,21 +1,14 @@
 # sbx-kit CLI
 
-Go sources for the toolkit CLI. See [docs/cli-tooling.md](../docs/cli-tooling.md).
-
-**macOS teammates:** [docs/homebrew.md](../docs/homebrew.md).
+Go sources. See [docs/cli-tooling.md](../docs/cli-tooling.md) and `sbx-kit concepts`.
 
 ```bash
 cd cli
 go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=dev" \
   -o ../bin/sbx-kit ./cmd/sbx-kit
 export SBX_TREE=/path/to/this/repo
-../bin/sbx-kit agents
-../bin/sbx-kit run --agent shell-hub --yes
+../bin/sbx-kit concepts
+../bin/sbx-kit recipes
+../bin/sbx-kit run --recipe shell-hub --yes
 ../bin/sbx-kit check
-../bin/sbx-kit run --agent cursor --yes --clone   # after template load
-../bin/sbx-kit template load --engine docker kit-core
-../bin/sbx-kit template load --engine docker kit-cursor
-../bin/sbx-kit init --agent shell-hub .
 ```
-
-Brew installs the binary plus `share/sbx-kit/{config,kits,…}` so `SBX_TREE` is not required for normal use.

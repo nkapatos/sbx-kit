@@ -22,55 +22,53 @@ import (
 
 func newRunCmd() *cobra.Command {
 	var (
-		agent            string
-		projectPath      string
-		attachName       string
-		sandboxName      string
-		resourcesProfile string
-		clone            bool
-		restoreState     bool
-		yes              bool
+		recipe, agentAlias string
+		projectPath        string
+		attachName         string
+		sandboxName        string
+		resourcesProfile   string
+		clone              bool
+		restoreState       bool
+		yes                bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "run",
-		Short: "Create a recipe sandbox or attach an existing one",
-		Long: `Lifecycle helper for recipe sandboxes (Hub or local templates + kits).
-
-Intents (do not mix):
+		Short: "Create from a recipe or attach a sandbox",
+		Long: `Create or attach (do not mix intents):
 
   sbx-kit run
       Attach the sole sandbox bound to the current directory.
 
-  sbx-kit run --agent <recipe> [--path <dir>]
-      CREATE only. Friendly sbx name defaults to the project dirname (like sbx).
-      Interactive: ask for a custom name, then confirm create.
-      --yes: skip prompts; use dirname (or --sandbox-name).
-      Opaque profile id stays in the host vault — not the sbx name.
-      Hub recipes (no image_name) let sbx use the stock agent template.
-      Local recipes resolve via sbx template ls / template_fallback.
+  sbx-kit run --recipe <id> [--path <dir>]
+      CREATE. Friendly sbx name defaults to the project dirname.
+      --yes skips prompts (dirname or --sandbox-name).
+      Hub recipes use the stock agent template; local recipes use template_fallback.
 
   sbx-kit run --name <sandbox>
-      ATTACH only by friendly sbx name (what sbx ls shows).
+      ATTACH by friendly sbx name (what sbx ls shows).
 
-Pass-through after -- goes to sbx:
-  sbx-kit run --agent cursor-hub --yes -- --memory 8g`,
-		Example: `  sbx-kit run --agent shell-hub --yes
-  sbx-kit run --agent cursor-hub --yes
-  sbx-kit run --agent cursor --yes
-  sbx-kit run --agent shell-hub --sandbox-name ds-creds --yes
-  sbx-kit run --agent shell-hub --path ~/my-project --yes --restore-state
+Pass-through after -- goes to sbx.`,
+		Example: `  sbx-kit run --recipe shell-hub --yes
+  sbx-kit run --recipe cursor-hub --yes
+  sbx-kit run --recipe cursor --yes
+  sbx-kit run --recipe shell-hub --sandbox-name ds-creds --yes
   sbx-kit run --name my-project
-  sbx-kit run --agent shell-hub --yes -- --memory 8g`,
+  sbx-kit run --recipe shell-hub --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)
 			if len(args) > 0 && len(extra) == 0 {
-				return fmt.Errorf("unexpected arguments %v\n  use: sbx-kit run\n       sbx-kit run --agent <recipe> [--path <dir>]\n       sbx-kit run --name <sandbox>", args)
+				return fmt.Errorf("unexpected arguments %v\n  use: sbx-kit run\n       sbx-kit run --recipe <id> [--path <dir>]\n       sbx-kit run --name <sandbox>", args)
 			}
 
-			if attachName != "" && agent != "" {
-				return fmt.Errorf("use either --name (attach) or --agent (create recipe), not both")
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+
+			if attachName != "" && recipeID != "" {
+				return fmt.Errorf("use either --name (attach) or --recipe (create), not both")
 			}
 			if attachName != "" && sandboxName != "" {
 				return fmt.Errorf("--sandbox-name is create-only; use --name to attach")
@@ -92,21 +90,21 @@ Pass-through after -- goes to sbx:
 				return runAttachOnly(attachName, restoreState)
 			}
 
-			if agent != "" {
+			if recipeID != "" {
 				if projectPath == "" {
 					projectPath = "."
 				}
 				if sandboxName != "" && !sbxname.Valid(sandboxName) {
 					return fmt.Errorf("invalid --sandbox-name %q", sandboxName)
 				}
-				return runCreateRecipe(agent, projectPath, sandboxName, resourcesProfile, clone, restoreState, yes, extra)
+				return runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile, clone, restoreState, yes, extra)
 			}
 
 			if projectPath == "" {
 				projectPath = "."
 			}
 			if clone || yes || resourcesProfile != "" || sandboxName != "" {
-				return fmt.Errorf("bare run is attach-only; pass --agent <recipe> to create")
+				return fmt.Errorf("bare run is attach-only; pass --recipe <id> to create")
 			}
 			rec, err := soleBindingRecord(projectPath)
 			if err != nil {
@@ -116,10 +114,10 @@ Pass-through after -- goes to sbx:
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe id (CREATE only)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe id (CREATE only)")
 	cmd.Flags().StringVar(&projectPath, "path", ".", "project directory (create, or bare-run attach filter)")
-	cmd.Flags().StringVar(&attachName, "name", "", "friendly sbx sandbox name (ATTACH only)")
-	cmd.Flags().StringVar(&sandboxName, "sandbox-name", "", "create-time friendly sbx name (default: project dirname)")
+	cmd.Flags().StringVar(&attachName, "name", "", "existing sandbox name (ATTACH only)")
+	cmd.Flags().StringVar(&sandboxName, "sandbox-name", "", "name at create (default: project dirname)")
 	cmd.Flags().StringVar(&resourcesProfile, "resources", "", "resource profile at create (remote-llm|local-llm)")
 	cmd.Flags().BoolVar(&clone, "clone", false, "create-time: sandbox clone mode")
 	cmd.Flags().BoolVar(&restoreState, "restore-state", false, "import host profile archive after create / before attach")
@@ -128,7 +126,7 @@ Pass-through after -- goes to sbx:
 	return cmd
 }
 
-func runCreateRecipe(agent, projectPath, sandboxName, resourcesProfile string, clone, restoreState, yes bool, extra []string) error {
+func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string, clone, restoreState, yes bool, extra []string) error {
 	root, err := requireToolkitRoot()
 	if err != nil {
 		return err
@@ -137,12 +135,12 @@ func runCreateRecipe(agent, projectPath, sandboxName, resourcesProfile string, c
 	if err != nil {
 		return err
 	}
-	ag, ok := cat.Agents[agent]
+	ag, ok := cat.Agents[recipeID]
 	if !ok {
-		return fmt.Errorf("unknown recipe %q (try: sbx-kit agents)", agent)
+		return fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", recipeID)
 	}
 	if ag.Stub {
-		return fmt.Errorf("recipe %q is still a stub in config/agents.yaml", agent)
+		return fmt.Errorf("recipe %q is still a stub in config/agents.yaml", recipeID)
 	}
 
 	profile := resourcesProfile
@@ -173,14 +171,14 @@ func runCreateRecipe(agent, projectPath, sandboxName, resourcesProfile string, c
 	if needs, err := kitcreds.ScanSpecs(kitPaths); err != nil {
 		return err
 	} else if len(needs) > 0 {
-		kitcreds.PrintHints(os.Stdout, agent, needs)
+		kitcreds.PrintHints(os.Stdout, recipeID, needs)
 		fmt.Println()
 	}
 
-	overrideKey := "SBX_" + strings.ToUpper(agent) + "_TEMPLATE"
+	overrideKey := "SBX_" + strings.ToUpper(recipeID) + "_TEMPLATE"
 	opts := run.Opts{
 		Root:             root,
-		AgentCatalogName: agent,
+		AgentCatalogName: recipeID,
 		SbxAgent:         ag.SbxAgent,
 		ImageName:        ag.ImageName,
 		TemplateFallback: ag.TemplateFallback,
@@ -240,7 +238,7 @@ func runAttachOnly(name string, restoreState bool) error {
 			return err
 		}
 		if !has {
-			fmt.Printf("==> warning: --restore-state set but no archive for profile %s\n", profileID)
+			fmt.Printf("==> warning: --restore-state set but no archive at profile %s\n", profileID)
 		} else if err := statexfer.Import(r, sbxName, profileID); err != nil {
 			return err
 		}
@@ -259,7 +257,7 @@ func soleBindingRecord(projectPath string) (*binding.Record, error) {
 	}
 	switch len(recs) {
 	case 0:
-		return nil, fmt.Errorf("no sandbox bound to %s\n  create:  sbx-kit run --agent <recipe> --path %s\n  list:    sbx-kit agents  /  sbx-kit status", abs, projectPath)
+		return nil, fmt.Errorf("no sandbox bound to %s\n  create:  sbx-kit run --recipe <id> --path %s\n  list:    sbx-kit recipes  /  sbx-kit status", abs, projectPath)
 	case 1:
 		rec := recs[0]
 		return &rec, nil
@@ -271,19 +269,6 @@ func soleBindingRecord(projectPath string) (*binding.Record, error) {
 		}
 		return nil, fmt.Errorf("%s", strings.TrimSuffix(b.String(), "\n"))
 	}
-}
-
-func extractPassthrough(argv []string) []string {
-	for i, a := range argv {
-		if a == "--" && i+1 < len(argv) {
-			return append([]string{}, argv[i+1:]...)
-		}
-	}
-	return nil
-}
-
-func containsFlag(args []string, flag string) bool {
-	return slices.Contains(args, flag)
 }
 
 func promptSandboxName(defaultName string) (string, error) {
@@ -327,4 +312,17 @@ func promptStaleArchive(profileID string) (restore, discard bool, err error) {
 	default:
 		return false, false, nil
 	}
+}
+
+func extractPassthrough(argv []string) []string {
+	for i, a := range argv {
+		if a == "--" && i+1 < len(argv) {
+			return append([]string{}, argv[i+1:]...)
+		}
+	}
+	return nil
+}
+
+func containsFlag(args []string, flag string) bool {
+	return slices.Contains(args, flag)
 }

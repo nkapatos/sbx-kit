@@ -1,142 +1,89 @@
 # Toolkit CLI (`sbx-kit`)
 
-Helper CLI for Docker AI Sandboxes: **recipes**, **kits**, **portable state**,
-and optional **local template builds**.
+Convenience layer on Docker AI Sandboxes (`sbx`): **recipes**, kit placement,
+portable state, and optional local template builds.
 
-Two template paths (same lifecycle commands):
-
-1. **Official / Hub** — omit local image fields in the recipe; `sbx` uses the
-   stock agent template. Attach kits to experiment (Docker’s supported model).
-2. **Local / registry tag** — set `image_name` / `template_fallback`, or run
-   `sbx-kit template load` for images under `templates/`.
-
-This repository ships a **few example recipes**. Point the toolkit root
-(`SBX_TREE` / Homebrew share) at your own `config/` + `kits/` + `templates/`
-when you want different stacks.
+Same words as sbx for **agent**, **template**, and **kit**. **Recipe** is the
+only sbx-kit-specific idea (named agent + kits shortcut). Run `sbx-kit concepts`
+for a short wiring guide.
 
 **Install (macOS):** [homebrew.md](homebrew.md) — `brew tap nkapatos/sbx-kit …`  
 **Go module:** `github.com/nkapatos/sbx-kit/cli`
 
 ## Required `sbx` CLI
 
-Kits/templates are still experimental upstream. This tree requires **Docker
-`sbx` >= 0.34.0** and authors kits as **schemaVersion `"1"`** (released CLIs
-through at least 0.37 do not yet accept clean authored v2). Lifecycle commands
-refuse an older `sbx`.
+Requires **Docker `sbx` >= 0.34.0**. Kits are authored as schemaVersion `"1"`.
 
 ```bash
-sbx-kit version          # prints sbx-kit + required range + detected sbx
-brew upgrade docker/tap/sbx
-sbx kit validate kits/agent-workspace # expect VALID; deprecation WARNs are OK
+sbx-kit version
+sbx kit validate kits/agent-workspace
 ```
 
-Escape hatch (not recommended): `SBX_KIT_SKIP_SBX_CHECK=1`.
-Bump the floor in `cli/internal/sbxcompat` when we depend on newer sbx.
+Escape hatch: `SBX_KIT_SKIP_SBX_CHECK=1`.
 
 ## Commands
 
 ```text
-sbx-kit agents
-sbx-kit template ls                              # → sbx template ls
-sbx-kit run                                      # attach sole binding for cwd
-sbx-kit run --agent <recipe> [--path <dir>] [--sandbox-name <name>] [--yes] [--clone] [--restore-state] [-- sbx-args...]
-sbx-kit run --name <sandbox> [--restore-state]   # attach only
-sbx-kit rm --agent <recipe> [--path <dir>] [--keep-state] [--force]
-sbx-kit rm --name <sandbox> [--keep-state] [--force]
-sbx-kit upgrade --agent <recipe> [--path <dir>] [--force]
-sbx-kit state export|import --agent <recipe> [--path <dir>]
-sbx-kit state export|import --name <sandbox>
-sbx-kit status [--path <dir>]                    # recipe↔sandbox bindings
-sbx-kit check [--name|--agent/--path]            # diagnostics + sbx secret ls
-sbx-kit init [--agent <recipe>] [project-dir]
-sbx-kit template load --engine <docker|container> <name-or-path> [image-tag]
+sbx-kit concepts
+sbx-kit recipes
+sbx-kit agents                               # sbx agents + custom templates in view
+sbx-kit template ls                          # → sbx template ls
+sbx-kit run                                  # attach sole cwd binding
+sbx-kit run --recipe <id> [--path <dir>] [--sandbox-name <name>] [--yes] …
+sbx-kit run --name <sandbox>                 # attach only
+sbx-kit rm --recipe <id>|--name … [--keep-state] [--force]
+sbx-kit upgrade --recipe <id>|--name … [--force]
+sbx-kit state export|import --recipe|--name …
+sbx-kit status [--path <dir>]
+sbx-kit check [--name|--recipe/--path]
+sbx-kit init [--recipe <id>] [project-dir]
+sbx-kit template load --engine <docker|container> <name> [tag]
 sbx-kit version
 ```
 
-## Host vault (XDG)
+`--agent` is accepted as an alias for `--recipe` on lifecycle commands.
 
-Created lazily by lifecycle commands (not by Homebrew):
+## Host vault (XDG)
 
 | Path | Contents |
 | --- | --- |
 | `~/.local/share/sbx-kit/profiles/<id>/state.tgz` | Portable VM state archives |
 | `~/.local/state/sbx-kit/bindings.json` | project + recipe → sandbox name |
 
-Honor `XDG_DATA_HOME` / `XDG_STATE_HOME` when set.
-
 ## Sandbox identity
-
-Friendly **sbx name** (what `sbx ls` shows) defaults to the project directory
-basename — same idea as stock sbx. An opaque **profile id**
-(`sbxk-<recipe>-<hash>`) keys the host vault only; users rarely type it.
 
 | Flag | Intent |
 | --- | --- |
-| `--agent <recipe>` | **Create** from catalog recipe |
-| `--path` | Project directory for create / bare-run attach |
-| `--sandbox-name` | Create-time friendly sbx name (default: dirname; `--yes` skips prompt) |
-| `--name` | **Attach** (or rm/state) by friendly sbx name — no create |
+| `--recipe <id>` | **Create** from catalog (or resolve binding for rm/upgrade/…) |
+| `--path` | Project directory |
+| `--sandbox-name` | Name at **create** (default: dirname) |
+| `--name` | **Existing** sandbox (attach / rm / check / state) |
 
 ```bash
-sbx-kit run --agent shell-hub --yes       # Hub shell + deepseek-creds trial
-sbx-kit check --agent shell-hub           # or: sbx-kit check --name <sandbox>
-sbx-kit status
-sbx-kit run --agent cursor-hub --yes      # Hub template + kits
-sbx-kit run --agent cursor --yes          # local kit-cursor image
-sbx-kit run                               # re-attach sole cwd binding
-sbx-kit run --name my-project             # attach from anywhere
+sbx-kit recipes
+sbx-kit run --recipe shell-hub --yes
+sbx-kit check
+sbx-kit run --name my-project
 ```
-
-If `--agent` is used and that sbx name already exists, the CLI errors (sbx
-owns uniqueness). To “rename”: `rm --keep-state`, recreate with a new
-`--sandbox-name`, `--restore-state`.
 
 ## Host secrets
 
-On **create**, `sbx-kit run` prints `sbx secret set <service>` for services
-declared in the recipe’s kits. `sbx-kit check` resolves the sandbox (cwd
-binding, `--name`, or `--agent`/`--path`) and runs `sbx secret ls` (sandbox
-scoped when the box exists). sbx-kit does not store keys.
-
-```bash
-sbx-kit check
-sbx-kit check --name ds-creds-trial
-```
+On **create**, `run` prints `sbx secret set <service>` for services declared in
+the recipe’s kits. `check` runs `sbx secret ls` (sandbox-scoped when the box
+exists).
 
 ## Portable state
 
-Pack/unpack is **not** hardcoded in Go. The host CLI runs:
-
-1. Best-effort wait if the sandbox is still `running` (detach first — agents often keep chat history in SQLite WAL files)
-2. `sbx exec <name> -- sbx-kit-state pack|unpack /tmp/sbx-kit-state.tgz` (pack checkpoints `*.db` WALs when `sqlite3` is available; otherwise includes `-wal`/`-shm`)
-3. `sbx cp` between that path and the host profile archive
-
-`sbx-kit-state` and `state.manifest` ship in the **`agent-workspace` kit**. Manifest INCLUDE/EXCLUDE lists what survives recreate; caches are excluded.
-
 ```bash
-sbx-kit rm --agent cursor-hub --keep-state
-sbx-kit run --agent cursor-hub --yes --restore-state   # only when the box does not exist yet
-# or:
-sbx-kit upgrade --agent cursor-hub                     # export → rm → create → restore → attach
+sbx-kit rm --recipe cursor-hub --keep-state
+sbx-kit run --recipe cursor-hub --yes --restore-state
+sbx-kit upgrade --recipe cursor-hub
 ```
 
-`upgrade` recreates the sandbox from the **current recipe** (template + kits).
-In-box agent binary refresh (distinct command) is still open.
+## Catalog
 
-## Catalog (recipes)
-
-Recipes are declared in [`config/agents.yaml`](../config/agents.yaml). Each key
-is a **user-chosen recipe id**; `sbx_agent` is the underlying sbx agent.
-
-| Recipe fields | Meaning |
-| --- | --- |
-| No `image_name` / `template_fallback` | **Hub** — `sbx` uses the stock agent template |
-| `image_name` + `template_fallback` | Resolve from `sbx template ls`, else fallback tag |
-| `kits` | Mixin dirs under the toolkit `kits/` tree |
-
-`sbx-kit agents` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS | STATUS`.
-
-Resource profiles: [`config/resources-remote-llm.env`](../config/resources-remote-llm.env), [`config/resources-local-llm.env`](../config/resources-local-llm.env).
+Recipes live in [`config/agents.yaml`](../config/agents.yaml) (filename kept for
+now). `sbx-kit recipes` prints `RECIPE | SBX_AGENT | SOURCE | IMAGE | KITS`.
 
 ## Develop from a checkout
 
@@ -145,13 +92,7 @@ cd cli
 go build -ldflags "-X github.com/nkapatos/sbx-kit/cli/internal/version.Version=dev" \
   -o ../bin/sbx-kit ./cmd/sbx-kit
 export SBX_TREE=/path/to/sbx-kit
-../bin/sbx-kit agents
-../bin/sbx-kit check --agent shell-hub
-../bin/sbx-kit run --agent shell-hub --yes
-../bin/sbx-kit template load --engine docker kit-core
-../bin/sbx-kit template load --engine docker kit-cursor
-../bin/sbx-kit run --agent cursor --yes
-../bin/sbx-kit init --agent shell-hub /tmp/demo
+../bin/sbx-kit concepts
+../bin/sbx-kit recipes
+../bin/sbx-kit run --recipe shell-hub --yes
 ```
-
-Or: `go install github.com/nkapatos/sbx-kit/cli/cmd/sbx-kit@latest`

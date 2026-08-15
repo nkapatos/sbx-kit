@@ -14,7 +14,7 @@ import (
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "sbx-kit",
-		Short:         "Recipes and kits for Docker AI Sandboxes (Hub or local templates) + portable state",
+		Short:         "Recipes and lifecycle helpers on top of Docker sbx",
 		Long:          longHelp(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -27,6 +27,8 @@ func NewRoot() *cobra.Command {
 	root.SetOut(os.Stdout)
 	root.SetErr(os.Stderr)
 
+	root.AddCommand(newConceptsCmd())
+	root.AddCommand(newRecipesCmd())
 	root.AddCommand(newAgentsCmd())
 	root.AddCommand(newRunCmd())
 	root.AddCommand(newRmCmd())
@@ -42,38 +44,19 @@ func NewRoot() *cobra.Command {
 }
 
 func longHelp() string {
-	return `sbx-kit sits on top of the Docker sbx CLI: recipes, kit placement, and
-portable agent state. Use official Hub templates (sbx pulls them) or local
-images you build — same commands either way.
+	return `Convenience layer on the Docker sbx CLI: recipes (agent + kits), lifecycle,
+and portable state. Same words as sbx for agent, template, and kit.
 
-  Hub / official   recipe without a local image → sbx stock agent + your kits
-  Local build      sbx-kit template load … then a recipe with image_name/fallback
+  sbx-kit concepts     short wiring guide
+  sbx-kit recipes      catalog shortcuts
+  sbx-kit agents       sbx agents + custom templates in view
+  sbx-kit run --recipe <id> --yes
+  sbx-kit run --name <sandbox>
+  sbx-kit check | status
+  sbx-kit template ls | template load --engine docker <name>
 
-This tree ships a few example recipes. Point SBX_TREE at your own
-config/kits/templates when you want a different catalog.
-
-macOS install:  brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit && brew install sbx-kit
-Docs:           docs/homebrew.md, docs/cli-tooling.md, docs/product-scope.md
-
-Host vault (created on demand):
-  ~/.local/share/sbx-kit/profiles/   portable state archives
-  ~/.local/state/sbx-kit/            project↔recipe bindings
-
-Day-to-day:
-  sbx-kit agents
-  sbx-kit template ls                     # → sbx template ls
-  sbx-kit run --agent shell-hub --yes     # Hub shell + deepseek-creds trial
-  sbx-kit check                           # diagnostics + sbx secret ls
-  sbx-kit status                          # recipe↔sandbox bindings
-  sbx-kit run --agent cursor-hub --yes
-  sbx-kit run --agent cursor --yes        # after local template load
-  sbx-kit run
-  sbx-kit run --name my-project
-  sbx-kit rm --agent shell-hub --keep-state
-  sbx-kit upgrade --agent shell-hub
-  sbx-kit init --agent shell-hub .
-  sbx-kit template load --engine docker kit-core
-  sbx-kit template load --engine docker kit-cursor`
+Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
+Docs: docs/cli-tooling.md  ·  Override tree: SBX_TREE=`
 }
 
 func requireToolkitRoot() (string, error) {

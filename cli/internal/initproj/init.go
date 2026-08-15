@@ -30,7 +30,7 @@ func Run(o Opts) error {
 	}
 	agent, ok := o.Catalog.Agents[agentName]
 	if !ok {
-		return fmt.Errorf("unknown recipe %q (try: sbx-kit agents)", agentName)
+		return fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", agentName)
 	}
 
 	dir := o.ProjectDir
@@ -87,9 +87,9 @@ func buildSection(name string, a catalog.Agent) string {
 	}
 	blurb := fmt.Sprintf("the `%s` recipe (`%s` + kits)%s", name, a.ImageName, stubNote)
 
-	runBlock := fmt.Sprintf("sbx-kit run --agent %s --yes", name)
+	runBlock := fmt.Sprintf("sbx-kit run --recipe %s --yes", name)
 	if a.Stub {
-		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run --agent %s --yes", name)
+		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run --recipe %s --yes", name)
 	}
 
 	return strings.TrimSpace(fmt.Sprintf(`

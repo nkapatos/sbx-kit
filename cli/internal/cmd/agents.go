@@ -2,30 +2,45 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
-	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 )
 
 func newAgentsCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "agents",
-		Short:   "List catalog recipes (Hub or local template + kits)",
-		Aliases: []string{"ls", "list", "recipes"},
-		Long: `Lists recipes from config/agents.yaml under the toolkit root.
+		Use:   "agents",
+		Short: "Show sbx agents and custom templates in view",
+		Long: `Inventory aligned with sbx terminology:
 
-SOURCE:
-  hub     no local image — sbx uses the stock agent template (official path)
-  local   recipe pins image_name / template_fallback (build or registry tag)
+  • tries sbx agents (or similar) when available
+  • lists sbx agents referenced by recipes in this toolkit tree
+  • points at sbx-kit template ls for loaded / custom images
 
-Add your own recipes to experiment with kits on any sbx agent.`,
+For composed shortcuts (agent + kits), use: sbx-kit recipes`,
+		Example: `  sbx-kit agents
+  sbx-kit recipes
+  sbx-kit template ls`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			out := cmd.OutOrStdout()
+
+			r := sbxutil.Default()
+			if _, err := r.LookPath(); err != nil {
+				fmt.Fprintln(out, "==> sbx not on PATH; skipping live agent list")
+			} else {
+				fmt.Fprintln(out, "==> sbx agents (pass-through)")
+				if err := r.RunInteractive("agents"); err != nil {
+					fmt.Fprintf(os.Stderr, "note: sbx agents failed (%v); continuing with catalog view\n", err)
+				}
+				fmt.Fprintln(out)
+			}
+
 			root, err := requireToolkitRoot()
 			if err != nil {
 				return err
@@ -35,40 +50,45 @@ Add your own recipes to experiment with kits on any sbx agent.`,
 				return err
 			}
 
-			names := make([]string, 0, len(cat.Agents))
-			for name := range cat.Agents {
-				names = append(names, name)
+			sbxAgents := map[string]struct{}{}
+			var local []string
+			for id, a := range cat.Agents {
+				if a.SbxAgent != "" {
+					sbxAgents[a.SbxAgent] = struct{}{}
+				}
+				if a.ImageName != "" || a.TemplateFallback != "" {
+					tag := a.TemplateFallback
+					if tag == "" {
+						tag = a.ImageName
+					}
+					local = append(local, fmt.Sprintf("%s  (recipe %s, sbx agent %s)", tag, id, a.SbxAgent))
+				}
+			}
+
+			names := make([]string, 0, len(sbxAgents))
+			for n := range sbxAgents {
+				names = append(names, n)
 			}
 			sort.Strings(names)
-
-			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-			fmt.Fprintln(w, "RECIPE\tSBX_AGENT\tSOURCE\tIMAGE\tKITS\tSTATUS")
-			for _, name := range names {
-				a := cat.Agents[name]
-				status := "ready"
-				if a.Stub {
-					status = "stub"
-				}
-				kits := a.Kits
-				if len(kits) == 0 {
-					kits = cat.Defaults.Kits
-				}
-				source, image := recipeSource(a)
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
-					name, a.SbxAgent, source, image, strings.Join(kits, ","), status)
+			fmt.Fprintln(out, "==> sbx agents used by recipes in this tree")
+			for _, n := range names {
+				fmt.Fprintf(out, "  %s\n", n)
 			}
-			return w.Flush()
+
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "==> custom / local templates pinned by recipes")
+			if len(local) == 0 {
+				fmt.Fprintln(out, "  (none)")
+			} else {
+				sort.Strings(local)
+				for _, line := range local {
+					fmt.Fprintf(out, "  %s\n", line)
+				}
+			}
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "Loaded images:  sbx-kit template ls")
+			fmt.Fprintln(out, "Recipes:        sbx-kit recipes")
+			return nil
 		},
 	}
-}
-
-func recipeSource(a catalog.Agent) (source, image string) {
-	if a.ImageName == "" && a.TemplateFallback == "" {
-		return "hub", "-"
-	}
-	image = a.ImageName
-	if image == "" {
-		image = a.TemplateFallback
-	}
-	return "local", image
 }

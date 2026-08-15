@@ -12,28 +12,30 @@ import (
 
 func newRmCmd() *cobra.Command {
 	var (
-		agent     string
-		path      string
-		name      string
-		keepState bool
-		force     bool
+		recipe, agentAlias string
+		path               string
+		name               string
+		keepState          bool
+		force              bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "rm",
-		Short: "Remove a sandbox (optionally export portable state first)",
-		Long: `Resolve the sandbox from --agent/--path (recipe binding) or --name, optionally
-pack state to ~/.local/share/sbx-kit/profiles/<id>/, then run sbx rm.
+		Short: "Remove a sandbox (optionally keep portable state)",
+		Long: `Resolve via --recipe/--path or --name, optionally export state to the host
+vault, then sbx rm.
 
-Without --keep-state, warns that /home/agent workplace state will be lost.
-With --keep-state, export best-effort waits if status is still running, then
-checkpoints SQLite WALs inside the VM before packing.`,
-		Example: `  sbx-kit rm --agent cursor --keep-state
-  sbx-kit rm --agent cursor --path ~/proj --keep-state
-  sbx-kit rm --name sbxk-cursor-deadbeef --keep-state --force`,
+Without --keep-state, /home/agent workplace state is discarded with the box.`,
+		Example: `  sbx-kit rm --recipe shell-hub --keep-state
+  sbx-kit rm --recipe cursor-hub --path ~/proj --keep-state
+  sbx-kit rm --name my-project --keep-state --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rs, err := resolveFlags(agent, path, name)
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+			rs, err := resolveFlags(recipeID, path, name)
 			if err != nil {
 				return err
 			}
@@ -52,25 +54,21 @@ checkpoints SQLite WALs inside the VM before packing.`,
 					return err
 				}
 			} else {
-				fmt.Printf("==> warning: removing %s without --keep-state; VM /home/agent state will be deleted\n", rs.SandboxName)
+				fmt.Println("==> warning: removing without --keep-state discards portable /home/agent state")
 			}
 
 			if err := r.Rm(rs.SandboxName, force); err != nil {
 				return err
 			}
-
-			if rs.AgentName != "" && rs.ProjectDir != "" {
-				_ = binding.Delete(rs.ProjectDir, rs.AgentName)
-			}
-			fmt.Printf("==> removed %s (%s)\n", rs.SandboxName, binding.Label(&binding.Record{ProjectDir: rs.ProjectDir, SandboxName: rs.SandboxName}))
+			_ = binding.Delete(rs.ProjectDir, rs.AgentName)
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
-	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host XDG profile before rm")
+	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
+	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host vault before rm")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd
 }

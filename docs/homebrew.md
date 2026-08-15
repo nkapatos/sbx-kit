@@ -9,7 +9,7 @@ brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit
 brew install sbx-kit
 
 sbx-kit version
-sbx-kit agents
+sbx-kit recipes
 ```
 
 Before the first version tag, install from the default branch:
@@ -43,18 +43,18 @@ Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"
 
 ```bash
 sbx-kit version   # sbx-kit + required range + detected sbx
-sbx-kit agents
+sbx-kit recipes
 
 # Hub path (no local build):
 cd ~/my-project
 sbx-kit init --agent cursor-hub .    # optional
-sbx-kit run --agent cursor-hub --yes
+sbx-kit run --recipe cursor-hub --yes
 
 # Local lean images (optional):
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor
 sbx template ls
-sbx-kit run --agent cursor --yes
+sbx-kit run --recipe cursor --yes
 ```
 
 Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.

@@ -14,36 +14,38 @@ import (
 
 func newUpgradeCmd() *cobra.Command {
 	var (
-		agent string
-		path  string
-		force bool
+		recipe, agentAlias string
+		path               string
+		name               string
+		force              bool
 	)
 
 	cmd := &cobra.Command{
 		Use:   "upgrade",
-		Short: "Export state, recreate sandbox from current recipe, restore",
-		Long: `Blessed path when templates/kits in the recipe change:
+		Short: "Recreate sandbox from current recipe, keeping state",
+		Long: `When the recipe's template or kits change:
 
-  1. sbx-kit-state pack + sbx cp → host profile
+  1. pack state to the host profile
   2. sbx rm
-  3. sbx create with current catalog recipe + same sandbox name
-  4. restore archive
-  5. sbx run --name (attach)
+  3. create from the current catalog recipe (same sandbox name)
+  4. restore archive and attach
 
-Requires the agent-workspace kit so sbx-kit-state is available.`,
-		Example: `  sbx-kit upgrade --agent cursor
-  sbx-kit upgrade --agent cursor --path ~/proj --force`,
+Requires the agent-workspace kit (sbx-kit-state).`,
+		Example: `  sbx-kit upgrade --recipe shell-hub
+  sbx-kit upgrade --recipe cursor-hub --path ~/proj --force
+  sbx-kit upgrade --name my-project --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if agent == "" {
-				return fmt.Errorf("--agent is required")
-			}
-			if path == "" {
-				path = "."
-			}
-			rs, err := resolveFromAgent(agent, path)
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
 			if err != nil {
 				return err
+			}
+			rs, err := resolveFlags(recipeID, path, name)
+			if err != nil {
+				return err
+			}
+			if rs.AgentName == "" {
+				return fmt.Errorf("could not resolve a recipe; pass --recipe or use a bound --name")
 			}
 
 			r := sbxutil.Default()
@@ -63,11 +65,10 @@ Requires the agent-workspace kit so sbx-kit-state is available.`,
 			}
 
 			extra := extractPassthrough(os.Args)
-			overrideKey := "SBX_" + strings.ToUpper(agent) + "_TEMPLATE"
-			// Reuse the same friendly name + profile id from the binding.
+			overrideKey := "SBX_" + strings.ToUpper(rs.AgentName) + "_TEMPLATE"
 			_, err = run.Sbx(run.Opts{
 				Root:             rs.Root,
-				AgentCatalogName: agent,
+				AgentCatalogName: rs.AgentName,
 				SbxAgent:         rs.SbxAgent,
 				ImageName:        rs.ImageName,
 				TemplateFallback: rs.TemplateFB,
@@ -88,10 +89,10 @@ Requires the agent-workspace kit so sbx-kit-state is available.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (required)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
+	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name (uses bound recipe)")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
-	_ = cmd.MarkFlagRequired("agent")
 	return cmd
 }
 

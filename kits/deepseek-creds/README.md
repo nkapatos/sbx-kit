@@ -8,7 +8,7 @@ Minimal kit for the **Hub + kits** proof: network allowlist + proxy-managed
 sbx secret set deepseek
 
 # Example recipe (stock shell, no local image):
-sbx-kit run --agent shell-hub --yes
+sbx-kit run --recipe shell-hub --yes
 ```
 
 Inside the box the env var should be a sentinel; the proxy injects the real

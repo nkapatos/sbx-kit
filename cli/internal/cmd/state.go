@@ -15,7 +15,7 @@ import (
 func newStateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "state",
-		Short: "Export or import portable workplace state to the host XDG vault",
+		Short: "Export or import portable workplace state",
 	}
 	cmd.AddCommand(newStateExportCmd())
 	cmd.AddCommand(newStateImportCmd())
@@ -23,13 +23,17 @@ func newStateCmd() *cobra.Command {
 }
 
 func newStateExportCmd() *cobra.Command {
-	var agent, path, name string
+	var recipe, agentAlias, path, name string
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Pack VM state and copy to ~/.local/share/sbx-kit/profiles/<id>/",
+		Short: "Pack VM state into the host profile archive",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rs, err := resolveFlags(agent, path, name)
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+			rs, err := resolveFlags(recipeID, path, name)
 			if err != nil {
 				return err
 			}
@@ -44,20 +48,24 @@ func newStateExportCmd() *cobra.Command {
 			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
+	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
 }
 
 func newStateImportCmd() *cobra.Command {
-	var agent, path, name string
+	var recipe, agentAlias, path, name string
 	cmd := &cobra.Command{
 		Use:   "import",
-		Short: "Copy host profile archive into the sandbox and unpack",
+		Short: "Restore host profile archive into the sandbox",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			rs, err := resolveFlags(agent, path, name)
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+			rs, err := resolveFlags(recipeID, path, name)
 			if err != nil {
 				return err
 			}
@@ -72,9 +80,9 @@ func newStateImportCmd() *cobra.Command {
 			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (resolve via project binding)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "sandbox id (no create)")
+	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
 }
 
@@ -82,7 +90,8 @@ func newStatusCmd() *cobra.Command {
 	var path string
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show recipe↔sandbox bindings and whether sandboxes still exist",
+		Short: "List recipe↔sandbox bindings",
+		Long:  `Shows project bindings and whether each sandbox still appears in sbx ls.`,
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := xdg.Ensure(); err != nil {
@@ -161,11 +170,11 @@ func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
 		}
 		switch len(recs) {
 		case 0:
-			return nil, fmt.Errorf("no binding for path %s; pass --agent <recipe> or --name (see sbx-kit status)", path)
+			return nil, fmt.Errorf("no binding for path %s; pass --recipe <id> or --name (see sbx-kit status)", path)
 		case 1:
 			agent = recs[0].Agent
 		default:
-			return nil, fmt.Errorf("multiple recipes bound to %s; pass --agent or --name explicitly", path)
+			return nil, fmt.Errorf("multiple recipes bound to %s; pass --recipe or --name explicitly", path)
 		}
 	}
 	if path == "" {

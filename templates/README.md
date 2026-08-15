@@ -17,12 +17,12 @@ hot-swap mid-session.
 
 ```bash
 # Hub (no local build):
-sbx-kit run --agent cursor-hub --yes
+sbx-kit run --recipe cursor-hub --yes
 
 # Local:
 sbx-kit template load --engine docker kit-core
 sbx-kit template load --engine docker kit-cursor   # after kit-core
-sbx-kit run --agent cursor --yes
+sbx-kit run --recipe cursor --yes
 ```
 
 | Dir | Image tag | Recipe | Role |

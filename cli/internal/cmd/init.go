@@ -10,23 +10,27 @@ import (
 )
 
 func newInitCmd() *cobra.Command {
-	var agent string
+	var recipe, agentAlias string
 
 	cmd := &cobra.Command{
 		Use:   "init [project-dir]",
-		Short: "Stamp a Docker Sandbox section into a project README",
-		Long: `Writes (or updates) a short "## Docker Sandbox" section in project-dir/README.md
-so the repo documents how to run it under sbx via sbx-kit.
-
-Uses recipe ids from config/agents.yaml (default example: cursor).`,
+		Short: "Add a Docker Sandbox section to the project README",
+		Long:  `Writes or updates a short "## Docker Sandbox" section using a catalog recipe.`,
 		Example: `  sbx-kit init
   sbx-kit init ~/my-project
-  sbx-kit init --agent opencode .`,
+  sbx-kit init --recipe shell-hub .`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectDir := "."
 			if len(args) > 0 {
 				projectDir = args[0]
+			}
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+			if recipeID == "" {
+				recipeID = "shell-hub"
 			}
 			root, err := requireToolkitRoot()
 			if err != nil {
@@ -38,13 +42,13 @@ Uses recipe ids from config/agents.yaml (default example: cursor).`,
 			}
 			return initproj.Run(initproj.Opts{
 				Root:       root,
-				Agent:      agent,
+				Agent:      recipeID,
 				ProjectDir: projectDir,
 				Catalog:    cat,
 			})
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "cursor", "catalog recipe to document (see sbx-kit agents)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe to document (see sbx-kit recipes)")
 	return cmd
 }

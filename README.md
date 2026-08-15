@@ -12,10 +12,11 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 
 | Term | Meaning |
 | --- | --- |
-| **Template** | Linux image the sandbox boots from — Hub/official via `sbx`, or a local build under `templates/`. |
-| **Kit** | Directory with `spec.yaml` applied at sandbox create (mixin or sandbox). Not an image. Official way to adjust any template. |
-| **Recipe** | Named combo in `config/agents.yaml`: which `sbx` agent, which template source, which kits. |
-| **CLI** | `sbx-kit` — recipes + kit placement + state migrate; `template load` only when you build locally |
+| **Agent** | What `sbx` runs (`shell`, `cursor`, …) — boots from a **template** image. |
+| **Template** | Image behind an agent (Hub via `sbx`, or local/`template load`). |
+| **Kit** | Create-time customization (`spec.yaml`). Not an image. |
+| **Recipe** | Named sbx-kit shortcut: agent (+ optional template) + kits. |
+| **CLI** | `sbx-kit` — recipes, placement, state; see `sbx-kit concepts`. |
 
 ## Two ways to get a template
 
@@ -57,7 +58,8 @@ Homebrew installs the binary plus `share/sbx-kit/{config,kits,templates,docs}`.
 ```bash
 brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit
 brew install sbx-kit   # or: brew install --HEAD nkapatos/sbx-kit/sbx-kit
-sbx-kit agents
+sbx-kit recipes
+sbx-kit concepts
 ```
 
 You still need the Docker **`sbx` CLI >= 0.34.0** signed in (kits authored as
@@ -70,11 +72,12 @@ No local image build. `sbx` pulls/uses the stock agent template; kits attach at 
 
 ```bash
 cd ~/my-project
-sbx-kit template ls                    # → sbx template ls (needs Docker/sbx login)
-sbx secret set deepseek                # host store (create also prints the command)
-sbx-kit run --agent shell-hub --yes    # stock shell + deepseek-creds (+ state kit)
-sbx-kit check                          # binding + declared services + sbx secret ls
-# or: sbx-kit run --agent cursor-hub --yes
+sbx-kit concepts
+sbx-kit recipes
+sbx-kit template ls
+sbx secret set deepseek
+sbx-kit run --recipe shell-hub --yes
+sbx-kit check
 ```
 
 ### 2b. Local lean templates (optional)
@@ -85,7 +88,7 @@ sbx-kit template load --engine docker kit-cursor
 # Apple container: --engine container (needs skopeo)
 # Cursor package download: allow downloads.cursor.com if policy blocks it
 sbx template ls
-sbx-kit run --agent cursor --yes
+sbx-kit run --recipe cursor --yes
 ```
 
 ### 3. Day-to-day
@@ -93,8 +96,8 @@ sbx-kit run --agent cursor --yes
 ```bash
 sbx-kit run                  # re-attach sole binding for cwd
 sbx-kit run --name <id>      # attach by friendly sbx name
-sbx-kit rm --agent cursor-hub --keep-state
-sbx-kit upgrade --agent cursor-hub   # recreate from recipe + restore state
+sbx-kit rm --recipe cursor-hub --keep-state
+sbx-kit upgrade --recipe cursor-hub
 ```
 
 ### Git workspace modes
@@ -115,7 +118,7 @@ Host **git worktrees** are for parallel host-visible checkouts. For VM-private a
 1. Add `kits/<name>/spec.yaml` (and optional `files/`).
 2. Reference it from [`config/agents.yaml`](config/agents.yaml) on a Hub or local recipe.
 3. For a **local** image: add `templates/<name>/Dockerfile`, then `sbx-kit template load`.
-4. Run: `sbx-kit run --agent <recipe> --yes`.
+4. Run: `sbx-kit run --recipe <id> --yes`.
 
 ## Reference
 

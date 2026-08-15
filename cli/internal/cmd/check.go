@@ -13,36 +13,35 @@ import (
 )
 
 func newCheckCmd() *cobra.Command {
-	var agent, path, name string
+	var recipe, agentAlias, path, name string
 
 	cmd := &cobra.Command{
 		Use:   "check",
-		Short: "Diagnostics for a recipe/sandbox (bindings, declared secrets, sbx secret ls)",
-		Long: `Convenience diagnostics. Resolves the sandbox from --name, --agent/--path,
-or the sole binding for the current directory, then:
-
-  • shows binding / recipe identity
-  • lists credential services declared by the recipe kits
-  • runs sbx secret ls --sandbox <name> when the box exists (else sbx secret ls)
-
-Does not store or validate secrets — sbx owns that.`,
+		Short: "Sandbox/recipe info and sbx secret ls",
+		Long: `Resolve via --name, --recipe/--path, or the sole cwd binding, then show
+identity, credential services declared by recipe kits, and run
+sbx secret ls (--sandbox when the box exists).`,
 		Example: `  sbx-kit check
   sbx-kit check --name my-project
-  sbx-kit check --agent shell-hub --path ~/proj`,
+  sbx-kit check --recipe shell-hub --path ~/proj`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCheck(agent, path, name)
+			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
+			if err != nil {
+				return err
+			}
+			return runCheck(recipeID, path, name)
 		},
 	}
 
-	cmd.Flags().StringVar(&agent, "agent", "", "catalog recipe (with --path)")
+	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (with --path)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "friendly sbx sandbox name")
+	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
 }
 
-func runCheck(agent, path, name string) error {
-	rs, err := resolveFlags(agent, path, name)
+func runCheck(recipeID, path, name string) error {
+	rs, err := resolveFlags(recipeID, path, name)
 	if err != nil {
 		return err
 	}
@@ -63,9 +62,7 @@ func runCheck(agent, path, name string) error {
 	}
 
 	kitPaths := rs.KitPaths
-	recipe := rs.AgentName
 	if len(kitPaths) == 0 && rs.AgentName != "" && rs.Root != "" {
-		// resolveSandboxArg by name alone may omit kits — reload from catalog.
 		cat, err := catalog.Load(filepath.Join(rs.Root, "config", "agents.yaml"))
 		if err == nil {
 			if ag, ok := cat.Agents[rs.AgentName]; ok {
@@ -103,9 +100,9 @@ func runCheck(agent, path, name string) error {
 			}
 			fmt.Println("  set on host:  sbx secret set <service>")
 		}
-	} else if recipe == "" {
+	} else if rs.AgentName == "" {
 		fmt.Println()
-		fmt.Println("==> no recipe kits loaded (name-only binding); skip declared-secret scan")
+		fmt.Println("==> no recipe kits loaded; skip declared-secret scan")
 	}
 
 	r := sbxutil.Default()

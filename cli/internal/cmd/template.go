@@ -12,13 +12,11 @@ import (
 func newTemplateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "template",
-		Short: "List sbx templates or build/import local images",
-		Long: `Convenience over sbx for templates:
+		Short: "List or import sandbox template images",
+		Long: `  sbx-kit template ls     → sbx template ls
+  sbx-kit template load   build a local Dockerfile and import into sbx
 
-  sbx-kit template ls     → sbx template ls (Hub + loaded local)
-  sbx-kit template load   → build a local Dockerfile and import into sbx
-
-Hub recipes do not need load — sbx already has the stock agent image.`,
+Hub recipes do not need load.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},

@@ -56,25 +56,25 @@ class SbxKit < Formula
         sbx-kit version
 
       Hub path (no local build):
+        sbx-kit concepts
+        sbx-kit recipes
         sbx-kit template ls
-        sbx secret set deepseek          # host store; create also prints this
-        sbx-kit run --agent shell-hub --yes
-        sbx-kit check                    # diagnostics + sbx secret ls
-        sbx-kit run --agent cursor-hub --yes
+        sbx secret set deepseek
+        sbx-kit run --recipe shell-hub --yes
+        sbx-kit check
 
       Local lean images (optional):
         sbx-kit template load --engine docker kit-core
         sbx-kit template load --engine docker kit-cursor
-        sbx-kit run --agent cursor --yes
-        sbx-kit run                          # re-attach
+        sbx-kit run --recipe cursor --yes
     EOS
   end
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
-    assert_match "shell-hub", shell_output("#{bin}/sbx-kit agents")
+    assert_match "shell-hub", shell_output("#{bin}/sbx-kit recipes")
+    assert_match "agent", shell_output("#{bin}/sbx-kit concepts")
     assert_match "check", shell_output("#{bin}/sbx-kit check --help")
     assert_match "load", shell_output("#{bin}/sbx-kit template load --help")
-    assert_match "ls", shell_output("#{bin}/sbx-kit template ls --help")
   end
 end

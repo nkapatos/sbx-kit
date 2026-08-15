@@ -7,11 +7,11 @@
 # mid-session. Preference CLIs stay in kits, not this image.
 #
 # Load parent first:
-#   sbx-kit template load --engine docker kit-core
-#   sbx-kit template load --engine docker kit-cursor
+#   sbx-kit image load --engine docker kit-core
+#   sbx-kit image load --engine docker kit-cursor
 #
 # Tag: local/sbx-kit-cursor:latest
-# Run: sbx-kit run --agent cursor --yes
+# Run: sbx-kit run kit-cursor --yes
 #
 # Build needs downloads.cursor.com:
 #   sbx policy allow network downloads.cursor.com

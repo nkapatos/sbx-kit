@@ -10,7 +10,7 @@ import (
 )
 
 func newInitCmd() *cobra.Command {
-	var recipe, agentAlias string
+	var recipe string
 
 	cmd := &cobra.Command{
 		Use:   "init [project-dir]",
@@ -25,10 +25,7 @@ func newInitCmd() *cobra.Command {
 			if len(args) > 0 {
 				projectDir = args[0]
 			}
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
+			recipeID := recipe
 			if recipeID == "" {
 				recipeID = "shell"
 			}
@@ -49,6 +46,6 @@ func newInitCmd() *cobra.Command {
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe to document (see sbx-kit recipes)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe to document (see sbx-kit recipes)")
 	return cmd
 }

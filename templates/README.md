@@ -1,9 +1,9 @@
 # Templates
 
 Optional **custom** images — lean floor when you do not want fat official
-`docker/sandbox-templates:*` bases. Develop with `sbx-kit template load`;
-**publish to a registry** and pin the tag in a recipe for normal use. Stock
-Hub recipes need **no** image pin; `sbx` uses the official agent template.
+`docker/sandbox-templates:*` bases. Develop with `sbx-kit image load`;
+**pull a registry tag** with `sbx-kit image pull` and pin it in a recipe for
+normal use. Stock recipes need **no** image pin; `sbx` uses the official kind.
 
 | Layer | Rebuild when | Holds |
 | --- | --- | --- |
@@ -17,13 +17,13 @@ Hub recipes need **no** image pin; `sbx` uses the official agent template.
 hot-swap mid-session.
 
 ```bash
-# Hub (stock agent, no custom image pin):
-sbx-kit run --recipe cursor --yes
+# Hub (stock kind, no custom image pin):
+sbx-kit run cursor --yes
 
-# Custom image (after template load or registry pin):
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor
-sbx-kit run --recipe kit-cursor --yes
+# Custom image (after image load or image pull):
+sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-cursor
+sbx-kit run kit-cursor --yes
 ```
 
 | Dir | Image tag | Recipe | Role |

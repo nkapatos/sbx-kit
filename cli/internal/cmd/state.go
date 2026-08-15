@@ -23,17 +23,13 @@ func newStateCmd() *cobra.Command {
 }
 
 func newStateExportCmd() *cobra.Command {
-	var recipe, agentAlias, path, name string
+	var recipe, path, name string
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Pack VM state into the host profile archive",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
-			rs, err := resolveFlags(recipeID, path, name)
+			rs, err := resolveFlags(recipe, path, name)
 			if err != nil {
 				return err
 			}
@@ -48,24 +44,20 @@ func newStateExportCmd() *cobra.Command {
 			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
 }
 
 func newStateImportCmd() *cobra.Command {
-	var recipe, agentAlias, path, name string
+	var recipe, path, name string
 	cmd := &cobra.Command{
 		Use:   "import",
 		Short: "Restore host profile archive into the sandbox",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
-			rs, err := resolveFlags(recipeID, path, name)
+			rs, err := resolveFlags(recipe, path, name)
 			if err != nil {
 				return err
 			}
@@ -80,7 +72,7 @@ func newStateImportCmd() *cobra.Command {
 			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
@@ -152,15 +144,15 @@ func newStatusCmd() *cobra.Command {
 	return cmd
 }
 
-// resolveFlags picks a sandbox from --name or --agent/--path.
-func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
-	if name != "" && agent != "" {
-		return nil, fmt.Errorf("use either --name or --agent, not both")
+// resolveFlags picks a sandbox from --name or --recipe/--path.
+func resolveFlags(recipe, path, name string) (*resolvedSandbox, error) {
+	if name != "" && recipe != "" {
+		return nil, fmt.Errorf("use either --name or --recipe, not both")
 	}
 	if name != "" {
 		return resolveSandboxArg(name, path)
 	}
-	if agent == "" {
+	if recipe == "" {
 		if path == "" {
 			path = "."
 		}
@@ -172,7 +164,7 @@ func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
 		case 0:
 			return nil, fmt.Errorf("no binding for path %s; pass --recipe <id> or --name (see sbx-kit status)", path)
 		case 1:
-			agent = recs[0].Agent
+			recipe = recs[0].Agent
 		default:
 			return nil, fmt.Errorf("multiple recipes bound to %s; pass --recipe or --name explicitly", path)
 		}
@@ -180,5 +172,5 @@ func resolveFlags(agent, path, name string) (*resolvedSandbox, error) {
 	if path == "" {
 		path = "."
 	}
-	return resolveFromAgent(agent, path)
+	return resolveFromAgent(recipe, path)
 }

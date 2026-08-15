@@ -21,7 +21,7 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 | Path | How |
 | --- | --- |
-| **Hub + kits** | Stock `sbx` agent/template; recipes attach kits (incl. sandbox kits that start agents Hub doesn’t ship). Secrets via `sbx secret` / proxyManaged. |
+| **Hub + kits** | Stock `sbx` kind; recipes attach kits (incl. sandbox kits that start agents Hub doesn’t ship). Secrets via `sbx secret` / proxyManaged. |
 | **Custom floor** | `kit-core` (+ optional baked agent layers like `kit-cursor`). Build/load locally or pull from a registry; same pattern later for other agents. |
 
 ## Layering rule (local / custom images)
@@ -37,11 +37,11 @@ tree via `SBX_TREE` — that does not expand what we ship as examples.
 
 ## In scope
 
-- Kits + recipes; Hub-first create path; local `template load` when needed
+- Kits + recipes; Hub-first create path; local `image load` / `image pull` when needed
 - `templates/kit-core`, `templates/kit-cursor` as optional lean floor examples
 - Mixins: mise-workspace, agent-workspace; optional lsp-mise, apt-extras;
   deepseek-creds (Hub secret trial)
-- CLI lifecycle + vault; thin `template ls` / `check` over sbx
+- CLI lifecycle + vault; `image ls` of our Dockerfiles; `check` over sbx
 
 ## Out of scope / parked
 

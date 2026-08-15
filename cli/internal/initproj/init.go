@@ -87,9 +87,9 @@ func buildSection(name string, a catalog.Agent) string {
 	}
 	blurb := fmt.Sprintf("the `%s` recipe (`%s` + kits)%s", name, a.ImageName, stubNote)
 
-	runBlock := fmt.Sprintf("sbx-kit run --recipe %s --yes", name)
+	runBlock := fmt.Sprintf("sbx-kit run %s --yes", name)
 	if a.Stub {
-		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run --recipe %s --yes", name)
+		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run %s --yes", name)
 	}
 
 	return strings.TrimSpace(fmt.Sprintf(`
@@ -98,7 +98,7 @@ func buildSection(name string, a catalog.Agent) string {
 
 Run this project under [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`+"`sbx`"+`) with %s. That is **not** `+"`docker run`"+`.
 
-**Host setup** (one-time): install [sbx-kit](https://github.com/nkapatos/sbx-kit) via Homebrew, ensure the Docker `+"`sbx`"+` CLI is signed in, and import a template image if you are not using a published Hub tag yet (`+"`sbx-kit template load`"+`).
+**Host setup** (one-time): install [sbx-kit](https://github.com/nkapatos/sbx-kit) via Homebrew, ensure the Docker `+"`sbx`"+` CLI is signed in, and import a custom image if you are not using a stock Hub kind (`+"`sbx-kit image load`"+` or `+"`sbx-kit image pull`"+`).
 
 ### This project
 

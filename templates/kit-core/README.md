@@ -24,8 +24,8 @@ env glue → mise. See comments in `Dockerfile`.
 ## Use
 
 ```bash
-sbx-kit template load --engine docker kit-core
-sbx-kit run --recipe kit-core --yes
+sbx-kit image load --engine docker kit-core
+sbx-kit run kit-core --yes
 ```
 
 Agent layers (e.g. [kit-cursor](../kit-cursor/)) `FROM` this image.

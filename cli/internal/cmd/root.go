@@ -14,7 +14,7 @@ import (
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "sbx-kit",
-		Short:         "Recipes and lifecycle helpers on top of Docker sbx",
+		Short:         "Recipes, kits, and custom images on top of Docker sbx",
 		Long:          longHelp(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -29,7 +29,6 @@ func NewRoot() *cobra.Command {
 
 	root.AddCommand(newConceptsCmd())
 	root.AddCommand(newRecipesCmd())
-	root.AddCommand(newAgentsCmd())
 	root.AddCommand(newRunCmd())
 	root.AddCommand(newRmCmd())
 	root.AddCommand(newUpgradeCmd())
@@ -37,26 +36,26 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(newStatusCmd())
 	root.AddCommand(newCheckCmd())
 	root.AddCommand(newInitCmd())
-	root.AddCommand(newTemplateCmd())
+	root.AddCommand(newImageCmd())
 	root.AddCommand(newVersionCmd())
 
 	return root
 }
 
 func longHelp() string {
-	return `Convenience layer on the Docker sbx CLI: recipes (agent + kits), lifecycle,
-and portable state. Same words as sbx for agent, template, and kit.
+	return `Convenience layer on Docker sbx: recipes (kind + kits + optional image),
+portable state, and custom images (build locally or pull a registry, then
+import into sbx).
 
-  sbx-kit concepts     short wiring guide
-  sbx-kit recipes      catalog shortcuts
-  sbx-kit agents       sbx agents + custom templates in view
-  sbx-kit run --recipe <id> --yes
+  sbx-kit concepts
+  sbx-kit recipes
+  sbx-kit run cursor --yes
   sbx-kit run --name <sandbox>
   sbx-kit check | status
-  sbx-kit template ls | template load --engine docker <name>
+  sbx-kit image ls | load | pull
 
-  template load builds/imports unpublished images; recipes may also pin
-  registry tags once images are published.
+Stock recipes call sbx with no -t. Custom recipes pin an image (-t).
+sbx template ls is the engine import store — use that, not image ls.
 
 Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
 Docs: docs/cli-tooling.md  ·  Override tree: SBX_TREE=`

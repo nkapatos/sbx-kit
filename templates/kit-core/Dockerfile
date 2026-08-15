@@ -17,8 +17,8 @@
 # Not here: Node/Go/Java/Rust, gh/glab, Docker Engine (future -docker variant).
 #
 # Tag: local/sbx-kit-core:latest
-#   sbx-kit template load --engine docker kit-core
-#   sbx-kit run --agent kit-core --yes
+#   sbx-kit image load --engine docker kit-core
+#   sbx-kit run kit-core --yes
 
 ARG DEBIAN_VERSION=bookworm-slim
 FROM debian:${DEBIAN_VERSION}

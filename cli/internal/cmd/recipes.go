@@ -15,16 +15,16 @@ import (
 func newRecipesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "recipes",
-		Short: "List catalog recipes (agent + kits shortcuts)",
-		Long: `Recipes are sbx-kit shortcuts: an sbx agent, optional template override, and kits.
+		Short: "List catalog recipes (kind + kits shortcuts)",
+		Long: `Recipes are sbx-kit shortcuts: an sbx kind, optional custom image, and kits.
 
 SOURCE:
-  stock    sbx stock agent template (no image pin in the recipe)
+  stock    sbx stock kind (no image pin in the recipe)
   custom   recipe pins image_name / template_fallback (local/… or a registry tag)
 
 Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 		Example: `  sbx-kit recipes
-  sbx-kit run --recipe shell --yes`,
+  sbx-kit run shell --yes`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root, err := requireToolkitRoot()

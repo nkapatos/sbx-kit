@@ -32,7 +32,7 @@ future Pi/Hermès layers on core; not a substitute for the Hub+kits path.
                     ┌── Hub / registry template (sbx pulls)
 sbx agent + kits ───┤     sandbox kits start extra agents on shell, etc.
                     └── custom: kit-core → kit-cursor | (later other agent layers)
-                              pull local (template load) or remote registry
+                              pull local (image load) or remote registry (image pull)
 
 kits: mise-workspace | agent-workspace | apt-extras | …   (mixins)
 CLI: recipes, placement, state export/import/upgrade; later recipe registry
@@ -61,8 +61,8 @@ CLI: recipes, placement, state export/import/upgrade; later recipe registry
 
 ## First-party templates (optional custom images)
 
-Build with `template load` while iterating; publish to a registry and pin the
-tag in the recipe when ready.
+Build with `image load` while iterating; `image pull` a registry tag and pin it
+in the recipe when ready.
 
 | Image tag | Role | Recipe |
 | --- | --- | --- |
@@ -75,12 +75,12 @@ Custom: `kit-core`, `kit-cursor`.
 ```bash
 sbx-kit concepts
 sbx-kit recipes
-sbx-kit run --recipe shell --yes
+sbx-kit run shell --yes
 sbx-kit check
 # custom image:
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor
-sbx-kit run --recipe kit-cursor --yes
+sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-cursor
+sbx-kit run kit-cursor --yes
 ```
 
 ---
@@ -91,10 +91,10 @@ sbx-kit run --recipe kit-cursor --yes
 | --- | --- |
 | kit-core cache-split layers | Done |
 | kit-cursor bootstrap + host refresh policy | Done (docs) |
-| Hub-first recipes + clearer CLI navigation | In progress |
-| `template ls` + create-time secret hints + `check` | Done (thin) |
+| Hub-first recipes + clearer CLI navigation | Done |
+| `image ls` / `load` / `pull` + create-time secret hints + `check` | Done |
 | Recipe/kit discovery (remote tree or registry) | Open |
-| One-command local `template load` for agent images | Open |
+| One-command local `image load` for agent images | Open |
 | Example sandbox kit on official shell (community pattern) | Open |
 | Baked agents beyond cursor on kit-core (local/remote pull) | Later |
 | Kits for preference CLIs (`gh`/`glab`/…) | Open |

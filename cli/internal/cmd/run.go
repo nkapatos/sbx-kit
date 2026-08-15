@@ -22,54 +22,59 @@ import (
 
 func newRunCmd() *cobra.Command {
 	var (
-		recipe, agentAlias string
-		projectPath        string
-		attachName         string
-		sandboxName        string
-		resourcesProfile   string
-		clone              bool
-		restoreState       bool
-		yes                bool
+		recipeFlag       string
+		projectPath      string
+		attachName       string
+		sandboxName      string
+		resourcesProfile string
+		clone            bool
+		restoreState     bool
+		yes              bool
 	)
 
 	cmd := &cobra.Command{
-		Use:   "run",
+		Use:   "run [recipe]",
 		Short: "Create from a recipe or attach a sandbox",
 		Long: `Create or attach (do not mix intents):
 
   sbx-kit run
       Attach the sole sandbox bound to the current directory.
 
-  sbx-kit run --recipe <id> [--path <dir>]
-      CREATE. Friendly sbx name defaults to the project dirname.
+  sbx-kit run <recipe> [--path <dir>]
+      CREATE. Recipe id is the first argument (e.g. cursor, kit-cursor).
+      Friendly sbx name defaults to the project dirname.
       --yes skips prompts (dirname or --sandbox-name).
-      Stock recipes use the sbx agent template; custom recipes may pin
-      a local/… tag or a published registry image.
+      Stock recipes: sbx run <kind> --kit … (no -t).
+      Custom recipes: sbx run <kind> -t <image> --kit ….
 
   sbx-kit run --name <sandbox>
       ATTACH by friendly sbx name (what sbx ls shows).
 
 Pass-through after -- goes to sbx.`,
-		Example: `  sbx-kit run --recipe shell --yes
-  sbx-kit run --recipe cursor --yes
-  sbx-kit run --recipe kit-cursor --yes
-  sbx-kit run --recipe shell --sandbox-name ds-creds --yes
+		Example: `  sbx-kit run cursor --yes
+  sbx-kit run shell --yes
+  sbx-kit run kit-cursor --yes
+  sbx-kit run shell --sandbox-name ds-creds --yes
   sbx-kit run --name my-project
-  sbx-kit run --recipe shell --yes -- --memory 8g`,
+  sbx-kit run cursor --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)
-			if len(args) > 0 && len(extra) == 0 {
-				return fmt.Errorf("unexpected arguments %v\n  use: sbx-kit run\n       sbx-kit run --recipe <id> [--path <dir>]\n       sbx-kit run --name <sandbox>", args)
+			pos := positionalArgs(args, extra)
+			if len(pos) > 1 {
+				return fmt.Errorf("unexpected arguments %v\n  use: sbx-kit run\n       sbx-kit run <recipe> [--path <dir>]\n       sbx-kit run --name <sandbox>", pos)
 			}
 
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
+			recipeID := recipeFlag
+			if len(pos) == 1 {
+				if recipeID != "" && recipeID != pos[0] {
+					return fmt.Errorf("recipe positional %q and --recipe %q differ", pos[0], recipeID)
+				}
+				recipeID = pos[0]
 			}
 
 			if attachName != "" && recipeID != "" {
-				return fmt.Errorf("use either --name (attach) or --recipe (create), not both")
+				return fmt.Errorf("use either --name (attach) or a recipe (create), not both")
 			}
 			if attachName != "" && sandboxName != "" {
 				return fmt.Errorf("--sandbox-name is create-only; use --name to attach")
@@ -105,7 +110,7 @@ Pass-through after -- goes to sbx.`,
 				projectPath = "."
 			}
 			if clone || yes || resourcesProfile != "" || sandboxName != "" {
-				return fmt.Errorf("bare run is attach-only; pass --recipe <id> to create")
+				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit run cursor --yes)")
 			}
 			rec, err := soleBindingRecord(projectPath)
 			if err != nil {
@@ -115,7 +120,7 @@ Pass-through after -- goes to sbx.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe id (CREATE only)")
+	addRecipeFlag(cmd, &recipeFlag, "catalog recipe id (CREATE; prefer positional)")
 	cmd.Flags().StringVar(&projectPath, "path", ".", "project directory (create, or bare-run attach filter)")
 	cmd.Flags().StringVar(&attachName, "name", "", "existing sandbox name (ATTACH only)")
 	cmd.Flags().StringVar(&sandboxName, "sandbox-name", "", "name at create (default: project dirname)")
@@ -258,7 +263,7 @@ func soleBindingRecord(projectPath string) (*binding.Record, error) {
 	}
 	switch len(recs) {
 	case 0:
-		return nil, fmt.Errorf("no sandbox bound to %s\n  create:  sbx-kit run --recipe <id> --path %s\n  list:    sbx-kit recipes  /  sbx-kit status", abs, projectPath)
+		return nil, fmt.Errorf("no sandbox bound to %s\n  create:  sbx-kit run <recipe> --path %s --yes\n  list:    sbx-kit recipes  /  sbx-kit status", abs, projectPath)
 	case 1:
 		rec := recs[0]
 		return &rec, nil
@@ -322,6 +327,20 @@ func extractPassthrough(argv []string) []string {
 		}
 	}
 	return nil
+}
+
+// positionalArgs drops cobra args that came from after `--`.
+func positionalArgs(args, extra []string) []string {
+	if len(extra) == 0 || len(args) < len(extra) {
+		return args
+	}
+	tail := args[len(args)-len(extra):]
+	for i := range extra {
+		if tail[i] != extra[i] {
+			return args
+		}
+	}
+	return args[:len(args)-len(extra)]
 }
 
 func containsFlag(args []string, flag string) bool {

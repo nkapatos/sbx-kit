@@ -24,8 +24,8 @@ The template must provide the **mise** binary at `/usr/local/bin/mise` (see `tem
 Prefer the catalog CLI (pulls this kit automatically):
 
 ```bash
-sbx-kit run --recipe cursor --yes
-sbx-kit run --recipe kit-core --yes
+sbx-kit run cursor --yes
+sbx-kit run kit-core --yes
 ```
 
 Long form:

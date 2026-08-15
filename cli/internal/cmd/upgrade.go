@@ -14,10 +14,10 @@ import (
 
 func newUpgradeCmd() *cobra.Command {
 	var (
-		recipe, agentAlias string
-		path               string
-		name               string
-		force              bool
+		recipe string
+		path   string
+		name   string
+		force  bool
 	)
 
 	cmd := &cobra.Command{
@@ -36,11 +36,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
   sbx-kit upgrade --name my-project --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
-			rs, err := resolveFlags(recipeID, path, name)
+			rs, err := resolveFlags(recipe, path, name)
 			if err != nil {
 				return err
 			}
@@ -89,7 +85,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe")
+	addRecipeFlag(cmd, &recipe, "catalog recipe")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name (uses bound recipe)")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")

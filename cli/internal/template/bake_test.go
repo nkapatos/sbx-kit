@@ -54,6 +54,24 @@ func TestResolveBuildByPath(t *testing.T) {
 	}
 }
 
+func TestListLocal(t *testing.T) {
+	root := findRepoRoot(t)
+	imgs, err := template.ListLocal(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, img := range imgs {
+		got[img.Name] = img.ImageTag
+	}
+	if got["kit-core"] != "local/sbx-kit-core:latest" {
+		t.Fatalf("kit-core: %#v", got)
+	}
+	if got["kit-cursor"] != "local/sbx-kit-cursor:latest" {
+		t.Fatalf("kit-cursor: %#v", got)
+	}
+}
+
 func findRepoRoot(t *testing.T) string {
 	t.Helper()
 	wd, err := os.Getwd()

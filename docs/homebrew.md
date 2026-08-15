@@ -45,21 +45,22 @@ Prerequisites: Docker **`sbx` CLI >= 0.34.0** signed in (kits = schemaVersion `"
 sbx-kit version   # sbx-kit + required range + detected sbx
 sbx-kit recipes
 
-# Stock Hub agent + kits (no custom image pin):
+# Stock kind + kits (no custom image pin):
 cd ~/my-project
 sbx-kit init --recipe cursor .    # optional
-sbx-kit run --recipe cursor --yes
+sbx-kit run cursor --yes
 
 # Custom images (optional):
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor
+sbx-kit image ls
+sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-cursor
 sbx template ls
-sbx-kit run --recipe kit-cursor --yes
+sbx-kit run kit-cursor --yes
 ```
 
 Override the version gate only if you know what you are doing: `SBX_KIT_SKIP_SBX_CHECK=1`.
 
-`template load` imports **local** Dockerfiles into sbx. Hub recipes skip it — `sbx` uses the stock agent template. Templates resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → registry publish and Formula version tags are a later release step.
+`image load` imports **local** Dockerfiles into sbx. `image pull` does the same for a registry tag. Stock recipes skip both — `sbx` uses the Hub image for that kind. Images resolve from Brew `share/sbx-kit/templates` (or `SBX_TREE`). CI → registry publish and Formula version tags are a later release step.
 
 ## Update / remove
 

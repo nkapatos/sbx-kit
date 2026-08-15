@@ -10,10 +10,10 @@ before attach (recreate box / future `sbx-kit` update). Updating the binary
 under a live session is unsafe.
 
 ```bash
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor
+sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-cursor
 # if blocked: sbx policy allow network downloads.cursor.com
-sbx-kit run --recipe kit-cursor --yes
+sbx-kit run kit-cursor --yes
 ```
 
 Kits: `mise-workspace`, `agent-workspace`. Preference CLIs (`gh`, `glab`, …)

@@ -1,17 +1,29 @@
 package cmd
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
 
 func TestExtractPassthrough(t *testing.T) {
-	got := extractPassthrough([]string{"sbx-kit", "run", "--agent", "cursor", "--", "--memory", "8g"})
+	got := extractPassthrough([]string{"sbx-kit", "run", "cursor", "--", "--memory", "8g"})
 	if len(got) != 2 || got[0] != "--memory" || got[1] != "8g" {
 		t.Fatalf("got %v", got)
 	}
-	if extractPassthrough([]string{"sbx-kit", "run", "--agent", "cursor"}) != nil {
+	if extractPassthrough([]string{"sbx-kit", "run", "cursor"}) != nil {
 		t.Fatal("expected nil")
+	}
+}
+
+func TestPositionalArgsStripsPassthrough(t *testing.T) {
+	extra := []string{"--memory", "8g"}
+	got := positionalArgs([]string{"cursor", "--memory", "8g"}, extra)
+	if !reflect.DeepEqual(got, []string{"cursor"}) {
+		t.Fatalf("got %v", got)
+	}
+	if got := positionalArgs([]string{"cursor"}, nil); !reflect.DeepEqual(got, []string{"cursor"}) {
+		t.Fatalf("got %v", got)
 	}
 }
 

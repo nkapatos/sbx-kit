@@ -64,9 +64,9 @@ agentContext: |
   agent (full key use without printing the key) — prefer not relying on it.
 
   The human can preserve this across sandbox recreate with:
-  - `sbx-kit rm --agent <recipe> --keep-state` (export to host XDG profiles)
-  - `sbx-kit run --agent <recipe> --yes --restore-state` (when the box does not exist)
-  - `sbx-kit upgrade --agent <recipe>`
+  - `sbx-kit rm --recipe <recipe> --keep-state` (export to host XDG profiles)
+  - `sbx-kit run <recipe> --yes --restore-state` (when the box does not exist)
+  - `sbx-kit upgrade --recipe <recipe>`
 
   Detach the agent session before export so SQLite WAL files can checkpoint.
   In-VM helper: `sbx-kit-state check|pack|unpack` (installed by this kit).

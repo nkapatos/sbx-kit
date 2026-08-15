@@ -12,11 +12,11 @@ import (
 
 func newRmCmd() *cobra.Command {
 	var (
-		recipe, agentAlias string
-		path               string
-		name               string
-		keepState          bool
-		force              bool
+		recipe    string
+		path      string
+		name      string
+		keepState bool
+		force     bool
 	)
 
 	cmd := &cobra.Command{
@@ -31,11 +31,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
   sbx-kit rm --name my-project --keep-state --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
-			rs, err := resolveFlags(recipeID, path, name)
+			rs, err := resolveFlags(recipe, path, name)
 			if err != nil {
 				return err
 			}
@@ -65,7 +61,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host vault before rm")

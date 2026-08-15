@@ -55,26 +55,27 @@ class SbxKit < Formula
       You still need the Docker `sbx` CLI (>= 0.34.0; kits are schemaVersion 1). Check with:
         sbx-kit version
 
-      Stock Hub agents + kits:
+      Stock recipes (sbx kind + kits):
         sbx-kit concepts
         sbx-kit recipes
-        sbx-kit template ls
         sbx secret set deepseek
-        sbx-kit run --recipe shell --yes
+        sbx-kit run shell --yes
         sbx-kit check
 
       Custom images (optional):
-        sbx-kit template load --engine docker kit-core
-        sbx-kit template load --engine docker kit-cursor
-        sbx-kit run --recipe kit-cursor --yes
+        sbx-kit image ls
+        sbx-kit image load --engine docker kit-core
+        sbx-kit image load --engine docker kit-cursor
+        sbx template ls
+        sbx-kit run kit-cursor --yes
     EOS
   end
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
     assert_match "shell", shell_output("#{bin}/sbx-kit recipes")
-    assert_match "agent", shell_output("#{bin}/sbx-kit concepts")
+    assert_match "recipe", shell_output("#{bin}/sbx-kit concepts")
     assert_match "check", shell_output("#{bin}/sbx-kit check --help")
-    assert_match "load", shell_output("#{bin}/sbx-kit template load --help")
+    assert_match "load", shell_output("#{bin}/sbx-kit image load --help")
   end
 end

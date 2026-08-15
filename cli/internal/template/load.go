@@ -14,10 +14,10 @@ import (
 
 // LoadOpts controls template import into sbx.
 type LoadOpts struct {
-	Root     string
-	Engine   string // docker | container
+	Root       string
+	Engine     string // docker | container
 	NameOrPath string
-	ImageTag string
+	ImageTag   string
 }
 
 // Load builds a template image and imports it via `sbx template load`.
@@ -64,6 +64,69 @@ func Load(o LoadOpts) error {
 		}
 	}
 
+	return importIntoSbx(b.ImageTag, dockerTar)
+}
+
+// PullOpts controls registry pull + import into sbx.
+type PullOpts struct {
+	Engine   string // docker (default)
+	ImageTag string
+}
+
+// Pull fetches a registry image with docker and imports it via `sbx template load`.
+func Pull(o PullOpts) error {
+	engine := strings.ToLower(strings.TrimSpace(o.Engine))
+	if engine == "" {
+		engine = "docker"
+	}
+	if engine != "docker" {
+		return fmt.Errorf("image pull currently supports --engine docker only")
+	}
+	imageTag := strings.TrimSpace(o.ImageTag)
+	if imageTag == "" {
+		return fmt.Errorf("image tag required (e.g. ghcr.io/org/sbx-kit-cursor:latest)")
+	}
+
+	r := sbxutil.Default()
+	if _, err := r.LookPath(); err != nil {
+		return fmt.Errorf("sbx not found on PATH (run this on the host; need >= %s)", sbxcompat.MinVersion)
+	}
+	if err := sbxcompat.Ensure(func() (string, error) {
+		return r.ProbeVersion()
+	}); err != nil {
+		return err
+	}
+
+	if _, err := exec.LookPath("docker"); err != nil {
+		return fmt.Errorf("docker CLI not found on PATH (Docker Desktop / Colima)")
+	}
+	if err := runLogged("docker", "info"); err != nil {
+		return fmt.Errorf("docker daemon not reachable (is Docker Desktop / Colima running?): %w", err)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "sbx-kit-pull-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	safe := strings.NewReplacer("/", "_", ":", "_").Replace(imageTag)
+	dockerTar := filepath.Join(tmpDir, "sbx-"+safe+".docker.tar")
+
+	fmt.Printf("==> [1/2] docker pull %s\n", imageTag)
+	if err := runLogged("docker", "pull", imageTag); err != nil {
+		return err
+	}
+
+	fmt.Printf("==> [2/2] docker image save -> %s\n", dockerTar)
+	if err := runLogged("docker", "image", "save", imageTag, "-o", dockerTar); err != nil {
+		return err
+	}
+
+	return importIntoSbx(imageTag, dockerTar)
+}
+
+func importIntoSbx(imageTag, dockerTar string) error {
 	fmt.Println("==> sbx template load")
 	if err := runLogged("sbx", "template", "load", dockerTar); err != nil {
 		return err
@@ -73,9 +136,9 @@ func Load(o LoadOpts) error {
 	_ = runLogged("sbx", "template", "ls")
 
 	fmt.Println()
-	fmt.Println("Done. Use the exact REPOSITORY:TAG from sbx template ls with --template if needed.")
-	fmt.Printf("Typical next step:\n  sbx-kit run --recipe kit-cursor --yes   # or: kit-core\n")
-	fmt.Printf("(image tag used for build: %s)\n", b.ImageTag)
+	fmt.Println("Done. Confirm with sbx template ls (engine store).")
+	fmt.Printf("Typical next step:\n  sbx-kit run kit-cursor --yes   # or: kit-core\n")
+	fmt.Printf("(image tag: %s)\n", imageTag)
 	return nil
 }
 

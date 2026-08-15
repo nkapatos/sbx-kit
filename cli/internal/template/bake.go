@@ -10,12 +10,12 @@ import (
 
 // Build describes how to docker/container-build a thin or legacy template.
 type Build struct {
-	Name         string
-	TemplateDir  string
-	Context      string
-	Dockerfile   string
-	BuildArgs    []string // e.g. BASE_IMAGE=...
-	ImageTag     string
+	Name        string
+	TemplateDir string
+	Context     string
+	Dockerfile  string
+	BuildArgs   []string // e.g. BASE_IMAGE=...
+	ImageTag    string
 }
 
 // ResolveBuild finds templates/<name> (or an absolute/relative dir) and

@@ -1,8 +1,8 @@
 # sbx-kit
 
-Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): **kits**, **recipes**, optional **custom templates** (build locally or publish to a registry), and the **`sbx-kit`** CLI.
+Companion toolkit for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`): **kits**, **recipes**, optional **custom images** (build locally or pull from a registry, then import into sbx), and the **`sbx-kit`** CLI.
 
-**Sandbox = agent workplace; host = human workplace.** Compose kits on **official Hub agents** or on **custom template images** (local `template load` today; registry tags when published). Recipes and portable state work for both.
+**Sandbox = agent workplace; host = human workplace.** Compose kits on **official Hub kinds** or on **custom images**. Recipes and portable state work for both.
 
 Architecture: [docs/agentic-tooling.md](docs/agentic-tooling.md) · Scope: [docs/product-scope.md](docs/product-scope.md) · Homebrew: [docs/homebrew.md](docs/homebrew.md) · CLI: [docs/cli-tooling.md](docs/cli-tooling.md).
 
@@ -12,18 +12,18 @@ Official background: [Customize](https://docs.docker.com/ai/sandboxes/customize/
 
 | Term | Meaning |
 | --- | --- |
-| **Agent** | What `sbx` runs (`shell`, `cursor`, …) — boots from a **template** image. |
-| **Template** | Image behind an agent (official Hub, registry tag, or local `template load`). |
+| **Kind** | First argument to `sbx run` (`shell`, `cursor`, …). See `sbx run --help`. |
+| **Template** | Image already imported into the sbx engine (`sbx template ls`). |
 | **Kit** | Create-time customization (`spec.yaml`). Not an image. |
-| **Recipe** | Named sbx-kit shortcut: agent (+ optional template pin) + kits. |
+| **Recipe** | Named sbx-kit shortcut: kind + kits + optional custom image. |
 | **CLI** | `sbx-kit` — recipes, placement, state; see `sbx-kit concepts`. |
 
-## Two ways to get a template
+## Two ways to get an image
 
 | Path | When | What you do |
 | --- | --- | --- |
-| **Official / stock** | Day-to-day on Hub agents | Recipe with no image pin → `sbx` uses the stock agent template; kits layer on top |
-| **Custom** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit template load` while developing, and/or pin a **registry** tag in the recipe once published |
+| **Official / stock** | Day-to-day on Hub kinds | Recipe with no image pin → `sbx run <kind> --kit …` (no `-t`) |
+| **Custom** | Lean floor (`kit-core` / `kit-cursor`) or your own image | `sbx-kit image load` while developing, or `sbx-kit image pull` for a registry tag; both import into sbx |
 
 ## Catalog
 
@@ -66,29 +66,30 @@ You still need the Docker **`sbx` CLI >= 0.34.0** signed in (kits authored as
 schemaVersion `"1"` until released sbx accepts v2). `sbx-kit version` reports
 the required range. Details: [docs/homebrew.md](docs/homebrew.md).
 
-### 2a. Official template + kits (first path)
+### 2a. Official kind + kits (first path)
 
-No local image build. `sbx` pulls/uses the stock agent template; kits attach at create:
+No local image build. `sbx` uses the stock Hub image; kits attach at create:
 
 ```bash
 cd ~/my-project
 sbx-kit concepts
 sbx-kit recipes
-sbx-kit template ls
 sbx secret set deepseek
-sbx-kit run --recipe shell --yes
+sbx-kit run shell --yes
 sbx-kit check
 ```
 
-### 2b. Custom templates (optional)
+### 2b. Custom images (optional)
 
 ```bash
-sbx-kit template load --engine docker kit-core
-sbx-kit template load --engine docker kit-cursor
+sbx-kit image ls
+sbx-kit image load --engine docker kit-core
+sbx-kit image load --engine docker kit-cursor
+# or: sbx-kit image pull ghcr.io/example/sbx-kit-cursor:latest
 # Apple container: --engine container (needs skopeo)
 # Cursor package download: allow downloads.cursor.com if policy blocks it
 sbx template ls
-sbx-kit run --recipe kit-cursor --yes
+sbx-kit run kit-cursor --yes
 ```
 
 ### 3. Day-to-day
@@ -117,21 +118,23 @@ Host **git worktrees** are for parallel host-visible checkouts. For VM-private a
 
 1. Add `kits/<name>/spec.yaml` (and optional `files/`).
 2. Reference it from [`config/agents.yaml`](config/agents.yaml) on a Hub or local recipe.
-3. For a **local** image: add `templates/<name>/Dockerfile`, then `sbx-kit template load`.
-4. Run: `sbx-kit run --recipe <id> --yes`.
+3. For a **local** image: add `templates/<name>/Dockerfile`, then `sbx-kit image load`.
+4. Run: `sbx-kit run <recipe> --yes`.
 
 ## Reference
 
-### Import engines (`template load`)
+### Import engines (`image load`)
 
 | Host | Command |
 | --- | --- |
-| Docker Desktop / Colima | `sbx-kit template load --engine docker …` |
-| Apple `container` | `sbx-kit template load --engine container …` (requires `skopeo`) |
+| Docker Desktop / Colima | `sbx-kit image load --engine docker …` |
+| Apple `container` | `sbx-kit image load --engine container …` (requires `skopeo`) |
 
 Not supported: OrbStack, Podman. Pass `--engine` explicitly.
 
 Apple `container image save` → OCI; `sbx template load` expects docker-archive. The container path converts with skopeo (`--override-os linux`).
+
+Registry tags: `sbx-kit image pull <registry/tag>` (docker pull, then the same import).
 
 ### Long form (no sbx-kit)
 
@@ -150,7 +153,7 @@ sbx run cursor \
 
 | Symptom | Fix |
 | --- | --- |
-| “Load complete” but missing from `sbx template ls` | Wrong tar format / engine — rerun `sbx-kit template load` |
+| “Load complete” but missing from `sbx template ls` | Wrong tar format / engine — rerun `sbx-kit image load` |
 | `skopeo` not found | `brew install skopeo` (Apple path) |
 | Host has the image, sbx does not | Expected until import succeeds |
 | Can’t find toolkit data | Brew share, or `export SBX_TREE=/path/to/checkout` |

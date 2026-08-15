@@ -13,7 +13,7 @@ import (
 )
 
 func newCheckCmd() *cobra.Command {
-	var recipe, agentAlias, path, name string
+	var recipe, path, name string
 
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -26,15 +26,11 @@ sbx secret ls (--sandbox when the box exists).`,
   sbx-kit check --recipe shell --path ~/proj`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			recipeID, err := coalesceRecipe(cmd, recipe, agentAlias)
-			if err != nil {
-				return err
-			}
-			return runCheck(recipeID, path, name)
+			return runCheck(recipe, path, name)
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, &agentAlias, "catalog recipe (with --path)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe (with --path)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd

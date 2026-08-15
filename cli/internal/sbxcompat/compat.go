@@ -13,9 +13,9 @@ import (
 )
 
 // MinVersion is the oldest sbx CLI this toolkit tree is tested against.
-// Bump when we rely on newer sbx behavior. Released sbx through at least
-// 0.37 still authors kits as schemaVersion "1" (v2 grammar is not released
-// yet — keep kits on v1 until `sbx kit validate` accepts authored v2).
+// Bump when we rely on newer sbx behavior.
+// Kits stay schemaVersion "1" until MinVersion is ≥ 0.36 and every spec.yaml
+// is rewritten to the v2 grammar (v1 still loads via sbx's legacy path).
 const MinVersion = "0.34.0"
 
 // MaxVersion, if non-empty, is an exclusive upper bound (sbx < MaxVersion).

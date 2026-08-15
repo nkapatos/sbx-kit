@@ -1,40 +1,19 @@
 # Templates
 
-Optional **custom** images — lean floor when you do not want fat official
-`docker/sandbox-templates:*` bases. Develop with `sbx-kit image load`;
-**pull a registry tag** with `sbx-kit image pull` and pin it in a recipe for
-normal use. Stock recipes need **no** image pin; `sbx` uses the official kind.
+Optional **custom** images when you do not want fat Hub bases.
 
-| Layer | Rebuild when | Holds |
-| --- | --- | --- |
-| OS / essential apt | Debian major/minor | bash, curl, git, ssh client, build-essential, zip/zstd, tini, sudo |
-| Modern utils | Occasional floor adds | jq, ripgrep, fd, sqlite3, openssl, ping, … |
-| sbx glue + mise binary | Glue or mise binary bumps | user, persistent-env, `/usr/local/bin/mise` |
-| **kit-shell** | Almost never | tini PID 1 + login bash only |
-| Agent layer | Intentional layout bootstrap only | Cursor (and later other agents) — **not** daily releases |
-| Kits / in-box / CLI refresh | Preference + churn | `gh`/`glab`/…, lang tools via mise, agent refresh |
-
-**Agent updates run from the host before attach** (new models / CLI bits). Do not
-hot-swap mid-session.
+| Dir | Role |
+| --- | --- |
+| [kit-core](kit-core/) | Docker `FROM` parent. Not imported into sbx. |
+| [kit-shell](kit-shell/) | Minimum empty image you load. Add kits. |
+| [kit-cursor](kit-cursor/) | Cursor CLI FROM kit-core. |
 
 ```bash
-# Hub (stock kind, no custom image pin):
-sbx-kit run cursor --yes
-sbx-kit run pi --yes
-
-# Custom images (loadable images only; kit-core is a FROM parent):
+sbx-kit image ls
 sbx-kit image load --engine docker kit-shell
 sbx-kit image load --engine docker kit-cursor
-sbx-kit run kit-shell --yes
-sbx-kit run kit-pi --yes
-sbx-kit run kit-cursor --yes
 ```
 
-| Dir | Image tag | Recipe | Role |
-| --- | --- | --- | --- |
-| [kit-core](kit-core/) | `local/sbx-kit-core:latest` | — (not imported) | Docker `FROM` parent; later VPS host floor |
-| [kit-shell](kit-shell/) | `local/sbx-kit-shell:latest` | `kit-shell` | Minimum empty image you load; add **kits** |
-| [kit-cursor](kit-cursor/) | `local/sbx-kit-cursor:latest` | `kit-cursor` | Cursor CLI **FROM kit-core** |
-
-Recipes: stock `shell` / `cursor` / `pi`; custom `kit-shell` / `kit-cursor` / `kit-pi`.
-`kit-pi` uses **kit-shell** (same idea as Hub Pi on official shell).
+`image load` docker-builds kit-core first. Stock recipes need no pin.
+Agent updates are host-side before attach — do not rebake for CLI churn.
+Live recipe list: `sbx-kit recipes`.

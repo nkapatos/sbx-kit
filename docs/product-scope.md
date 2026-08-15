@@ -1,58 +1,56 @@
-# Product scope (sbx-kit example tree)
+# Product scope
 
-Guardrail for this repo’s templates, kits, and catalog. CLI can compose any
-tree via `SBX_TREE` — that does not expand what we ship as examples.
+Guardrail for this example tree. `SBX_TREE` can point the CLI at another tree;
+that does not expand what we ship here. Live catalog: `sbx-kit recipes`.
 
 ## Goals
 
-1. **Recipes + kits for everyone** — novices and power users; works on **official
-   Hub templates** (Docker’s supported customization path) and on **local /
-   remote** custom images.
-2. **Clear template ownership** — Hub vs local/registry build; CLI makes where
-   images come from obvious.
-3. **Portable agent state** — survive recreate, host moves, and recipe changes
-   (`upgrade` / export / import).
-4. **Own custom images when you want them** — build/load for development;
-   publish to a registry and pin tags in recipes; rare rebuilds; mise for langs;
-   kits for preference CLIs; host-side agent refresh (not mid-session).
-5. Keep the brew/share tree small and teachable.
+1. Recipes + kits on **official Hub kinds** and on **custom images**.
+2. Obvious image source (Hub vs `image load` / `image pull`).
+3. Portable `/home/agent` state across recreate and host moves.
+4. Thin custom images: mise for languages, kits for preference CLIs, host-side
+   agent refresh (not mid-session, not daily rebakes).
+5. Small brew/share tree. CLI help is the reference, not these files.
 
 ## Two paths
 
 | Path | How |
 | --- | --- |
-| **Shell + kits** | Official Hub `shell` or our `kit-shell`. Add stuff with **kits** (Pi, mixins). Do not bake a new image. |
-| **Image on core** | `FROM kit-core` for custom images you own (e.g. `kit-cursor`). **Do not** import kit-core into sbx. |
+| **Shell + kits** | Hub `shell` or `kit-shell`. Add kits. Do not bake. |
+| **Image on core** | `FROM kit-core` for images you own. Do not import kit-core into sbx. |
 
-## Layering rule (local / custom images)
+## Layering (custom images)
 
-| Layer | Owns | Examples |
-| --- | --- | --- |
-| **kit-core** | Parent image: OS, utils, sbx glue, mise **binary**. Never `sbx template load`. | `FROM` for `kit-shell`, `kit-cursor`; later Docker-on-VPS |
-| **kit-shell** | Hub-shell counterpart: tini + login bash only | Kits on top (`kit-pi`), same as official `shell` |
-| **Agent image** | Bootstrap install/layout only | `kit-cursor` **FROM kit-core**, not via kit-shell |
-| **Mixin kit** | Activate, allowlists, state, preference CLIs | `mise-workspace`, `agent-workspace`, `apt-extras` |
-| **Sandbox kit** | Agent Hub doesn’t ship: image + entrypoint + install + provider secrets | `kits/pi` (recipes `pi` / `kit-pi`) |
-| **Project** | Language pins | `mise.toml` |
-| **Host / CLI** | Recipes, kit placement, state; later agent refresh | |
+| Layer | Owns |
+| --- | --- |
+| **kit-core** | OS, utils, sbx glue, mise binary. Docker `FROM` parent only. Later VPS hosts. |
+| **kit-shell** | Tini + login bash. Hub-shell counterpart. |
+| **Agent image** | Bootstrap layout only (`kit-cursor` FROM core, not via kit-shell). |
+| **Mixin kit** | Activate, allowlists, state, preference CLIs. |
+| **Sandbox kit** | Agent Hub doesn’t ship (`kits/pi`). Kind = kit `name:`. |
+| **Project** | Language pins (`mise.toml`). |
+| **Host / CLI** | Recipes, placement, state. |
+
+**Hard rules:** no languages or preference CLIs in kit-core; no secrets or bash
+completions in `/etc/sandbox-persistent.sh`; Cursor layers keep
+`AGENT_CLI_CREDENTIAL_STORE=memory`; never set `environment.variables.PATH` in
+mise-workspace; don’t paper over Hub images with workaround kits.
 
 ## In scope
 
-- Kits + recipes; Hub-first create path; local `image load` / `image pull` when needed
-- `templates/kit-core` (FROM parent, not imported), `templates/kit-shell` (minimum load), `templates/kit-cursor`
-- Mixins: mise-workspace, agent-workspace (default on every recipe); optional lsp-mise, apt-extras
-- Sandbox kit example: `kits/pi` (install + provider secrets in the same kit) on official shell (`pi`) and kit-shell (`kit-pi`)
-- CLI lifecycle + vault; `image ls` of our Dockerfiles; `check` over sbx
+Kits, recipes, Hub-first create, optional local/registry custom images,
+portable state, `check`.
 
 ## Out of scope / parked
 
-- Docker Compose / VPS twin under `deploy/` (archived; same **kit-core** parent when it returns)
-- Official-base + apt purge; thin “creds-only” Pi mixins as Hub workarounds
-- Baking `gh` alone (or any preference CLI) into core “for parity”
-- Daily image rebuilds for agent CLI churn
-- Hot-swapping the agent binary mid-session
+Compose/VPS twin (same kit-core parent later); official-base + apt purge;
+baking `gh` into core; daily agent-image rebuilds; hot-swap agent binaries
+mid-session.
 
-## Compatibility
+## Kit schema
 
-- Kits: schemaVersion `"1"`
-- CLI: `sbx` >= floor in `cli/internal/sbxcompat`
+Stay on **`schemaVersion: "1"`**. Upstream v2 exists from sbx **0.36**
+(`permissions`, `setup`, `agentInstructions`, list `credentials`). v1 still
+loads through the legacy path. This tree’s sbx floor is `sbx-kit version`
+(`cli/internal/sbxcompat`). Move to v2 only when that floor is ≥ 0.36 **and**
+every `spec.yaml` is rewritten — do not mix v1 fields into a `"2"` file.

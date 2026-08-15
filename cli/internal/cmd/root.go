@@ -58,7 +58,7 @@ Stock recipes call sbx with no -t. Custom recipes pin an image (-t).
 sbx template ls is the engine import store — use that, not image ls.
 
 Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
-Docs: docs/cli-tooling.md  ·  Override tree: SBX_TREE=`
+Override tree: SBX_TREE=`
 }
 
 func requireToolkitRoot() (string, error) {

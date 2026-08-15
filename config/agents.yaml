@@ -1,24 +1,9 @@
-# Recipe catalog for sbx-kit (see docs/cli-tooling.md).
+# Recipe catalog. Live view: sbx-kit recipes
 #
-# Each key is a RECIPE id. Prefer stock recipe ids that match the sbx kind
-# (shell, cursor) or a sandbox-kit name (pi). Prefix custom-image recipes
-# with kit- so they do not collide with stock names.
-#
-# A recipe is always: sbx kind + kits + optional image pin.
-#   mixin kits     stack on a Hub kind (cursor, shell, …)
-#   sandbox kits   ARE the kind: sbx_agent must match the kit's name:
-#                  sbx run pi --kit …/kits/pi  (not sbx run shell --kit pi)
-#   credentials    live on the kit that needs them (many services per kit);
-#                  host: sbx secret set <service> for any you use
-#
-# Catalog defaults.kits (agent-workspace) are always attached, then recipe kits.
-#
-# Template source (SOURCE column in sbx-kit recipes):
-#   - Omit image_name + template_fallback → stock (sbx kind / kit image)
-#   - Set image_name / template_fallback → custom (local/… or registry tag)
-#
-# Optional mixins: lsp-mise, apt-extras.
-# Product scope: docs/product-scope.md
+# Stock ids match the sbx kind or sandbox-kit name. Custom-image recipes: kit- prefix.
+# Recipe = kind + kits + optional image. Sandbox kit name == sbx_agent.
+# defaults.kits attach after recipe kits. Credentials live on the kit.
+# Omit image_name → stock. Set it → custom pin.
 
 defaults:
   resources: remote-llm

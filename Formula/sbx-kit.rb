@@ -52,25 +52,13 @@ class SbxKit < Formula
         ~/.local/share/sbx-kit/profiles/   portable state archives
         ~/.local/state/sbx-kit/            project↔recipe bindings
 
-      You still need the Docker `sbx` CLI (>= 0.34.0; kits are schemaVersion 1). Check with:
+      You still need the Docker `sbx` CLI. Required range:
         sbx-kit version
 
-      Stock recipes (sbx kind + kits):
+      Then:
         sbx-kit concepts
         sbx-kit recipes
-        sbx-kit run shell --yes
-        sbx secret set anthropic   # any providers declared by the recipe's kits
-        sbx-kit run pi --yes
-        sbx-kit check
-
-      Custom images (optional):
-        sbx-kit image ls
-        sbx-kit image load --engine docker kit-shell
-        sbx-kit image load --engine docker kit-cursor
-        sbx template ls
-        sbx-kit run kit-shell --yes
-        sbx-kit run kit-cursor --yes
-        sbx-kit run kit-pi --yes
+        sbx-kit run cursor --yes
     EOS
   end
 

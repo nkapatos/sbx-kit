@@ -36,16 +36,13 @@ sbx_agent matches the kit name, and the shell image lives in the kit (or a
 recipe -t pin). Credentials live on the kit that needs them (many services
 per kit); the host stores values with sbx secret set (any you use).
 
-Catalog default kit: agent-workspace (portable state / sbx-kit-state).
+Catalog default kit: agent-workspace (portable state).
 
-  sbx-kit recipes              catalog
-  sbx-kit run cursor --yes     recipe named cursor → sbx run cursor --kit …
-  sbx-kit run pi --yes         sandbox kit → sbx run pi --kit pi --kit …
-  sbx-kit run kit-pi --yes     same kit, custom image -t
-  sbx-kit run kit-cursor --yes custom image pin → sbx run cursor -t … --kit …
-  sbx-kit image ls|load|pull   manage custom images (not sbx template ls)
+  sbx-kit recipes              live catalog (kind, image, kits)
+  sbx-kit run <recipe> --yes
+  sbx-kit image ls|load|pull   custom images (not sbx template ls)
   sbx-kit check | status
 
-See also: docs/cli-tooling.md
+See also: sbx-kit --help
 `
 }

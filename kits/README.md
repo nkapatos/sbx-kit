@@ -1,56 +1,20 @@
 # Kits
 
-Kits are create-time YAML (`spec.yaml`): network allowlists, env, agent notes.
-They are **not** images — pass them with `sbx run … --kit /path/to/kit`.
+Create-time YAML (`spec.yaml` + optional `files/`). Not images.
 
-This tree authors **kit-spec v1** (`schemaVersion: "1"`).
+This tree authors **schemaVersion `"1"`**. Upstream v2 exists (sbx ≥ 0.36); we
+stay on v1 until the CLI sbx floor moves — see [docs/product-scope.md](../docs/product-scope.md).
 
-**Command shapes (easy to mix up):**
+Which kits attach to which image: **`sbx-kit recipes`**. A sandbox kit **is**
+the sbx kind (`name:`). Mixins stack. Credentials live on the kit that needs
+them; `sbx-kit run` lists services — set any you use.
 
-| Block | `command` type |
+| Directory | Kind |
 | --- | --- |
-| `commands.install` | **string** (passed to `sh -c`) |
-| `commands.startup` | **argv array** (e.g. `[bash, -lc, "…"]`) |
+| [agent-workspace](agent-workspace/) | mixin (catalog default) |
+| [mise-workspace](mise-workspace/) | mixin (custom images with mise) |
+| [lsp-mise](lsp-mise/) | mixin (optional) |
+| [apt-extras](apt-extras/) | mixin (optional) |
+| [pi](pi/) | sandbox |
 
-## Mixins
-
-| Directory | Kind | Used with |
-| --- | --- | --- |
-| [mise-workspace](mise-workspace/) | mixin | Templates with `/usr/local/bin/mise` (kit-core and layers). Allowlists, `MISE_*`, activate. Never sets `environment.variables.PATH`. |
-| [agent-workspace](agent-workspace/) | mixin | Portable state + `sbx-kit-state` + agentContext. **Catalog default** on every recipe. |
-| [lsp-mise](lsp-mise/) | mixin | **Optional.** Box-level `/mise/config.toml` for LSPs/helpers. |
-| [apt-extras](apt-extras/) | mixin | **Optional.** Small apt packages. |
-
-## Sandbox kits
-
-| Directory | Kind | Used with |
-| --- | --- | --- |
-| [pi](pi/) | sandbox | Official shell (`pi`, npm -g) or kit-shell (`kit-pi`, mise node@22 + pnpm). `sbx_agent` is `pi`, not `shell`. |
-
-A sandbox kit **is** the sbx kind (`name:` → first arg to `sbx run`). Mixins still stack.
-Credentials belong on the kit that needs them (many `sbx secret set` services per
-kit). Do not ship a mixin per API key. Create-time `run` lists declared services;
-set any you use. See `sbx-kit concepts`.
-
-**Hub path:** stock kinds (`shell`, `cursor`) plus mixins, or a sandbox kit whose
-`sandbox.image` is an official template.
-
-**Custom shell + kits:** `kit-shell` (same as Hub shell: add kits, don’t bake).
-
-**Custom image on core:** `FROM kit-core` (`kit-cursor`, …). Load the **child**
-into sbx (`image load kit-cursor`); kit-core is never imported. Pin a registry
-tag in the recipe once published. Same sandbox kit as Hub; the recipe `-t`
-overrides `sandbox.image`. Use `mise-workspace` only on images that ship
-`/usr/local/bin/mise`.
-
-## Composition
-
-Recipes in [`config/agents.yaml`](../config/agents.yaml). Catalog defaults list
-`agent-workspace`; recipe `kits:` are extra (mise-workspace, pi, …).
-
-**agentContext:** sbx concatenates each attached kit's blob at create. There is
-no Hub-vs-custom field in kit spec v1. Split by **which kits attach**
-(`mise-workspace` only on custom images) plus a live `/etc/sbx-kit/floor.md`
-from `agent-workspace` (probes `/etc/sbx-kit-agent`, mise, gh, npm, go). Do not
-inventory Hub toolchains in YAML — they drift. Dual-path kits (pi) stay
-detection-oriented.
+Add a kit: drop `kits/<name>/spec.yaml`, reference it from `config/agents.yaml`.

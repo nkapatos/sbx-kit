@@ -15,7 +15,9 @@ agent-first docs, product refs, dumps, and scratch notes here.
 - Travels with profile state when you spin multiple boxes on path slices
 - Stays out of git / PRs by default
 
-Committed project norms still belong in the repo (`AGENTS.md`, `docs/`).
+Git holds product code, kits, recipes, and templates. Agent write-ups,
+validation reports, and how-tos live here under `docs/`. CLI help
+(`sbx-kit --help`, `sbx-kit concepts`) is the user-facing reference.
 Gitignored `ref/` / `internal/` under the project is optional host scratch —
 do not treat it as the official agent brain.
 

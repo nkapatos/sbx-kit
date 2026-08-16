@@ -8,7 +8,7 @@
 #
 # Install layout:
 #   bin/sbx-kit
-#   share/sbx-kit/{config,kits,templates,docs}
+#   share/sbx-kit/{config,kits,templates}
 
 class SbxKit < Formula
   desc "CLI for Docker AI Sandboxes templates, kits, and project init"

@@ -1,0 +1,15 @@
+---
+description: Keep drifting write-ups in the sandbox portable store, not git docs/
+alwaysApply: true
+---
+
+# Docs placement
+
+Do not add product how-tos, validation reports, or brew runbooks under git
+`docs/`. Put those in `/home/agent/.local/share/sbx-kit/portable/docs/`.
+
+Git markdown stays next to the code it describes and stays one-screen
+(kit/template/cli READMEs). The root README stays an abstract blurb.
+
+CLI help is the user-facing reference. If behavior changed, update
+`sbx-kit --help` / `sbx-kit concepts`, not a new markdown file.

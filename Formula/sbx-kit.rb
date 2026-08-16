@@ -1,15 +1,5 @@
 # frozen_string_literal: true
 
-# Homebrew formula for sbx-kit (tap = this repo).
-#
-#   brew tap nkapatos/sbx-kit https://github.com/nkapatos/sbx-kit
-#   brew install sbx-kit
-#   brew install --HEAD nkapatos/sbx-kit/sbx-kit   # before first tag
-#
-# Install layout:
-#   bin/sbx-kit
-#   share/sbx-kit/{config,kits,templates}
-
 class SbxKit < Formula
   desc "CLI for Docker AI Sandboxes templates, kits, and project init"
   homepage "https://github.com/nkapatos/sbx-kit"
@@ -38,28 +28,6 @@ class SbxKit < Formula
     share_root.install "templates" if File.directory?("templates")
     share_root.install "docs" if File.directory?("docs")
     share_root.install "skills" if File.directory?("skills")
-  end
-
-  def caveats
-    <<~EOS
-      sbx-kit data (example recipes) lives in:
-        #{share}/sbx-kit
-
-      Override with SBX_TREE=/path/to/checkout for local development or another
-      templates/kits/catalog tree.
-
-      Host vault (created on first run/rm/upgrade/status):
-        ~/.local/share/sbx-kit/profiles/   portable state archives
-        ~/.local/state/sbx-kit/            project↔recipe bindings
-
-      You still need the Docker `sbx` CLI. Required range:
-        sbx-kit version
-
-      Then:
-        sbx-kit concepts
-        sbx-kit recipes
-        sbx-kit run cursor --yes
-    EOS
   end
 
   test do

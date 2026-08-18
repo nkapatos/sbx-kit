@@ -26,6 +26,10 @@ type Agent struct {
 	Stub             bool     `yaml:"stub"`
 }
 
+func File(root string) string {
+	return filepath.Join(root, "recipes", "agents.yaml")
+}
+
 func Load(path string) (*Catalog, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {

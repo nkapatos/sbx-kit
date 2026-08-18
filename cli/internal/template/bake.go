@@ -18,7 +18,7 @@ type Build struct {
 	ImageTag    string
 }
 
-// ResolveBuild finds templates/<name> (or an absolute/relative dir) and
+// ResolveBuild finds images/<name> (or an absolute/relative dir) and
 // resolves bake.env → _bake + BASE_IMAGE, or a local Dockerfile.
 func ResolveBuild(root, nameOrPath, imageTag string) (*Build, error) {
 	dir, err := resolveTemplateDir(root, nameOrPath)
@@ -77,10 +77,12 @@ func resolveTemplateDir(root, nameOrPath string) (string, error) {
 		}
 		return abs, nil
 	}
-	// Strip optional templates/ prefix.
-	name := strings.TrimPrefix(nameOrPath, "templates/")
+	// Strip optional images/ or templates/ prefix.
+	name := strings.TrimPrefix(nameOrPath, "images/")
+	name = strings.TrimPrefix(name, "images"+string(filepath.Separator))
+	name = strings.TrimPrefix(name, "templates/")
 	name = strings.TrimPrefix(name, "templates"+string(filepath.Separator))
-	cand := filepath.Join(root, "templates", name)
+	cand := filepath.Join(root, "images", name)
 	st, err := os.Stat(cand)
 	if err != nil || !st.IsDir() {
 		return "", fmt.Errorf("template not found: %s (tried %s)", nameOrPath, cand)

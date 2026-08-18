@@ -137,7 +137,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 	if err != nil {
 		return err
 	}
-	cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+	cat, err := catalog.Load(catalog.File(root))
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		return fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", recipeID)
 	}
 	if ag.Stub {
-		return fmt.Errorf("recipe %q is still a stub in config/agents.yaml", recipeID)
+		return fmt.Errorf("recipe %q is still a stub in recipes/agents.yaml", recipeID)
 	}
 
 	profile := resourcesProfile

@@ -13,7 +13,7 @@ func newImageCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "image",
 		Short: "List, build, or pull custom images",
-		Long: `Manage this tree's custom images (templates/ Dockerfiles).
+		Long: `Manage this tree's custom images (images/ Dockerfiles).
 
   sbx-kit image ls                         Dockerfiles we ship
   sbx-kit image load --engine docker <name> [tag]
@@ -37,7 +37,7 @@ func newImageLsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "ls",
 		Short:   "List custom Dockerfiles in this toolkit tree",
-		Long:    `Lists templates/ directories that have a Dockerfile (or bake.env). Not sbx template ls.`,
+		Long:    `Lists images/ directories that have a Dockerfile (or bake.env). Not sbx template ls.`,
 		Aliases: []string{"list"},
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -50,7 +50,7 @@ func newImageLsCmd() *cobra.Command {
 				return err
 			}
 			if len(imgs) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "(no custom images under templates/)")
+				fmt.Fprintln(cmd.OutOrStdout(), "(no custom images under images/)")
 				fmt.Fprintln(cmd.OutOrStdout(), "Engine store: sbx template ls")
 				return nil
 			}
@@ -85,7 +85,7 @@ Engines:
   docker      Docker Desktop or Colima (docker CLI)
   container   Apple container + skopeo (OCI → docker-archive)
 
-Names resolve under the toolkit root (Brew share or SBX_TREE):
+Names resolve under the toolkit root:
   sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
 
@@ -95,7 +95,7 @@ It is docker-built automatically; do not import it into sbx.
 Not supported: OrbStack, Podman.`,
 		Example: `  sbx-kit image load --engine docker kit-shell
   sbx-kit image load --engine docker kit-cursor
-  sbx-kit image load --engine container templates/kit-shell
+  sbx-kit image load --engine container images/kit-shell
   sbx-kit image load --engine docker kit-cursor local/sbx-kit-cursor:dev`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {

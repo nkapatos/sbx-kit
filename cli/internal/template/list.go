@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-// LocalImage is a custom image directory under templates/.
+// LocalImage is a custom image directory under images/.
 type LocalImage struct {
 	Name     string
 	ImageTag string
 	Role     string // "parent" (FROM only) or "load" (import into sbx)
 }
 
-// ListLocal returns templates/ dirs that have a Dockerfile or bake.env.
+// ListLocal returns images/ dirs that have a Dockerfile or bake.env.
 func ListLocal(root string) ([]LocalImage, error) {
-	dir := filepath.Join(root, "templates")
+	dir := filepath.Join(root, "images")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {

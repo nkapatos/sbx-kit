@@ -5,37 +5,47 @@ class SbxKit < Formula
   homepage "https://github.com/nkapatos/sbx-kit"
   license "MIT"
 
-  url "https://github.com/nkapatos/sbx-kit/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "REPLACE_WITH_TARBALL_SHA256"
+  on_macos do
+    on_arm do
+      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.1.0/sbx-kit_darwin_arm64.tar.gz"
+      sha256 "PLACEHOLDER_ARM64"
+    end
+    on_intel do
+      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.1.0/sbx-kit_darwin_amd64.tar.gz"
+      sha256 "PLACEHOLDER_AMD64"
+    end
+  end
+
   head "https://github.com/nkapatos/sbx-kit.git", branch: "master"
 
-  depends_on "go" => :build
+  depends_on :macos
+  depends_on "go" => :build if build.head?
 
   def install
-    ldflags = %W[
-      -s -w
-      -X github.com/nkapatos/sbx-kit/cli/internal/version.Version=#{version}
-    ]
-
-    cd "cli" do
-      system "go", "build", *std_go_args(ldflags: ldflags.join(" "), output: bin/"sbx-kit"), "./cmd/sbx-kit"
+    if build.head?
+      ldflags = %W[
+        -s -w
+        -X github.com/nkapatos/sbx-kit/cli/internal/version.Version=#{version}
+      ]
+      cd "cli" do
+        system "go", "build", *std_go_args(ldflags: ldflags.join(" "), output: bin/"sbx-kit"), "./cmd/sbx-kit"
+      end
+    else
+      bin.install "sbx-kit"
     end
 
-    share_root = share/"sbx-kit"
-    share_root.mkpath
-    share_root.install "config"
-    share_root.install "kits"
-    share_root.install "templates" if File.directory?("templates")
-    share_root.install "docs" if File.directory?("docs")
-    share_root.install "skills" if File.directory?("skills")
+    generate_completions_from_executable(bin/"sbx-kit", "completion")
+  end
+
+  def caveats
+    <<~EOS
+      Point sbx-kit at a recipes/kits/images tree:
+        sbx-kit setup --tree /path/to/tree
+    EOS
   end
 
   test do
     assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
-    assert_match "shell", shell_output("#{bin}/sbx-kit recipes")
-    assert_match "pi", shell_output("#{bin}/sbx-kit recipes")
-    assert_match "recipe", shell_output("#{bin}/sbx-kit concepts")
-    assert_match "check", shell_output("#{bin}/sbx-kit check --help")
-    assert_match "load", shell_output("#{bin}/sbx-kit image load --help")
+    assert_match "#compdef sbx-kit", (share/"zsh/site-functions/_sbx-kit").read
   end
 end

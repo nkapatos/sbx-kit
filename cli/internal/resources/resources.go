@@ -16,7 +16,7 @@ type Profile struct {
 }
 
 func Load(toolkitRoot, profile string) (*Profile, error) {
-	path := filepath.Join(toolkitRoot, "config", "resources-"+profile+".env")
+	path := filepath.Join(toolkitRoot, "recipes", "resources-"+profile+".env")
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("resources profile %q: %w", profile, err)

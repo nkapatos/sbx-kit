@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -26,7 +25,7 @@ SOURCE:
   stock    no image pin (Hub kind, or sandbox kit owns sandbox.image)
   custom   recipe pins image_name / template_fallback (local/… or a registry tag)
 
-Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
+Defined in recipes/agents.yaml under the toolkit root.`,
 		Example: `  sbx-kit recipes
   sbx-kit run shell --yes`,
 		Args: cobra.NoArgs,
@@ -35,7 +34,7 @@ Defined in config/agents.yaml under the toolkit root (SBX_TREE or brew share).`,
 			if err != nil {
 				return err
 			}
-			cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+			cat, err := catalog.Load(catalog.File(root))
 			if err != nil {
 				return err
 			}

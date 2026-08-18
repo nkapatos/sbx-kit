@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"path/filepath"
-
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
@@ -33,7 +31,7 @@ func newInitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+			cat, err := catalog.Load(catalog.File(root))
 			if err != nil {
 				return err
 			}

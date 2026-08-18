@@ -10,7 +10,7 @@ import (
 )
 
 func TestResolveBuildKitCoreDockerfile(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	b, err := template.ResolveBuild(root, "kit-core", "")
 	if err != nil {
 		t.Fatal(err)
@@ -30,7 +30,7 @@ func TestResolveBuildKitCoreDockerfile(t *testing.T) {
 }
 
 func TestResolveBuildKitShellDockerfile(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	b, err := template.ResolveBuild(root, "kit-shell", "")
 	if err != nil {
 		t.Fatal(err)
@@ -44,7 +44,7 @@ func TestResolveBuildKitShellDockerfile(t *testing.T) {
 }
 
 func TestResolveBuildKitCursorDockerfile(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	b, err := template.ResolveBuild(root, "kit-cursor", "")
 	if err != nil {
 		t.Fatal(err)
@@ -58,8 +58,8 @@ func TestResolveBuildKitCursorDockerfile(t *testing.T) {
 }
 
 func TestResolveBuildByPath(t *testing.T) {
-	root := findRepoRoot(t)
-	rel := filepath.Join(root, "templates", "kit-core")
+	root := fixtureTree(t)
+	rel := filepath.Join(root, "images", "kit-core")
 	b, err := template.ResolveBuild(root, rel, "local/custom:dev")
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func TestResolveBuildByPath(t *testing.T) {
 }
 
 func TestListLocal(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	imgs, err := template.ListLocal(root)
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +101,7 @@ func TestListLocal(t *testing.T) {
 }
 
 func TestParentOnlyAndParentName(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	core, err := template.ResolveBuild(root, "kit-core", "")
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +137,7 @@ func TestParentOnlyAndParentName(t *testing.T) {
 }
 
 func TestLoadRejectsParentImage(t *testing.T) {
-	root := findRepoRoot(t)
+	root := fixtureTree(t)
 	err := template.Load(template.LoadOpts{
 		Root:       root,
 		Engine:     "docker",
@@ -151,15 +151,23 @@ func TestLoadRejectsParentImage(t *testing.T) {
 	}
 }
 
-func findRepoRoot(t *testing.T) string {
+func fixtureTree(t *testing.T) string {
 	t.Helper()
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
+	root := t.TempDir()
+	mustWrite := func(rel, body string) {
+		t.Helper()
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
 	}
-	root := filepath.Clean(filepath.Join(wd, "../../.."))
-	if _, err := os.Stat(filepath.Join(root, "config", "agents.yaml")); err != nil {
-		t.Fatalf("repo root not found from %s: %v", wd, err)
-	}
+	mustWrite("recipes/agents.yaml", "agents: {}\n")
+	mustWrite("images/kit-core/Dockerfile", "FROM scratch\n")
+	mustWrite("images/kit-core/PARENT", "")
+	mustWrite("images/kit-shell/Dockerfile", "ARG PARENT_IMAGE=local/sbx-kit-core:latest\nFROM scratch\n")
+	mustWrite("images/kit-cursor/Dockerfile", "ARG PARENT_IMAGE=local/sbx-kit-core:latest\nFROM scratch\n")
 	return root
 }

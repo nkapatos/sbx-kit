@@ -33,7 +33,7 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+	cat, err := catalog.Load(catalog.File(root))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		return nil, fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", agentName)
 	}
 	if agent.Stub {
-		return nil, fmt.Errorf("recipe %q is still a stub in config/agents.yaml", agentName)
+		return nil, fmt.Errorf("recipe %q is still a stub in recipes/agents.yaml", agentName)
 	}
 	abs, err := filepath.Abs(projectDir)
 	if err != nil {
@@ -96,7 +96,7 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 	if err != nil {
 		return nil, err
 	}
-	cat, err := catalog.Load(filepath.Join(root, "config", "agents.yaml"))
+	cat, err := catalog.Load(catalog.File(root))
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,18 @@ func StateDir() (string, error) {
 	return filepath.Join(home, ".local", "state", appName), nil
 }
 
+// ConfigDir is ~/.config/sbx-kit (or $XDG_CONFIG_HOME/sbx-kit).
+func ConfigDir() (string, error) {
+	if v := os.Getenv("XDG_CONFIG_HOME"); v != "" {
+		return filepath.Join(v, appName), nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", appName), nil
+}
+
 // ProfilesDir is share/profiles.
 func ProfilesDir() (string, error) {
 	share, err := ShareDir()

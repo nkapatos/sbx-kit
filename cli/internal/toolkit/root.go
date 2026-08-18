@@ -6,39 +6,34 @@ import (
 	"path/filepath"
 )
 
-// Root locates the toolkit data directory (config/, kits/, …).
+const (
+	TreeEnv      = "SBX_KIT_TREE"
+	catalogRel   = "recipes/agents.yaml"
+	errNeedSetup = "no recipes tree; run: sbx-kit setup --tree <dir>"
+)
+
+// IsTree reports whether dir looks like a recipes/kits/images tree.
+func IsTree(dir string) bool {
+	st, err := os.Stat(filepath.Join(dir, catalogRel))
+	return err == nil && !st.IsDir()
+}
+
+// Root locates the recipes/kits/images tree.
 //
-// Order:
-//  1. SBX_TREE
-//  2. Homebrew share: <exe>/../share/sbx-kit (Cellar layout)
-//  3. Walk up from executable dir and cwd looking for config/agents.yaml (dev checkout)
+// Order: SBX_KIT_TREE, then setup config, then walk cwd for recipes/agents.yaml.
 func Root() (string, error) {
-	if t := os.Getenv("SBX_TREE"); t != "" {
-		if isToolkitRoot(t) {
+	if t := os.Getenv(TreeEnv); t != "" {
+		if IsTree(t) {
 			return filepath.Clean(t), nil
 		}
-		return "", fmt.Errorf("SBX_TREE=%s does not contain config/agents.yaml", t)
+		return "", fmt.Errorf("%s=%s is not a recipes tree (need %s)", TreeEnv, t, catalogRel)
 	}
 
-	if exe, err := os.Executable(); err == nil {
-		exe, err := filepath.EvalSymlinks(exe)
-		if err != nil {
-			exe, _ = os.Executable()
+	if t, err := configuredTree(); err == nil && t != "" {
+		if IsTree(t) {
+			return t, nil
 		}
-		binDir := filepath.Dir(exe)
-		// Homebrew: .../Cellar/sbx-kit/<ver>/bin/sbx-kit → ../share/sbx-kit
-		brewShare := filepath.Clean(filepath.Join(binDir, "..", "share", "sbx-kit"))
-		if isToolkitRoot(brewShare) {
-			return brewShare, nil
-		}
-		// Some taps install share next to opt prefix: .../opt/sbx-kit/bin + share
-		optShare := filepath.Clean(filepath.Join(binDir, "..", "..", "share", "sbx-kit"))
-		if isToolkitRoot(optShare) {
-			return optShare, nil
-		}
-		if root := walkForRoot(binDir); root != "" {
-			return root, nil
-		}
+		return "", fmt.Errorf("setup tree %s is not a recipes tree (need %s)", t, catalogRel)
 	}
 
 	if wd, err := os.Getwd(); err == nil {
@@ -47,18 +42,13 @@ func Root() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("cannot find toolkit root (brew share/sbx-kit or set SBX_TREE)")
-}
-
-func isToolkitRoot(dir string) bool {
-	st, err := os.Stat(filepath.Join(dir, "config", "agents.yaml"))
-	return err == nil && !st.IsDir()
+	return "", fmt.Errorf("%s", errNeedSetup)
 }
 
 func walkForRoot(start string) string {
 	dir := start
 	for {
-		if isToolkitRoot(dir) {
+		if IsTree(dir) {
 			return dir
 		}
 		parent := filepath.Dir(dir)

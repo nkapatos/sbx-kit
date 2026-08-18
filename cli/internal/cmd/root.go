@@ -27,6 +27,7 @@ func NewRoot() *cobra.Command {
 	root.SetOut(os.Stdout)
 	root.SetErr(os.Stderr)
 
+	root.AddCommand(newSetupCmd())
 	root.AddCommand(newConceptsCmd())
 	root.AddCommand(newRecipesCmd())
 	root.AddCommand(newRunCmd())
@@ -58,13 +59,13 @@ Stock recipes call sbx with no -t. Custom recipes pin an image (-t).
 sbx template ls is the engine import store — use that, not image ls.
 
 Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
-Override tree: SBX_TREE=`
+Tree: sbx-kit setup --tree <dir>  (override: SBX_KIT_TREE)`
 }
 
 func requireToolkitRoot() (string, error) {
 	root, err := toolkit.Root()
 	if err != nil {
-		return "", fmt.Errorf("%w\n  tip: brew install places data in share/sbx-kit; for a git checkout set SBX_TREE", err)
+		return "", fmt.Errorf("%w\n  tip: sbx-kit setup --tree <dir>", err)
 	}
 	return root, nil
 }

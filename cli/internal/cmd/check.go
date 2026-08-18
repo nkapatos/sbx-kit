@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -59,7 +58,7 @@ func runCheck(recipeID, path, name string) error {
 
 	kitPaths := rs.KitPaths
 	if len(kitPaths) == 0 && rs.AgentName != "" && rs.Root != "" {
-		cat, err := catalog.Load(filepath.Join(rs.Root, "config", "agents.yaml"))
+		cat, err := catalog.Load(catalog.File(rs.Root))
 		if err == nil {
 			if ag, ok := cat.Agents[rs.AgentName]; ok {
 				kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)

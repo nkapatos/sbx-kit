@@ -2,6 +2,12 @@
 
 All notable changes to this project are generated from conventional commits.
 
+## [0.1.1] - 2026-08-18
+
+### CI
+
+- run Actions on Node 24
+
 ## [0.1.0] - 2026-08-18
 
 ### Bug Fixes

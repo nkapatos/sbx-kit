@@ -56,12 +56,6 @@ resolve_dispatch_tag() {
   echo "$bumped"
 }
 
-ensure_master() {
-  git fetch origin master
-  git checkout master
-  git pull --ff-only origin master
-}
-
 create_tag() {
   local tag="$1"
   if git rev-parse "refs/tags/$tag" >/dev/null 2>&1; then
@@ -100,15 +94,10 @@ main() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-  local tag event="${GITHUB_EVENT_NAME:-}"
-  if [[ "$event" == "push" ]]; then
-    tag="$(normalize_tag "${GITHUB_REF_NAME:?}")"
-  else
-    ensure_master
-    tag="$(resolve_dispatch_tag)"
-    create_tag "$tag"
-  fi
-  echo "release_tag=$tag" >> "${GITHUB_OUTPUT:-/dev/null}"
+  # Tag this checkout (already tested). Do not pull — that would release untested HEAD.
+  local tag
+  tag="$(resolve_dispatch_tag)"
+  create_tag "$tag"
   echo "Publishing $tag"
 
   git cliff --config "$CLIFF_CONFIG" --latest --strip header > /tmp/release-notes.md
@@ -130,7 +119,6 @@ main() {
   sha="$(sha256sum "$tar_path" | awk '{print $1}')"
   echo "tarball sha256=$sha"
 
-  ensure_master
   git cliff --config "$CLIFF_CONFIG" -o CHANGELOG.md
   update_formula "$tag" "$sha" "$GITHUB_REPOSITORY"
 
@@ -142,7 +130,7 @@ main() {
   git commit -m "chore(formula): point tap at ${tag}
 
 [skip ci]"
-  git push origin master
+  git push origin "HEAD:${DEFAULT_BRANCH:?}"
 }
 
 main "$@"

@@ -26,11 +26,11 @@ func TestParseVersion(t *testing.T) {
 func TestCheckMin(t *testing.T) {
 	Reset()
 	t.Setenv(skipEnv, "")
-	if err := Check("0.33.0"); err == nil {
-		t.Fatal("expected error for 0.33.0")
+	if err := Check("0.37.0"); err == nil {
+		t.Fatal("expected error for 0.37.0")
 	}
-	if err := Check("0.34.0"); err != nil {
-		t.Fatalf("0.34.0: %v", err)
+	if err := Check("0.38.0"); err != nil {
+		t.Fatalf("0.38.0: %v", err)
 	}
 	if err := Check("1.0.0"); err != nil {
 		t.Fatalf("1.0.0: %v", err)

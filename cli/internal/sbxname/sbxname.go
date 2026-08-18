@@ -100,6 +100,7 @@ func Valid(name string) bool {
 
 func sanitizeToken(s string) string {
 	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, "/", "-")
 	var b strings.Builder
 	for _, r := range s {
 		switch {

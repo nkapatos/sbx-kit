@@ -22,27 +22,24 @@ type resolvedSandbox struct {
 	TemplateFB  string
 	Resources   *resources.Profile
 	ResProfile  string
-	Root        string
+	Root        string // catalog directory (kits/, images/, recipes/)
+	Tree        string
 }
 
 func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	if err := xdg.Ensure(); err != nil {
 		return nil, err
 	}
-	root, err := requireToolkitRoot()
+	tree, err := requireToolkitRoot()
 	if err != nil {
 		return nil, err
 	}
-	cat, err := catalog.Load(catalog.File(root))
+	src, cat, agent, err := catalog.Lookup(tree, agentName)
 	if err != nil {
 		return nil, err
-	}
-	agent, ok := cat.Agents[agentName]
-	if !ok {
-		return nil, fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", agentName)
 	}
 	if agent.Stub {
-		return nil, fmt.Errorf("recipe %q is still a stub in recipes/agents.yaml", agentName)
+		return nil, fmt.Errorf("recipe %q is still a stub in %s", agentName, catalog.File(src.Root))
 	}
 	abs, err := filepath.Abs(projectDir)
 	if err != nil {
@@ -64,13 +61,13 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	}
 
 	kits := catalog.ResolveKits(agent.Kits, cat.Defaults.Kits)
-	kitPaths := catalog.KitPaths(root, kits)
+	kitPaths := catalog.KitPaths(src.Root, kits)
 
 	resProfile := cat.Defaults.Resources
 	if resProfile == "" {
 		resProfile = "remote-llm"
 	}
-	res, err := resources.Load(root, resProfile)
+	res, err := resources.Load(src.Root, resProfile)
 	if err != nil {
 		return nil, err
 	}
@@ -86,24 +83,21 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		TemplateFB:  agent.TemplateFallback,
 		Resources:   res,
 		ResProfile:  resProfile,
-		Root:        root,
+		Root:        src.Root,
+		Tree:        tree,
 	}, nil
 }
 
 func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
-	// Prefer catalog recipe id when it matches.
-	root, err := requireToolkitRoot()
+	tree, err := requireToolkitRoot()
 	if err != nil {
 		return nil, err
 	}
-	cat, err := catalog.Load(catalog.File(root))
-	if err != nil {
-		return nil, err
+	if _, _, err := catalog.ParseID(arg); err == nil {
+		if _, _, _, lookupErr := catalog.Lookup(tree, arg); lookupErr == nil {
+			return resolveFromAgent(arg, projectDir)
+		}
 	}
-	if _, ok := cat.Agents[arg]; ok {
-		return resolveFromAgent(arg, projectDir)
-	}
-	// Treat as sandbox name.
 	if err := xdg.Ensure(); err != nil {
 		return nil, err
 	}
@@ -114,13 +108,13 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 	if rec != nil {
 		full, err := resolveFromAgent(rec.Agent, rec.ProjectDir)
 		if err != nil {
-			// Binding exists but recipe missing from catalog — still useful for rm/check.
 			return &resolvedSandbox{
 				AgentName:   rec.Agent,
 				ProjectDir:  rec.ProjectDir,
 				SandboxName: rec.SandboxName,
 				ProfileID:   rec.ProfileID,
-				Root:        root,
+				Root:        "",
+				Tree:        tree,
 			}, nil
 		}
 		full.SandboxName = rec.SandboxName
@@ -131,6 +125,6 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 		SandboxName: arg,
 		ProfileID:   arg,
 		ProjectDir:  projectDir,
-		Root:        root,
+		Tree:        tree,
 	}, nil
 }

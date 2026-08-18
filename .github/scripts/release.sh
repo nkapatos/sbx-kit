@@ -4,6 +4,7 @@ set -euo pipefail
 
 CLIFF_CONFIG="${CLIFF_CONFIG:-.github/cliff.toml}"
 FORMULA="Formula/sbx-kit.rb"
+TAP_REPO="${HOMEBREW_TAP_REPO:-${GITHUB_REPOSITORY%%/*}/homebrew-sbx-kit}"
 
 normalize_tag() {
   local v="$1"
@@ -99,6 +100,59 @@ set_formula_asset() {
   grep -Fq "$sha" "$FORMULA" || { echo "failed to set formula sha256 for ${arch}" >&2; exit 1; }
 }
 
+tap_git() {
+  git -c "http.extraheader=AUTHORIZATION: bearer ${HOMEBREW_TAP_TOKEN}" "$@"
+}
+
+# Copy Formula (and a stub README on first run) to nkapatos/homebrew-sbx-kit.
+# Requires HOMEBREW_TAP_TOKEN with contents:write on that repo.
+push_formula_to_tap() {
+  local tag="$1"
+  if [[ -z "${HOMEBREW_TAP_TOKEN:-}" ]]; then
+    echo "HOMEBREW_TAP_TOKEN is required to push Formula to ${TAP_REPO}" >&2
+    echo "Add a PAT (contents:write on ${TAP_REPO}) as repo secret HOMEBREW_TAP_TOKEN." >&2
+    exit 1
+  fi
+
+  local tap_dir
+  tap_dir="$(mktemp -d)/tap"
+  if ! tap_git clone "https://github.com/${TAP_REPO}.git" "$tap_dir"; then
+    echo "failed to clone https://github.com/${TAP_REPO} — create that public repo first" >&2
+    exit 1
+  fi
+
+  mkdir -p "$tap_dir/Formula"
+  cp "$FORMULA" "$tap_dir/Formula/sbx-kit.rb"
+  if [[ ! -f "$tap_dir/README.md" ]]; then
+    cat > "$tap_dir/README.md" <<EOF
+# sbx-kit
+
+\`\`\`
+brew tap ${GITHUB_REPOSITORY%%/*}/sbx-kit
+brew install sbx-kit
+\`\`\`
+EOF
+  fi
+
+  (
+    cd "$tap_dir"
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
+      git checkout -B main
+      branch=main
+    fi
+    git add Formula/sbx-kit.rb README.md
+    if git diff --cached --quiet; then
+      echo "tap Formula already matches $tag"
+      exit 0
+    fi
+    git commit -m "chore(formula): point tap at ${tag}"
+    tap_git push origin "HEAD:${branch}"
+  )
+}
+
 main() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -141,12 +195,14 @@ main() {
   git add "$FORMULA" CHANGELOG.md
   if git diff --cached --quiet; then
     echo "Formula and CHANGELOG already match $tag"
-    return 0
-  fi
-  git commit -m "chore(formula): point tap at ${tag}
+  else
+    git commit -m "chore(formula): point tap at ${tag}
 
 [skip ci]"
-  git push origin "HEAD:${DEFAULT_BRANCH:?}"
+    git push origin "HEAD:${DEFAULT_BRANCH:?}"
+  fi
+
+  push_formula_to_tap "$tag"
 }
 
 main "$@"

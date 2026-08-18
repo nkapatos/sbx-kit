@@ -26,7 +26,8 @@ func conceptsText() string {
   sbx template ls    images already imported into the sbx engine
   sbx kit            create-time YAML sbx applies at sandbox create
 
-  recipe             (sbx-kit) named shortcut: kind + kits + optional custom image
+  recipe             (sbx-kit) <catalog>/<name>: kind + kits + optional image
+  catalog            (sbx-kit) one-level child of the tree (git clone or local dir)
   image              (sbx-kit) our Dockerfiles / registry tags — build or pull,
                      then import so they show up in sbx template ls
 
@@ -38,8 +39,11 @@ per kit); the host stores values with sbx secret set (any you use).
 
 Catalog default kit: agent-workspace (portable state).
 
-  sbx-kit recipes              live catalog (kind, image, kits)
-  sbx-kit run <recipe> --yes
+  sbx-kit setup
+  sbx-kit catalog add <git-url>
+  sbx-kit catalog fetch
+  sbx-kit recipes
+  sbx-kit run <catalog>/<name> --yes
   sbx-kit image ls|load|pull   custom images (not sbx template ls)
   sbx-kit check | status
 

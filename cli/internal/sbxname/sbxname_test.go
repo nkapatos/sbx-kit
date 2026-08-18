@@ -14,6 +14,10 @@ func TestFromProjectStable(t *testing.T) {
 	if !strings.HasPrefix(a, "sbxk-cursor-") {
 		t.Fatalf("prefix: %s", a)
 	}
+	slash := NewProfileID("mine/cursor", "/Users/me/proj")
+	if !strings.Contains(slash, "mine-cursor") {
+		t.Fatalf("namespaced: %s", slash)
+	}
 	if !Valid(a) {
 		t.Fatalf("invalid: %s", a)
 	}

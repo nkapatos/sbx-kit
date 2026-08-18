@@ -22,7 +22,8 @@ func configFile() (string, error) {
 	return filepath.Join(dir, "config.yaml"), nil
 }
 
-func configuredTree() (string, error) {
+// ConfiguredTree returns the tree path from setup config, or empty.
+func ConfiguredTree() (string, error) {
 	path, err := configFile()
 	if err != nil {
 		return "", err
@@ -44,14 +45,27 @@ func configuredTree() (string, error) {
 	return filepath.Clean(c.Tree), nil
 }
 
-// WriteTree records the recipes tree path in ~/.config/sbx-kit/config.yaml.
+// DefaultTree is ~/sbx-kit-recipes.
+func DefaultTree() string {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return "sbx-kit-recipes"
+	}
+	return filepath.Join(home, "sbx-kit-recipes")
+}
+
+// WriteTree records the tree path in ~/.config/sbx-kit/config.yaml and
+// creates the directory if needed. The tree is the parent of catalogs.
 func WriteTree(dir string) (string, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return "", err
 	}
-	if !IsTree(abs) {
-		return "", fmt.Errorf("%s is not a recipes tree (need %s)", abs, catalogRel)
+	if IsCatalog(abs) {
+		return "", fmt.Errorf("%s looks like a catalog (has %s); pass the parent directory", abs, catalogRel)
+	}
+	if err := os.MkdirAll(abs, 0o755); err != nil {
+		return "", err
 	}
 	path, err := configFile()
 	if err != nil {

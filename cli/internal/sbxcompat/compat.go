@@ -13,10 +13,9 @@ import (
 )
 
 // MinVersion is the oldest sbx CLI this toolkit tree is tested against.
-// Bump when we rely on newer sbx behavior.
-// Kits stay schemaVersion "1" until MinVersion is ≥ 0.36 and every spec.yaml
-// is rewritten to the v2 grammar (v1 still loads via sbx's legacy path).
-const MinVersion = "0.34.0"
+// Bump when we rely on newer sbx behavior. Floor is this host: 0.38.0.
+// Kits may still be schemaVersion "1" until spec.yaml files are rewritten to v2.
+const MinVersion = "0.38.0"
 
 // MaxVersion, if non-empty, is an exclusive upper bound (sbx < MaxVersion).
 // Leave empty while tracking latest; set when a known break lands upstream.
@@ -103,8 +102,7 @@ func ParseVersion(s string) (string, error) {
 	if m == nil {
 		return "", fmt.Errorf("no semver token found")
 	}
-	// Strip pre-release/build for comparison floor (0.34.0-rc3 >= 0.34.0 for our purposes? 
-	// Actually rc should be < release. Keep core for cmp; store full core.major.minor.patch)
+	// Strip pre-release/build for the comparison floor (0.38.0-rc3 → 0.38.0).
 	core := m[1]
 	if i := strings.IndexAny(core, "-+"); i >= 0 {
 		core = core[:i]

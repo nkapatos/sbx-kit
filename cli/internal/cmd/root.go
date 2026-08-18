@@ -28,6 +28,7 @@ func NewRoot() *cobra.Command {
 	root.SetErr(os.Stderr)
 
 	root.AddCommand(newSetupCmd())
+	root.AddCommand(newCatalogCmd())
 	root.AddCommand(newConceptsCmd())
 	root.AddCommand(newRecipesCmd())
 	root.AddCommand(newRunCmd())
@@ -48,9 +49,11 @@ func longHelp() string {
 portable state, and custom images (build locally or pull a registry, then
 import into sbx).
 
-  sbx-kit concepts
+  sbx-kit setup
+  sbx-kit catalog add <git-url>
+  sbx-kit catalog ls | fetch
   sbx-kit recipes
-  sbx-kit run cursor --yes
+  sbx-kit run mine/cursor --yes
   sbx-kit run --name <sandbox>
   sbx-kit check | status
   sbx-kit image ls | load | pull
@@ -59,13 +62,14 @@ Stock recipes call sbx with no -t. Custom recipes pin an image (-t).
 sbx template ls is the engine import store — use that, not image ls.
 
 Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
-Tree: sbx-kit setup --tree <dir>  (override: SBX_KIT_TREE)`
+Tree: sbx-kit setup  (override: SBX_KIT_TREE)
+Recipe ids: <catalog>/<name>`
 }
 
 func requireToolkitRoot() (string, error) {
 	root, err := toolkit.Root()
 	if err != nil {
-		return "", fmt.Errorf("%w\n  tip: sbx-kit setup --tree <dir>", err)
+		return "", fmt.Errorf("%w\n  tip: sbx-kit setup", err)
 	}
 	return root, nil
 }

@@ -31,8 +31,8 @@ func newUpgradeCmd() *cobra.Command {
   4. restore archive and attach
 
 Requires the agent-workspace kit (sbx-kit-state).`,
-		Example: `  sbx-kit upgrade --recipe shell
-  sbx-kit upgrade --recipe cursor --path ~/proj --force
+		Example: `  sbx-kit upgrade --recipe mine/shell
+  sbx-kit upgrade --recipe mine/cursor --path ~/proj --force
   sbx-kit upgrade --name my-project --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -61,7 +61,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 			}
 
 			extra := extractPassthrough(os.Args)
-			overrideKey := "SBX_" + strings.ToUpper(rs.AgentName) + "_TEMPLATE"
+			overrideKey := templateOverrideEnv(rs.AgentName)
 			_, err = run.Sbx(run.Opts{
 				Root:             rs.Root,
 				AgentCatalogName: rs.AgentName,

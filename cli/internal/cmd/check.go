@@ -22,7 +22,7 @@ identity, credential services declared by recipe kits, and run
 sbx secret ls (--sandbox when the box exists).`,
 		Example: `  sbx-kit check
   sbx-kit check --name my-project
-  sbx-kit check --recipe shell --path ~/proj`,
+  sbx-kit check --recipe mine/shell --path ~/proj`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCheck(recipe, path, name)
@@ -58,12 +58,13 @@ func runCheck(recipeID, path, name string) error {
 
 	kitPaths := rs.KitPaths
 	if len(kitPaths) == 0 && rs.AgentName != "" && rs.Root != "" {
-		cat, err := catalog.Load(catalog.File(rs.Root))
-		if err == nil {
-			if ag, ok := cat.Agents[rs.AgentName]; ok {
-				kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
-				kitPaths = catalog.KitPaths(rs.Root, kits)
-			}
+		tree := rs.Tree
+		if tree == "" {
+			tree, _ = requireToolkitRoot()
+		}
+		if src, cat, ag, err := catalog.Lookup(tree, rs.AgentName); err == nil {
+			kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
+			kitPaths = catalog.KitPaths(src.Root, kits)
 		}
 	}
 

@@ -18,6 +18,7 @@ const (
 type Opts struct {
 	Root       string
 	Agent      string
+	RecipeID   string
 	ProjectDir string
 	Catalog    *catalog.Catalog
 }
@@ -46,14 +47,18 @@ func Run(o Opts) error {
 		return fmt.Errorf("not a directory: %s", dir)
 	}
 
-	section := buildSection(agentName, agent, o.Catalog.Defaults.Kits)
+	display := o.RecipeID
+	if display == "" {
+		display = agentName
+	}
+	section := buildSection(display, agent, o.Catalog.Defaults.Kits)
 	readme := filepath.Join(abs, "README.md")
 	if _, err := os.Stat(readme); os.IsNotExist(err) {
 		title := "# " + filepath.Base(abs) + "\n\n"
 		if err := os.WriteFile(readme, []byte(title+section), 0o644); err != nil {
 			return err
 		}
-		fmt.Printf("Created %s with Docker Sandbox section (recipe=%s)\n", readme, agentName)
+		fmt.Printf("Created %s with Docker Sandbox section (recipe=%s)\n", readme, display)
 		return nil
 	}
 
@@ -69,13 +74,13 @@ func Run(o Opts) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Updated Docker Sandbox section in %s (recipe=%s)\n", readme, agentName)
+		fmt.Printf("Updated Docker Sandbox section in %s (recipe=%s)\n", readme, display)
 	} else {
 		if !strings.HasSuffix(body, "\n") {
 			body += "\n"
 		}
 		out = body + "\n" + section
-		fmt.Printf("Appended Docker Sandbox section to %s (recipe=%s)\n", readme, agentName)
+		fmt.Printf("Appended Docker Sandbox section to %s (recipe=%s)\n", readme, display)
 	}
 	return os.WriteFile(readme, []byte(out), 0o644)
 }

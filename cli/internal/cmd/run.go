@@ -41,7 +41,7 @@ func newRunCmd() *cobra.Command {
       Attach the sole sandbox bound to the current directory.
 
   sbx-kit run <recipe> [--path <dir>]
-      CREATE. Recipe id is the first argument (e.g. cursor, kit-cursor).
+      CREATE. Recipe id is <catalog>/<name> (e.g. mine/cursor).
       Friendly sbx name defaults to the project dirname.
       --yes skips prompts (dirname or --sandbox-name).
       Stock recipes: sbx run <kind> --kit … (no -t).
@@ -51,12 +51,12 @@ func newRunCmd() *cobra.Command {
       ATTACH by friendly sbx name (what sbx ls shows).
 
 Pass-through after -- goes to sbx.`,
-		Example: `  sbx-kit run cursor --yes
-  sbx-kit run shell --yes
-  sbx-kit run kit-cursor --yes
-  sbx-kit run shell --sandbox-name ds-creds --yes
+		Example: `  sbx-kit run mine/cursor --yes
+  sbx-kit run mine/shell --yes
+  sbx-kit run mine/kit-cursor --yes
+  sbx-kit run mine/shell --sandbox-name ds-creds --yes
   sbx-kit run --name my-project
-  sbx-kit run cursor --yes -- --memory 8g`,
+  sbx-kit run mine/cursor --yes -- --memory 8g`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			extra := extractPassthrough(os.Args)
@@ -110,7 +110,7 @@ Pass-through after -- goes to sbx.`,
 				projectPath = "."
 			}
 			if clone || yes || resourcesProfile != "" || sandboxName != "" {
-				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit run cursor --yes)")
+				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit run <catalog>/<name> --yes)")
 			}
 			rec, err := soleBindingRecord(projectPath)
 			if err != nil {
@@ -120,7 +120,7 @@ Pass-through after -- goes to sbx.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipeFlag, "catalog recipe id (CREATE; prefer positional)")
+	addRecipeFlag(cmd, &recipeFlag, "recipe id <catalog>/<name> (CREATE; prefer positional)")
 	cmd.Flags().StringVar(&projectPath, "path", ".", "project directory (create, or bare-run attach filter)")
 	cmd.Flags().StringVar(&attachName, "name", "", "existing sandbox name (ATTACH only)")
 	cmd.Flags().StringVar(&sandboxName, "sandbox-name", "", "name at create (default: project dirname)")
@@ -133,20 +133,16 @@ Pass-through after -- goes to sbx.`,
 }
 
 func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string, clone, restoreState, yes bool, extra []string) error {
-	root, err := requireToolkitRoot()
+	tree, err := requireToolkitRoot()
 	if err != nil {
 		return err
 	}
-	cat, err := catalog.Load(catalog.File(root))
+	src, cat, ag, err := catalog.Lookup(tree, recipeID)
 	if err != nil {
 		return err
-	}
-	ag, ok := cat.Agents[recipeID]
-	if !ok {
-		return fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", recipeID)
 	}
 	if ag.Stub {
-		return fmt.Errorf("recipe %q is still a stub in recipes/agents.yaml", recipeID)
+		return fmt.Errorf("recipe %q is still a stub in %s", recipeID, catalog.File(src.Root))
 	}
 
 	profile := resourcesProfile
@@ -156,13 +152,13 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 	if profile == "" {
 		profile = "remote-llm"
 	}
-	res, err := resources.Load(root, profile)
+	res, err := resources.Load(src.Root, profile)
 	if err != nil {
 		return err
 	}
 
 	kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
-	kitPaths := catalog.KitPaths(root, kits)
+	kitPaths := catalog.KitPaths(src.Root, kits)
 
 	if clone && !containsFlag(extra, "--clone") {
 		extra = append([]string{"--clone"}, extra...)
@@ -175,9 +171,9 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		fmt.Println()
 	}
 
-	overrideKey := "SBX_" + strings.ToUpper(recipeID) + "_TEMPLATE"
+	overrideKey := templateOverrideEnv(recipeID)
 	opts := run.Opts{
-		Root:             root,
+		Root:             src.Root,
 		AgentCatalogName: recipeID,
 		SbxAgent:         ag.SbxAgent,
 		ImageName:        ag.ImageName,

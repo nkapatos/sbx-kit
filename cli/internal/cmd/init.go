@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
@@ -14,36 +16,39 @@ func newInitCmd() *cobra.Command {
 		Use:   "init [project-dir]",
 		Short: "Add a Docker Sandbox section to the project README",
 		Long:  `Writes or updates a short "## Docker Sandbox" section using a catalog recipe.`,
-		Example: `  sbx-kit init
-  sbx-kit init ~/my-project
-  sbx-kit init --recipe shell .`,
+		Example: `  sbx-kit init --recipe mine/shell .
+  sbx-kit init --recipe mine/cursor ~/my-project`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectDir := "."
 			if len(args) > 0 {
 				projectDir = args[0]
 			}
-			recipeID := recipe
-			if recipeID == "" {
-				recipeID = "shell"
+			if recipe == "" {
+				return fmt.Errorf("pass --recipe <catalog>/<name> (see sbx-kit recipes)")
 			}
-			root, err := requireToolkitRoot()
+			tree, err := requireToolkitRoot()
 			if err != nil {
 				return err
 			}
-			cat, err := catalog.Load(catalog.File(root))
+			src, cat, _, err := catalog.Lookup(tree, recipe)
+			if err != nil {
+				return err
+			}
+			_, recName, err := catalog.ParseID(recipe)
 			if err != nil {
 				return err
 			}
 			return initproj.Run(initproj.Opts{
-				Root:       root,
-				Agent:      recipeID,
+				Root:       src.Root,
+				Agent:      recName,
+				RecipeID:   recipe,
 				ProjectDir: projectDir,
 				Catalog:    cat,
 			})
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "catalog recipe to document (see sbx-kit recipes)")
+	addRecipeFlag(cmd, &recipe, "catalog recipe <catalog>/<name>")
 	return cmd
 }

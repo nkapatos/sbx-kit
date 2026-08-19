@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -50,30 +49,24 @@ func newImageLsCmd() *cobra.Command {
 				return err
 			}
 			if len(dirs) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "(no directories)")
-				fmt.Fprintln(cmd.OutOrStdout(), "add one:  sbx-kit catalog add <url>")
+				UI().Empty("directories", "add one:  sbx-kit catalog add <url>")
 				return nil
 			}
-			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-			fmt.Fprintln(w, "NAME\tDEFAULT_TAG\tROLE")
-			n := 0
+			var rows [][]string
 			for _, d := range dirs {
 				imgs, err := template.ListLocal(d.Root)
 				if err != nil {
 					return err
 				}
 				for _, img := range imgs {
-					n++
-					fmt.Fprintf(w, "%s\t%s\t%s\n", catalog.JoinID(d.Name, img.Name), img.ImageTag, img.Role)
+					rows = append(rows, []string{catalog.JoinID(d.Name, img.Name), img.ImageTag, img.Role})
 				}
 			}
-			if err := w.Flush(); err != nil {
-				return err
+			if len(rows) == 0 {
+				UI().Empty("custom images under images/", "")
+				return nil
 			}
-			if n == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "(no custom images under images/)")
-			}
-			return nil
+			return UI().Table([]string{"NAME", "DEFAULT_TAG", "ROLE"}, rows)
 		},
 	}
 }

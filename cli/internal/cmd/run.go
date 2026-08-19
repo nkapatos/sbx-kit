@@ -16,7 +16,6 @@ import (
 	"github.com/nkapatos/sbx-kit/cli/internal/resources"
 	"github.com/nkapatos/sbx-kit/cli/internal/run"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxname"
-	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/statexfer"
 )
 
@@ -158,8 +157,8 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 	if needs, err := kitcreds.ScanSpecs(kitPaths); err != nil {
 		return err
 	} else if len(needs) > 0 {
-		kitcreds.PrintHints(os.Stdout, recipeID, needs)
-		fmt.Println()
+		kitcreds.PrintHints(UI().Out, recipeID, needs)
+		UI().Println()
 	}
 
 	overrideKey := templateOverrideEnv(recipeID)
@@ -193,20 +192,23 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 }
 
 func runAttachOnly(name string, restoreState bool) error {
-	r := sbxutil.Default()
+	r := sbxRunner()
 	if _, err := r.LookPath(); err != nil {
 		return fmt.Errorf("sbx not found on PATH")
 	}
 
 	sbxName := name
 	profileID := name
+	w := UI()
 	if rec, err := binding.GetBySandbox(name); err != nil {
 		return err
 	} else if rec != nil {
 		sbxName = rec.SandboxName
 		profileID = rec.ProfileID
-		fmt.Printf("==> attaching %s  recipe=%s  project=%s  profile=%s\n",
-			sbxName, rec.Agent, rec.ProjectDir, profileID)
+		w.Header("attaching " + sbxName)
+		w.Detail("recipe", rec.Agent)
+		w.Detail("project", rec.ProjectDir)
+		w.Detail("profile", profileID)
 	}
 
 	exists, err := r.Exists(sbxName)
@@ -217,7 +219,7 @@ func runAttachOnly(name string, restoreState bool) error {
 		return fmt.Errorf("sandbox %q not found; try: sbx-kit box bindings  or  sbx ls", sbxName)
 	}
 	if rec, _ := binding.GetBySandbox(name); rec == nil {
-		fmt.Printf("==> attaching %s (no sbx-kit binding)\n", sbxName)
+		w.Header("attaching " + sbxName + " (no sbx-kit binding)")
 	}
 
 	if restoreState {
@@ -226,8 +228,8 @@ func runAttachOnly(name string, restoreState bool) error {
 			return err
 		}
 		if !has {
-			fmt.Printf("==> warning: --restore-state set but no archive at profile %s\n", profileID)
-		} else if err := statexfer.Import(r, sbxName, profileID, UI().Out); err != nil {
+			w.Warn("--restore-state set but no archive at profile " + profileID)
+		} else if err := statexfer.Import(r, sbxName, profileID, w.Out); err != nil {
 			return err
 		}
 	}
@@ -260,7 +262,7 @@ func soleBindingRecord(projectPath string) (*binding.Record, error) {
 }
 
 func promptSandboxName(defaultName string) (string, error) {
-	fmt.Printf("Sandbox name? [%s] ", defaultName)
+	UI().Printf("Sandbox name? [%s] ", defaultName)
 	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return "", err
@@ -276,7 +278,7 @@ func promptSandboxName(defaultName string) (string, error) {
 }
 
 func promptCreate(agent, path, name string) (bool, error) {
-	fmt.Printf("Create sandbox name=%s recipe=%s\n  path=%s\nCreate? [y/N] ", name, agent, path)
+	UI().Printf("Create sandbox name=%s recipe=%s\n  path=%s\nCreate? [y/N] ", name, agent, path)
 	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return false, err
@@ -286,7 +288,7 @@ func promptCreate(agent, path, name string) (bool, error) {
 }
 
 func promptStaleArchive(profileID string) (restore, discard bool, err error) {
-	fmt.Printf("Saved state exists for profile %s\n  [r]estore  [d]iscard  [n] abort  [r/d/N] ", profileID)
+	UI().Printf("Saved state exists for profile %s\n  [r]estore  [d]iscard  [n] abort  [r/d/N] ", profileID)
 	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return false, false, err

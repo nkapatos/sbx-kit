@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -61,12 +60,12 @@ func newCatalogAddCmd() *cobra.Command {
 			if _, err := os.Stat(dest); err == nil {
 				return fmt.Errorf("directory %q already exists at %s", destName, dest)
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "==> add %s\n", destName)
+			UI().Header("add " + destName)
 			if err := gitdir.Clone(url, dest); err != nil {
 				return err
 			}
 			if !catalog.IsDir(dest) {
-				fmt.Fprintf(cmd.OutOrStdout(), "warning: %s/recipes/agents.yaml not found yet\n", destName)
+				UI().Warn(destName + "/recipes/agents.yaml not found yet")
 			}
 			return nil
 		},
@@ -91,12 +90,10 @@ func newCatalogLsCmd() *cobra.Command {
 				return err
 			}
 			if len(dirs) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "(no directories)")
-				fmt.Fprintln(cmd.OutOrStdout(), "add one:  sbx-kit catalog add <url>")
+				UI().Empty("directories", "add one:  sbx-kit catalog add <url>")
 				return nil
 			}
-			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-			fmt.Fprintln(w, "DIR\tORIGIN")
+			rows := make([][]string, 0, len(dirs))
 			for _, d := range dirs {
 				origin := "local"
 				if gitdir.IsRepo(d.Root) {
@@ -106,9 +103,9 @@ func newCatalogLsCmd() *cobra.Command {
 						origin = "git"
 					}
 				}
-				fmt.Fprintf(w, "%s\t%s\n", d.Name, origin)
+				rows = append(rows, []string{d.Name, origin})
 			}
-			return w.Flush()
+			return UI().Table([]string{"DIR", "ORIGIN"}, rows)
 		},
 	}
 }
@@ -157,42 +154,40 @@ func runCatalogSync(cmd *cobra.Command, filter string, pull bool) error {
 		return err
 	}
 	if len(dirs) == 0 {
-		fmt.Fprintln(cmd.OutOrStdout(), "(no directories)")
+		UI().Empty("directories", "")
 		return nil
 	}
 
-	out := cmd.OutOrStdout()
-	w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+	header := []string{"DIR", "STATE"}
 	if pull {
-		fmt.Fprintln(w, "DIR\tRESULT")
-	} else {
-		fmt.Fprintln(w, "DIR\tSTATE")
+		header[1] = "RESULT"
 	}
+	rows := make([][]string, 0, len(dirs))
 	for _, d := range dirs {
 		if !gitdir.IsRepo(d.Root) {
-			fmt.Fprintf(w, "%s\tlocal\n", d.Name)
+			rows = append(rows, []string{d.Name, "local"})
 			continue
 		}
 		if pull {
 			if err := gitdir.Pull(d.Root); err != nil {
-				fmt.Fprintf(w, "%s\terror: %v\n", d.Name, err)
+				rows = append(rows, []string{d.Name, "error: " + err.Error()})
 			} else {
-				fmt.Fprintf(w, "%s\tupdated\n", d.Name)
+				rows = append(rows, []string{d.Name, "updated"})
 			}
 			continue
 		}
 		if err := gitdir.Fetch(d.Root); err != nil {
-			fmt.Fprintf(w, "%s\terror: %v\n", d.Name, err)
+			rows = append(rows, []string{d.Name, "error: " + err.Error()})
 			continue
 		}
 		st, err := gitdir.Status(d.Root)
 		if err != nil {
-			fmt.Fprintf(w, "%s\terror: %v\n", d.Name, err)
+			rows = append(rows, []string{d.Name, "error: " + err.Error()})
 			continue
 		}
-		fmt.Fprintf(w, "%s\t%s\n", d.Name, summarizeSyncState(st))
+		rows = append(rows, []string{d.Name, summarizeSyncState(st)})
 	}
-	return w.Flush()
+	return UI().Table(header, rows)
 }
 
 func summarizeSyncState(status string) string {

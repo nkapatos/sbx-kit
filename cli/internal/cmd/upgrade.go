@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/run"
-	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/statexfer"
 )
 
@@ -44,8 +43,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 				return fmt.Errorf("could not resolve a recipe; pass --recipe or use a bound --name")
 			}
 
-			r := sbxutil.Default()
-			r.Out = UI().Out
+			r := sbxRunner()
 			exists, err := r.Exists(rs.SandboxName)
 			if err != nil {
 				return err
@@ -58,7 +56,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 					return err
 				}
 			} else {
-				fmt.Printf("==> no running sandbox %s; will create fresh and restore if archive exists\n", rs.SandboxName)
+				UI().Header("no running sandbox " + rs.SandboxName + "; will create fresh and restore if archive exists")
 			}
 
 			extra := extractPassthrough(os.Args)

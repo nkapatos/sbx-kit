@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"sort"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -56,14 +54,11 @@ func runRecipesList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if len(dirs) == 0 {
-		fmt.Fprintln(cmd.OutOrStdout(), "(no directories)")
-		fmt.Fprintln(cmd.OutOrStdout(), "add one:  sbx-kit catalog add <url>")
+		UI().Empty("directories", "add one:  sbx-kit catalog add <url>")
 		return nil
 	}
 
-	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "RECIPE\tSBX_AGENT\tIMAGE\tKITS\tSTATUS")
-	any := false
+	var rows [][]string
 	for _, d := range dirs {
 		manifest, err := catalog.Load(catalog.File(d.Root))
 		if err != nil {
@@ -75,7 +70,6 @@ func runRecipesList(cmd *cobra.Command, args []string) error {
 		}
 		sort.Strings(names)
 		for _, name := range names {
-			any = true
 			a := manifest.Agents[name]
 			status := "ready"
 			if a.Stub {
@@ -84,17 +78,14 @@ func runRecipesList(cmd *cobra.Command, args []string) error {
 			kits := catalog.ResolveKits(a.Kits, manifest.Defaults.Kits)
 			image := recipeImage(a)
 			id := catalog.JoinID(d.Name, name)
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-				id, a.SbxAgent, image, strings.Join(kits, ","), status)
+			rows = append(rows, []string{id, a.SbxAgent, image, strings.Join(kits, ","), status})
 		}
 	}
-	if err := w.Flush(); err != nil {
-		return err
+	if len(rows) == 0 {
+		UI().Empty("recipes", "")
+		return nil
 	}
-	if !any {
-		fmt.Fprintln(cmd.OutOrStdout(), "(no recipes)")
-	}
-	return nil
+	return UI().Table([]string{"RECIPE", "SBX_AGENT", "IMAGE", "KITS", "STATUS"}, rows)
 }
 
 func newRecipesVerifyCmd() *cobra.Command {
@@ -152,7 +143,7 @@ func verifyOpts(cmd *cobra.Command, skipKits bool) recipeverify.Options {
 	r := sbxutil.Default()
 	r.Out = UI().Out
 	return recipeverify.Options{
-		Out:      cmd.OutOrStdout(),
+		Out:      UI().Out,
 		SkipKits: skipKits,
 		Runner: recipeverify.SbxKitRunner{
 			ProbeVersion: r.ProbeVersion,

@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/binding"
-	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/statexfer"
 )
 
@@ -36,7 +35,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 				return err
 			}
 
-			r := sbxutil.Default()
+			r := sbxRunner()
 			exists, err := r.Exists(rs.SandboxName)
 			if err != nil {
 				return err
@@ -50,7 +49,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 					return err
 				}
 			} else {
-				fmt.Println("==> warning: removing without --keep-state discards portable /home/agent state")
+				UI().Warn("removing without --keep-state discards portable /home/agent state")
 			}
 
 			if err := r.Rm(rs.SandboxName, force); err != nil {

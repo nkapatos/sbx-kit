@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/binding"
-	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/statexfer"
 )
 
@@ -31,7 +30,7 @@ func newStateExportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			r := sbxutil.Default()
+			r := sbxRunner()
 			exists, err := r.Exists(rs.SandboxName)
 			if err != nil {
 				return err
@@ -57,7 +56,7 @@ func newStateImportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			r := sbxutil.Default()
+			r := sbxRunner()
 			exists, err := r.Exists(rs.SandboxName)
 			if err != nil {
 				return err

@@ -96,9 +96,9 @@ func buildSection(name string, a catalog.Agent, defaultKits []string) string {
 	}
 	blurb := fmt.Sprintf("the `%s` recipe (`%s` + kits)%s", name, image, stubNote)
 
-	runBlock := fmt.Sprintf("sbx-kit run %s --yes", name)
+	runBlock := fmt.Sprintf("sbx-kit box run %s --yes", name)
 	if a.Stub {
-		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit run %s --yes", name)
+		runBlock = fmt.Sprintf("# once the kit is ready:\n# sbx-kit box run %s --yes", name)
 	}
 
 	miseBlock := ""
@@ -145,7 +145,7 @@ preinstalled tools (typical for official Hub kinds). The agent follows kit
 
 Run this project under [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`+"`sbx`"+`) with %s. That is **not** `+"`docker run`"+`.
 
-**Host setup** (one-time): install [sbx-kit](https://github.com/nkapatos/sbx-kit) via Homebrew, ensure the Docker `+"`sbx`"+` CLI is signed in, and import a custom image if you are not using a stock Hub kind (`+"`sbx-kit image load`"+` or `+"`sbx-kit image pull`"+`).
+**Host setup** (one-time): install [sbx-kit](https://github.com/nkapatos/sbx-kit) via Homebrew, ensure the Docker `+"`sbx`"+` CLI is signed in, and import a custom image if you are not using a stock Hub kind (`+"`sbx-kit recipes image load`"+` or `+"`sbx-kit recipes image pull`"+`).
 
 ### This project
 %s

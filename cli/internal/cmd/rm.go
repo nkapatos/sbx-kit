@@ -26,9 +26,9 @@ func newRmCmd() *cobra.Command {
 vault, then sbx rm.
 
 Without --keep-state, /home/agent workplace state is discarded with the box.`,
-		Example: `  sbx-kit rm --recipe mine/shell --keep-state
-  sbx-kit rm --recipe mine/cursor --path ~/proj --keep-state
-  sbx-kit rm --name my-project --keep-state --force`,
+		Example: `  sbx-kit box rm --recipe mine/shell --keep-state
+  sbx-kit box rm --recipe mine/cursor --path ~/proj --keep-state
+  sbx-kit box rm --name my-project --keep-state --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rs, err := resolveFlags(recipe, path, name)
@@ -42,7 +42,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 				return err
 			}
 			if !exists {
-				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?); try: sbx-kit bindings", rs.SandboxName)
+				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?); try: sbx-kit box bindings", rs.SandboxName)
 			}
 
 			if keepState {

@@ -153,7 +153,7 @@ func Sbx(o Opts) (*Result, error) {
 	}
 
 	if exists && o.CreateOnly {
-		return res, fmt.Errorf("sandbox %q already exists\n  attach: sbx-kit run --name %s\n  or:    sbx-kit run   (from the project dir)\n  rename: sbx-kit rm --keep-state then recreate with a new name + --restore-state",
+		return res, fmt.Errorf("sandbox %q already exists\n  attach: sbx-kit box run --name %s\n  or:    sbx-kit box run   (from the project dir)\n  rename: sbx-kit box rm --keep-state then recreate with a new name + --restore-state",
 			name, name)
 	}
 

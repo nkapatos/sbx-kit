@@ -11,9 +11,12 @@ import (
 )
 
 const (
-	groupCatalog = "catalog"
-	groupSandbox = "sandbox"
-	groupOther   = "other"
+	groupCatalog      = "catalog"
+	groupRecipes      = "recipes"
+	groupBox          = "box"
+	groupProject      = "project"
+	groupExperimental = "experimental"
+	groupOther        = "other"
 )
 
 // NewRoot builds the sbx-kit command tree.
@@ -35,7 +38,10 @@ func NewRoot() *cobra.Command {
 
 	root.AddGroup(
 		&cobra.Group{ID: groupCatalog, Title: "Catalog:"},
-		&cobra.Group{ID: groupSandbox, Title: "Sandbox:"},
+		&cobra.Group{ID: groupRecipes, Title: "Recipes:"},
+		&cobra.Group{ID: groupBox, Title: "Box:"},
+		&cobra.Group{ID: groupProject, Title: "Project:"},
+		&cobra.Group{ID: groupExperimental, Title: "Experimental:"},
 		&cobra.Group{ID: groupOther, Title: "Other:"},
 	)
 
@@ -43,26 +49,19 @@ func NewRoot() *cobra.Command {
 	setup.GroupID = groupCatalog
 	catalog := newCatalogCmd()
 	catalog.GroupID = groupCatalog
+
 	recipes := newRecipesCmd()
-	recipes.GroupID = groupCatalog
+	recipes.GroupID = groupRecipes
 
-	run := newRunCmd()
-	run.GroupID = groupSandbox
-	bindings := newBindingsCmd()
-	bindings.GroupID = groupSandbox
-	check := newCheckCmd()
-	check.GroupID = groupSandbox
-	upgrade := newUpgradeCmd()
-	upgrade.GroupID = groupSandbox
-	rm := newRmCmd()
-	rm.GroupID = groupSandbox
-	state := newStateCmd()
-	state.GroupID = groupSandbox
+	box := newBoxCmd()
+	box.GroupID = groupBox
 
-	image := newImageCmd()
-	image.GroupID = groupOther
-	init := newInitCmd()
-	init.GroupID = groupOther
+	project := newProjectCmd()
+	project.GroupID = groupProject
+
+	experimental := newExperimentalCmd()
+	experimental.GroupID = groupExperimental
+
 	concepts := newConceptsCmd()
 	concepts.GroupID = groupOther
 	ver := newVersionCmd()
@@ -72,14 +71,9 @@ func NewRoot() *cobra.Command {
 		setup,
 		catalog,
 		recipes,
-		run,
-		bindings,
-		check,
-		upgrade,
-		rm,
-		state,
-		image,
-		init,
+		box,
+		project,
+		experimental,
 		concepts,
 		ver,
 	)
@@ -93,16 +87,20 @@ func longHelp() string {
 Catalog
   sbx-kit setup
   sbx-kit catalog add | ls | status | update
+
+Recipes
   sbx-kit recipes
+  sbx-kit recipes image ls | load | pull
 
-Sandbox
-  sbx-kit run <dir>/<name> --yes
-  sbx-kit run --name <sandbox>
-  sbx-kit bindings | check | upgrade | rm | state
+Box
+  sbx-kit box run <dir>/<name> --yes
+  sbx-kit box bindings | check | upgrade | rm | state
 
-Other
-  sbx-kit image ls | load | pull
-  sbx-kit init
+Project
+  sbx-kit project readme --recipe <dir>/<name>
+
+Experimental (stubs)
+  sbx-kit experimental verify | spec | skill | kit-v2
 
 Glossary: sbx-kit concepts
 Default catalog: ~/sbx-kit-catalog (sbx-kit setup)

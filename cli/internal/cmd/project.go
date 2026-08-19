@@ -9,15 +9,26 @@ import (
 	"github.com/nkapatos/sbx-kit/cli/internal/initproj"
 )
 
-func newInitCmd() *cobra.Command {
+func newProjectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project",
+		Short: "Host project helpers (not box lifecycle)",
+		Long:  `Commands that modify the host project repo, not sbx-kit itself.`,
+		RunE:  func(cmd *cobra.Command, args []string) error { return cmd.Help() },
+	}
+	cmd.AddCommand(newProjectReadmeCmd())
+	return cmd
+}
+
+func newProjectReadmeCmd() *cobra.Command {
 	var recipe string
 
 	cmd := &cobra.Command{
-		Use:   "init [project-dir]",
+		Use:   "readme [project-dir]",
 		Short: "Add a Docker Sandbox section to the project README",
-		Long:  `Writes or updates a short "## Docker Sandbox" section using a recipe.`,
-		Example: `  sbx-kit init --recipe mine/shell .
-  sbx-kit init --recipe mine/cursor ~/my-project`,
+		Long:  `Writes or updates "## Docker Sandbox" using a catalog recipe.`,
+		Example: `  sbx-kit project readme --recipe mine/shell .
+  sbx-kit project readme --recipe mine/cursor ~/my-project`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			projectDir := "."

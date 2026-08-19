@@ -18,9 +18,9 @@ func newImageCmd() *cobra.Command {
 		Short: "List, build, or pull custom images",
 		Long: `Manage custom images under catalog directories.
 
-  sbx-kit image ls                         list Dockerfiles
-  sbx-kit image load --engine docker <dir>/<name> [tag]
-  sbx-kit image pull [--engine docker] <registry/tag>
+  sbx-kit recipes image ls                         list Dockerfiles
+  sbx-kit recipes image load --engine docker <dir>/<name> [tag]
+  sbx-kit recipes image pull [--engine docker] <registry/tag>
 
 Not sbx template ls. See sbx-kit concepts.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -84,9 +84,9 @@ func newImageLoadCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "load <dir>/<name-or-path> [image-tag]",
 		Short: "Build a local Dockerfile and import it into sbx",
-		Long:  `Names are <dir>/<image>. See sbx-kit image ls.`,
-		Example: `  sbx-kit image load --engine docker mine/kit-shell
-  sbx-kit image load --engine docker mine/kit-cursor local/sbx-kit-cursor:dev`,
+		Long:  `Names are <dir>/<image>. See sbx-kit recipes image ls.`,
+		Example: `  sbx-kit recipes image load --engine docker mine/kit-shell
+  sbx-kit recipes image load --engine docker mine/kit-cursor local/sbx-kit-cursor:dev`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if engine == "" {
@@ -138,7 +138,7 @@ func resolveImageRef(catalogRoot, ref string) (dirRoot, nameOrPath string, err e
 	}
 	dirName, img, err := catalog.ParseID(ref)
 	if err != nil {
-		return "", "", fmt.Errorf("image id is <dir>/<name> (got %q; try: sbx-kit image ls)", ref)
+		return "", "", fmt.Errorf("image id is <dir>/<name> (got %q; try: sbx-kit recipes image ls)", ref)
 	}
 	dirRoot = filepath.Join(catalogRoot, dirName)
 	if !catalog.IsDir(dirRoot) {
@@ -154,8 +154,8 @@ func newImagePullCmd() *cobra.Command {
 		Use:   "pull <registry/tag>",
 		Short: "Pull a registry image and import it into sbx",
 		Long:  `Pull a registry tag, then import via sbx template load.`,
-		Example: `  sbx-kit image pull ghcr.io/example/sbx-kit-cursor:latest
-  sbx-kit image pull --engine docker ghcr.io/example/sbx-kit-shell:latest`,
+		Example: `  sbx-kit recipes image pull ghcr.io/example/sbx-kit-cursor:latest
+  sbx-kit recipes image pull --engine docker ghcr.io/example/sbx-kit-shell:latest`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return template.Pull(template.PullOpts{

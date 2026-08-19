@@ -75,7 +75,7 @@ func Load(o LoadOpts) error {
 }
 
 func errParentNotImported(engine, name string) error {
-	return fmt.Errorf("%s is a parent image (Docker FROM base), not imported into sbx.\n  Minimum sandbox image: sbx-kit image load --engine %s kit-shell\n  Baked agent example:   sbx-kit image load --engine %s kit-cursor\nThe parent is docker-built automatically when you load those.", name, engine, engine)
+	return fmt.Errorf("%s is a parent image (Docker FROM base), not imported into sbx.\n  Minimum sandbox image: sbx-kit recipes image load --engine %s kit-shell\n  Baked agent example:   sbx-kit recipes image load --engine %s kit-cursor\nThe parent is docker-built automatically when you load those.", name, engine, engine)
 }
 
 func buildParentIfNeeded(engine, root string, child *Build) error {
@@ -175,7 +175,7 @@ func importIntoSbx(imageTag, dockerTar string) error {
 
 	fmt.Println()
 	fmt.Println("Done. Confirm with sbx template ls (engine store).")
-	fmt.Printf("Typical next step:\n  sbx-kit run kit-shell --yes   # or: kit-cursor / kit-pi\n")
+	fmt.Printf("Typical next step:\n  sbx-kit box run kit-shell --yes   # or: kit-cursor / kit-pi\n")
 	fmt.Printf("(image tag: %s)\n", imageTag)
 	return nil
 }

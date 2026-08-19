@@ -20,9 +20,9 @@ func newCheckCmd() *cobra.Command {
 		Long: `Resolve via --name, --recipe/--path, or the sole cwd binding, then show
 identity, credential services declared by recipe kits, and run
 sbx secret ls (--sandbox when the box exists).`,
-		Example: `  sbx-kit check
-  sbx-kit check --name my-project
-  sbx-kit check --recipe mine/shell --path ~/proj`,
+		Example: `  sbx-kit box check
+  sbx-kit box check --name my-project
+  sbx-kit box check --recipe mine/shell --path ~/proj`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCheck(recipe, path, name)

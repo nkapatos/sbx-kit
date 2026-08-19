@@ -90,7 +90,7 @@ func resolveFlags(recipe, path, name string) (*resolvedSandbox, error) {
 		}
 		switch len(recs) {
 		case 0:
-			return nil, fmt.Errorf("no binding for path %s; pass --recipe <dir>/<name> or --name (see sbx-kit bindings)", path)
+			return nil, fmt.Errorf("no binding for path %s; pass --recipe <dir>/<name> or --name (see sbx-kit box bindings)", path)
 		case 1:
 			recipe = recs[0].Agent
 		default:

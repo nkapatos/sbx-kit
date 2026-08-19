@@ -27,7 +27,7 @@ Glossary
   directory   subdirectory with recipes/ (and optional kits/, images/)
   recipe      <dir>/<name> — sbx kind + kits + optional image
   kit         create-time YAML sbx applies at sandbox create
-  image       custom Dockerfile or registry tag (sbx-kit image)
+  image       custom Dockerfile or registry tag (sbx-kit recipes image)
 
 Most commands need sbx-kit setup first, or a cwd inside your catalog.
 
@@ -38,8 +38,10 @@ Workflow
   sbx-kit catalog status
   sbx-kit catalog update
   sbx-kit recipes
-  sbx-kit run <dir>/<name> --yes
-  sbx-kit bindings
+  sbx-kit box run <dir>/<name> --yes
+  sbx-kit box bindings
+
+Parked work lives under sbx-kit experimental (verify, spec, skill, kit-v2).
 
 See also: sbx-kit --help
 `

@@ -26,26 +26,18 @@ Glossary
   catalog     path sbx-kit manages (sbx-kit setup; default ~/sbx-kit-catalog)
   directory   subdirectory with recipes/ (and optional kits/, images/)
   recipe      <dir>/<name> — sbx kind + kits + optional image
-  kit         create-time YAML sbx applies at sandbox create
+  kit         create-time YAML sbx applies at sandbox create (schema owned by sbx)
   image       custom Dockerfile or registry tag (sbx-kit recipes image)
+  box         one sbx sandbox bound to a host project path
 
 Most commands need sbx-kit setup first, or a cwd inside your catalog.
 
 Workflow
   sbx-kit setup
   sbx-kit catalog add <url>
-  sbx-kit catalog ls
-  sbx-kit catalog status
-  sbx-kit catalog update
   sbx-kit recipes
-  sbx-kit recipes verify
-  sbx-kit recipes skill --cursor   # agent skill for sbx-kit
   sbx-kit box run <dir>/<name> --yes
   sbx-kit box bindings
-
-Recipe checks: sbx-kit recipes verify. Kit checks: sbx (via sbx-kit recipes verify kits).
-Kit schema: sbx and SPEC-v2 — not sbx-kit.
-Parked recipe spec: sbx-kit experimental spec.
 
 See also: sbx-kit --help
 `

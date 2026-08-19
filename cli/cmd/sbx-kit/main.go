@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/cmd"
@@ -9,7 +8,7 @@ import (
 
 func main() {
 	if err := cmd.NewRoot().Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		cmd.UI().ErrorPrefix(err.Error())
 		os.Exit(1)
 	}
 }

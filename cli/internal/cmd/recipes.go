@@ -18,12 +18,12 @@ func newRecipesCmd() *cobra.Command {
 		Short: "List and manage recipe content",
 		Long:  `Recipe ids are <dir>/<name>. ` + recipeverify.Describe(),
 		Example: `  sbx-kit recipes
-  sbx-kit recipes create mine
-  sbx-kit recipes skill --cursor
   sbx-kit recipes ls
+  sbx-kit recipes create mine
   sbx-kit recipes verify
   sbx-kit recipes verify kits mine
-  sbx-kit recipes image ls`,
+  sbx-kit recipes image ls
+  sbx-kit recipes skill --cursor`,
 		RunE: ls.RunE,
 	}
 	cmd.AddCommand(ls)

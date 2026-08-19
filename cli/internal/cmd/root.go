@@ -27,12 +27,11 @@ func SetUI(w *ui.Writer) {
 }
 
 const (
-	groupCatalog      = "catalog"
-	groupRecipes      = "recipes"
-	groupBox          = "box"
-	groupProject      = "project"
-	groupExperimental = "experimental"
-	groupOther        = "other"
+	groupCatalog = "catalog"
+	groupRecipes = "recipes"
+	groupBox     = "box"
+	groupProject = "project"
+	groupOther   = "other"
 )
 
 // NewRoot builds the sbx-kit command tree.
@@ -67,7 +66,6 @@ func NewRoot() *cobra.Command {
 		&cobra.Group{ID: groupRecipes, Title: "Recipes:"},
 		&cobra.Group{ID: groupBox, Title: "Box:"},
 		&cobra.Group{ID: groupProject, Title: "Project:"},
-		&cobra.Group{ID: groupExperimental, Title: "Experimental:"},
 		&cobra.Group{ID: groupOther, Title: "Other:"},
 	)
 
@@ -86,7 +84,7 @@ func NewRoot() *cobra.Command {
 	project.GroupID = groupProject
 
 	experimental := newExperimentalCmd()
-	experimental.GroupID = groupExperimental
+	experimental.Hidden = true
 
 	concepts := newConceptsCmd()
 	concepts.GroupID = groupOther
@@ -126,9 +124,6 @@ Box
 
 Project
   sbx-kit project readme --recipe <dir>/<name>
-
-Experimental (stubs)
-  sbx-kit experimental spec
 
 Glossary: sbx-kit concepts
 Default catalog: ~/sbx-kit-catalog (sbx-kit setup)

@@ -1,0 +1,110 @@
+---
+name: sbx-kit
+description: >-
+  Work with Docker sbx through sbx-kit: catalog directories, recipes,
+  box lifecycle, and delegated kit verify. Use when editing agents.yaml,
+  catalog kits/images, or running sbx-kit box commands.
+---
+# sbx-kit on Docker sbx
+
+sbx-kit is a **host-side convenience layer** on the Docker **sbx** CLI. It does not replace sbx. sbx runs sandboxes; sbx-kit manages catalog directories, recipe manifests, bindings, and portable state.
+
+Requires sbx >= {{ .MinSbx }} (kit verify >= {{ .MinKitVerify }}). Check with `sbx-kit version`.
+
+## Layers
+
+| Layer | Commands |
+|-------|----------|
+| Catalog | `setup`, `catalog add\|ls\|status\|update` |
+| Recipes | `recipes`, `recipes create`, `recipes skill`, `recipes verify`, `recipes image …` |
+| Box | `box run`, `box bindings`, `box check`, `box upgrade`, `box rm`, `box state` |
+| Project | `project readme` |
+
+## Glossary
+
+- **catalog** — path from `setup` (default `~/sbx-kit-catalog`; env `SBX_KIT_CATALOG`)
+- **directory** — child of catalog with `recipes/`, optional `kits/`, `images/`
+- **recipe** — `<dir>/<name>` from `recipes/agents.yaml`
+- **kit** — create-time YAML under `kits/` — **schema and verify belong to sbx**
+- **image** — Dockerfile or registry tag under `images/`
+- **box** — one sbx sandbox bound to a host project path
+
+## Typical workflow
+
+```bash
+sbx-kit setup
+sbx-kit catalog add <git-url>    # or: recipes create <dir>
+sbx-kit recipes
+sbx-kit recipes verify
+sbx-kit box run <dir>/<name> --yes
+sbx-kit box bindings
+```
+
+## Verify (who owns what)
+
+```bash
+sbx-kit recipes verify [id]           # manifest + optional sbx kit verify
+sbx-kit recipes verify --skip-kits    # manifest only
+sbx-kit recipes verify kits [dir]     # sbx kit verify only
+```
+
+- Recipe manifests → **sbx-kit**
+- Kit specs → **sbx** (`sbx kit verify`, migrate with sbx)
+- Runtime secrets → **sbx** (`sbx secret set`); hints via `sbx-kit box check`
+
+{{ if .HasCatalogHint -}}
+## This catalog
+
+Configured catalog: `{{ .CatalogRoot }}`
+
+{{ end -}}
+{{ if .HasDirHint -}}
+## Directory {{ .DirName }}
+
+Recipes are ids like `{{ .DirName }}/<agent-name>`. Kits live in `{{ .DirName }}/kits/`. See `AGENTS.md` in that directory if present.
+
+{{ end -}}
+## Interim recipe manifest
+
+Path: `<catalog>/<dir>/recipes/agents.yaml`
+
+```yaml
+defaults:
+  resources: remote-llm
+  kits: [agent-workspace]
+agents:
+  cursor:
+    sbx_agent: cursor
+    kits: []
+    image_name: ""   # optional custom template
+```
+
+Formal spec is still evolving (`sbx-kit experimental spec`).
+
+## Upstream sbx docs (read when needed)
+
+Use these for sbx-native concepts — sbx-kit intentionally delegates here instead of copying specs:
+
+| Topic | Link | When an agent needs it |
+|-------|------|-------------------------|
+| Sandboxes overview | https://docs.docker.com/ai/sandboxes/ | Isolation, `sbx run`, daemon, what runs inside the box |
+| Customize | https://docs.docker.com/ai/sandboxes/customize/ | **Templates vs kits** — image bake vs YAML at create |
+| Integrations | https://docs.docker.com/ai/sandboxes/integrations/ | SSH `.sbx`, workspace mount paths, Cursor remote |
+| Kit spec v2 | https://github.com/docker/sbx-kits-contrib/blob/main/spec/SPEC-v2.md | Authoring or migrating `kits/*/spec.yaml` |
+
+Do not implement kit schema or v1→v2 migration in sbx-kit — use sbx CLI and the spec above.
+
+## Host vs box
+
+- **Host**: catalog path, git directories, secrets, bindings, state archives, `sbx-kit` commands
+- **Box**: agent session, `/home/agent`, `sbx exec`, Docker inside the sandbox — see Docker Sandboxes docs
+
+## box check vs recipes verify
+
+- `sbx-kit box check` — bound sandbox + recipe kits + `sbx secret ls` (runtime readiness)
+- `sbx-kit recipes verify` — catalog content before create (manifest + delegated kit verify)
+
+## More
+
+- `sbx-kit concepts` — short glossary
+- `sbx-kit recipes create <dir>` — scaffold a new catalog directory + `AGENTS.md`

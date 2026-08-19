@@ -1,0 +1,43 @@
+# {{ .DirName }} — sbx-kit catalog directory
+
+This directory is a **catalog directory** managed by [sbx-kit](https://github.com/nkapatos/sbx-kit). It composes Docker **sbx** recipes from manifests, kits, and optional custom images.
+
+## Layout
+
+| Path | Role |
+|------|------|
+| `recipes/agents.yaml` | Recipe manifest (sbx-kit; interim format) |
+| `kits/` | sbx kit specs (`spec.yaml`) — schema owned by **sbx** |
+| `images/` | Custom Dockerfiles imported via `sbx-kit recipes image load` |
+
+Recipe id: **`{{ .RecipeID }}`** (`<dir>/<name>`).
+
+## Commands
+
+```bash
+sbx-kit recipes verify {{ .RecipeID }}
+sbx-kit box run {{ .RecipeID }} --yes
+sbx-kit recipes verify kits {{ .DirName }}
+```
+
+Recipe checks are done by sbx-kit. Kit checks are done by sbx (`sbx kit verify`). Migrate kits with sbx, not sbx-kit.
+
+## Edit the starter recipe
+
+File: `recipes/agents.yaml`
+
+- `defaults.kits` — kits applied to every recipe unless overridden
+- `agents.<name>.sbx_agent` — sbx agent kind (`{{ .SbxAgent }}` today)
+- `agents.<name>.kits` — optional per-recipe kit stack
+- `agents.<name>.image_name` — optional custom template tag
+
+## Upstream docs (sbx)
+
+Read these when authoring kits or images — not duplicated here:
+
+- [Docker Sandboxes overview](https://docs.docker.com/ai/sandboxes/) — isolation, `sbx run`, when the box is the runtime
+- [Customize: templates and kits](https://docs.docker.com/ai/sandboxes/customize/) — template vs kit; kits are YAML applied at create
+- [Editor integrations](https://docs.docker.com/ai/sandboxes/integrations/) — SSH, workspace paths, Cursor/VS Code over `.sbx`
+- [Kit spec v2](https://github.com/docker/sbx-kits-contrib/blob/main/spec/SPEC-v2.md) — authoritative kit YAML schema
+
+Global sbx-kit skill: run `sbx-kit recipes skill` and install under `.cursor/skills/sbx-kit/SKILL.md` if using Cursor.

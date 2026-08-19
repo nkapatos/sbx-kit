@@ -90,6 +90,7 @@ Catalog
 
 Recipes
   sbx-kit recipes
+  sbx-kit recipes create | skill
   sbx-kit recipes verify [id] | verify kits [dir]
   sbx-kit recipes image ls | load | pull
 
@@ -101,7 +102,7 @@ Project
   sbx-kit project readme --recipe <dir>/<name>
 
 Experimental (stubs)
-  sbx-kit experimental spec | skill
+  sbx-kit experimental spec
 
 Glossary: sbx-kit concepts
 Default catalog: ~/sbx-kit-catalog (sbx-kit setup)

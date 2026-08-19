@@ -1,0 +1,9 @@
+defaults:
+  resources: {{ .Resources }}
+  kits:
+{{- range .DefaultKits }}
+    - {{ . }}
+{{- end }}
+agents:
+  {{ .RecipeName }}:
+    sbx_agent: {{ .SbxAgent }}

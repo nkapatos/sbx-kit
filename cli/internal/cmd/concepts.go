@@ -39,10 +39,12 @@ Workflow
   sbx-kit catalog update
   sbx-kit recipes
   sbx-kit recipes verify
+  sbx-kit recipes skill --cursor   # agent skill for sbx-kit
   sbx-kit box run <dir>/<name> --yes
   sbx-kit box bindings
 
 Recipe checks: sbx-kit recipes verify. Kit checks: sbx (via sbx-kit recipes verify kits).
+Kit schema: sbx and SPEC-v2 — not sbx-kit.
 Parked recipe spec: sbx-kit experimental spec.
 
 See also: sbx-kit --help

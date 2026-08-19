@@ -45,7 +45,7 @@ class SbxKit < Formula
   end
 
   test do
-    assert_match "sbx-kit", shell_output("#{bin}/sbx-kit version")
+    assert_match version.to_s, shell_output("#{bin}/sbx-kit version")
     assert_match "#compdef sbx-kit", (share/"zsh/site-functions/_sbx-kit").read
   end
 end

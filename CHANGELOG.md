@@ -2,6 +2,12 @@
 
 All notable changes to this project are generated from conventional commits.
 
+## [unreleased]
+
+### Bug Fixes
+
+- do not leave a GitHub tag when tap publish fails
+
 ## [0.1.1] - 2026-08-18
 
 ### CI

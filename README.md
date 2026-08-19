@@ -1,9 +1,14 @@
 # sbx-kit
 
 Companion CLI for [Docker AI Sandboxes](https://docs.docker.com/ai/sandboxes/) (`sbx`).
-Recipes, kits, and optional custom images.
+It manages recipe catalogs and sandbox lifecycle on top of the `sbx` CLI.
 
-**Sandbox = agent workplace; host = human workplace.**
+Install, then:
+
+```bash
+sbx-kit setup
+sbx-kit --help
+```
 
 Live reference: `sbx-kit --help` and `sbx-kit concepts`.
 

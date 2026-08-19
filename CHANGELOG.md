@@ -4,6 +4,18 @@ All notable changes to this project are generated from conventional commits.
 
 ## [unreleased]
 
+### Features
+
+- recipes verify (delegates kit checks to sbx)
+- recipes create and recipes skill for catalog scaffolding and agent guidance
+- shared CLI output layer (lipgloss, NO_COLOR, TTY-aware)
+
+### Refactor
+
+- layered CLI: catalog, recipes, box, project
+- kit schema and migration stay with sbx
+- command output goes through ui.Writer (prep for a future TUI)
+
 ### Bug Fixes
 
 - do not leave a GitHub tag when tap publish fails

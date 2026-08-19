@@ -29,7 +29,7 @@ func newUpgradeCmd() *cobra.Command {
   3. create from the current recipe (same sandbox name)
   4. restore archive and attach
 
-Requires the agent-workspace kit (sbx-kit-state).`,
+Requires the CLI overlay (sbx-kit-state), installed on box run.`,
 		Example: `  sbx-kit box upgrade --recipe mine/shell
   sbx-kit box upgrade --recipe mine/cursor --path ~/proj --force
   sbx-kit box upgrade --name my-project --force`,

@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestFromProjectStable(t *testing.T) {
+func TestNewProfileIDStable(t *testing.T) {
 	a := NewProfileID("cursor", "/Users/me/proj")
-	b := FromProject("cursor", "/Users/me/proj")
+	b := NewProfileID("cursor", "/Users/me/proj")
 	if a != b {
 		t.Fatalf("unstable: %s vs %s", a, b)
 	}

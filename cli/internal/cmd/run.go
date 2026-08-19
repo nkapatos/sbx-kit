@@ -101,7 +101,7 @@ Pass-through after -- goes to sbx.`,
 				projectPath = "."
 			}
 			if clone || yes || resourcesProfile != "" || sandboxName != "" {
-				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit box run <dir>/<name> --yes)")
+				return fmt.Errorf("bare run is attach-only; pass a recipe to create\n  create:  sbx-kit box run <dir>/<name> --yes\n  list:    sbx-kit recipes")
 			}
 			rec, err := soleBindingRecord(projectPath)
 			if err != nil {
@@ -117,7 +117,7 @@ Pass-through after -- goes to sbx.`,
 	cmd.Flags().StringVar(&resourcesProfile, "resources", "", "[create] resource profile (remote-llm|local-llm)")
 	cmd.Flags().BoolVar(&clone, "clone", false, "[create] pass --clone to sbx")
 	cmd.Flags().BoolVar(&restoreState, "restore-state", false, "restore host profile archive")
-	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "[create] skip prompts")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "[create] skip confirmation prompts")
 
 	return cmd
 }
@@ -140,7 +140,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		profile = manifest.Defaults.Resources
 	}
 	if profile == "" {
-		profile = "remote-llm"
+		profile = catalog.DefaultResources
 	}
 	res, err := resources.Load(src.Root, profile)
 	if err != nil {
@@ -150,7 +150,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 	kits := catalog.ResolveKits(ag.Kits, manifest.Defaults.Kits)
 	kitPaths := catalog.KitPaths(src.Root, kits)
 
-	if clone && !containsFlag(extra, "--clone") {
+	if clone && !slices.Contains(extra, "--clone") {
 		extra = append([]string{"--clone"}, extra...)
 	}
 
@@ -325,8 +325,4 @@ func positionalArgs(args, extra []string) []string {
 		}
 	}
 	return args[:len(args)-len(extra)]
-}
-
-func containsFlag(args []string, flag string) bool {
-	return slices.Contains(args, flag)
 }

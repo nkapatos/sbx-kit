@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/binding"
+	"github.com/nkapatos/sbx-kit/cli/internal/overlay"
 	"github.com/nkapatos/sbx-kit/cli/internal/resources"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxname"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 	"github.com/nkapatos/sbx-kit/cli/internal/statexfer"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 	"github.com/nkapatos/sbx-kit/cli/internal/xdg"
 )
 
@@ -43,8 +45,10 @@ type Opts struct {
 	// StaleArchiveFn is called when a vault archive exists but the box does not.
 	// restore=true → import after create; discard=true → delete archive; both false → abort.
 	StaleArchiveFn func(profileID string) (restore, discard bool, err error)
-	Runner         *sbxutil.Runner
-	Out            io.Writer
+	// SkipOverlay skips installing the CLI platform overlay (tests).
+	SkipOverlay bool
+	Runner      *sbxutil.Runner
+	Out         io.Writer
 }
 
 // Result is returned after create/attach preparation.
@@ -55,15 +59,8 @@ type Result struct {
 	Label       string
 }
 
-func dest(w io.Writer) io.Writer {
-	if w == nil {
-		return os.Stdout
-	}
-	return w
-}
-
 func Sbx(o Opts) (*Result, error) {
-	out := dest(o.Out)
+	out := stdio.Out(o.Out)
 	r := o.Runner
 	if r == nil {
 		r = sbxutil.Default()
@@ -180,7 +177,7 @@ func Sbx(o Opts) (*Result, error) {
 		}
 	}
 
-	// Persist mapping before sbx create/run (kit-owned; sbx only sees --name).
+	// Persist mapping before sbx create (sbx only sees --name).
 	if err := binding.Put(binding.Record{
 		ProjectDir:  absProject,
 		Agent:       o.RecipeID,
@@ -188,6 +185,13 @@ func Sbx(o Opts) (*Result, error) {
 		ProfileID:   profileID,
 	}); err != nil {
 		return res, fmt.Errorf("save binding: %w", err)
+	}
+
+	install := func() error {
+		if o.SkipOverlay {
+			return nil
+		}
+		return overlay.Install(r, name, out)
 	}
 
 	if restore {
@@ -204,6 +208,9 @@ func Sbx(o Opts) (*Result, error) {
 				return res, err
 			}
 		}
+		if err := install(); err != nil {
+			return res, err
+		}
 		if has {
 			if err := statexfer.Import(r, name, profileID, out); err != nil {
 				return res, err
@@ -214,11 +221,20 @@ func Sbx(o Opts) (*Result, error) {
 
 	if exists {
 		fmt.Fprintf(out, "==> re-attaching existing sandbox %s\n", name)
+		if err := install(); err != nil {
+			return res, err
+		}
 		return res, r.RunEnv(env, "run", "--name", name)
 	}
 
-	runArgs := buildArgs("run", o.SbxAgent, template, o.KitPaths, extra, absProject)
-	return res, r.RunEnv(env, runArgs...)
+	createArgs := buildArgs("create", o.SbxAgent, template, o.KitPaths, extra, absProject)
+	if err := r.RunEnv(env, createArgs...); err != nil {
+		return res, err
+	}
+	if err := install(); err != nil {
+		return res, err
+	}
+	return res, r.RunEnv(env, "run", "--name", name)
 }
 
 func resolveFriendlyName(o Opts, absProject string, existing *binding.Record, passthroughHasName bool, passthroughName string) (string, error) {

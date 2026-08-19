@@ -18,3 +18,12 @@ func TestResolveKitsMergesDefaults(t *testing.T) {
 		t.Fatalf("already present: %v", got)
 	}
 }
+
+func TestResolveKitsEmptyDefaults(t *testing.T) {
+	if got := ResolveKits(nil, nil); len(got) != 0 {
+		t.Fatalf("empty: %v", got)
+	}
+	if got := ResolveKits([]string{"mise-workspace"}, nil); !reflect.DeepEqual(got, []string{"mise-workspace"}) {
+		t.Fatalf("recipe only: %v", got)
+	}
+}

@@ -15,6 +15,9 @@ func TestBuildSectionHubOmitsMise(t *testing.T) {
 	if !strings.Contains(got, "floor.md") {
 		t.Fatalf("expected floor.md pointer:\n%s", got)
 	}
+	if !strings.Contains(got, "/etc/sbx-kit/context.md") {
+		t.Fatalf("expected overlay context.md pointer:\n%s", got)
+	}
 }
 
 func TestBuildSectionCustomIncludesMise(t *testing.T) {

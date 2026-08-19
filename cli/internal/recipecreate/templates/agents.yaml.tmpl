@@ -1,8 +1,12 @@
 defaults:
   resources: {{ .Resources }}
+{{- if .DefaultKits }}
   kits:
 {{- range .DefaultKits }}
     - {{ . }}
+{{- end }}
+{{- else }}
+  kits: []
 {{- end }}
 agents:
   {{ .RecipeName }}:

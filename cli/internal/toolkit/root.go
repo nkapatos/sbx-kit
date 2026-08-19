@@ -4,40 +4,24 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
 )
 
 const (
-	CatalogEnv = "SBX_KIT_CATALOG"
-
-	recipeManifestRel = "recipes/agents.yaml"
-	errNeedSetup      = "no catalog configured; run: sbx-kit setup"
+	CatalogEnv   = "SBX_KIT_CATALOG"
+	errNeedSetup = "no catalog configured; run: sbx-kit setup"
 )
 
 // IsRecipeDir reports whether dir holds recipes (has recipes/agents.yaml).
 func IsRecipeDir(dir string) bool {
-	st, err := os.Stat(filepath.Join(dir, recipeManifestRel))
-	return err == nil && !st.IsDir()
+	return catalog.IsDir(dir)
 }
 
 // HasRecipeDirs reports whether dir has at least one recipe directory child.
 func HasRecipeDirs(dir string) bool {
-	ents, err := os.ReadDir(dir)
-	if err != nil {
-		return false
-	}
-	for _, e := range ents {
-		if !e.IsDir() || isHidden(e.Name()) {
-			continue
-		}
-		if IsRecipeDir(filepath.Join(dir, e.Name())) {
-			return true
-		}
-	}
-	return false
-}
-
-func isHidden(name string) bool {
-	return name == "" || name[0] == '.'
+	dirs, err := catalog.List(dir)
+	return err == nil && len(dirs) > 0
 }
 
 // Root locates the catalog path configured by setup.

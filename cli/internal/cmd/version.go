@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,14 +16,14 @@ func newVersionCmd() *cobra.Command {
 		Short: "Print sbx-kit version and required sbx CLI range",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			out := cmd.OutOrStdout()
-			fmt.Fprintln(out, version.Version)
-			fmt.Fprintln(out, sbxcompat.RequirementSummary())
+			w := UI()
+			w.Println(version.Version)
+			w.Println(sbxcompat.RequirementSummary())
 
 			r := sbxutil.Default()
 			raw, err := r.ProbeVersion()
 			if err != nil {
-				fmt.Fprintf(out, "sbx: not found on PATH (need >= %s)\n", sbxcompat.MinVersion)
+				w.Printf("sbx: not found on PATH (need >= %s)\n", sbxcompat.MinVersion)
 				return
 			}
 			ver, perr := sbxcompat.ParseVersion(raw)
@@ -33,15 +32,15 @@ func newVersionCmd() *cobra.Command {
 				if len(trunc) > 80 {
 					trunc = trunc[:77] + "..."
 				}
-				fmt.Fprintf(out, "sbx: unparsed version output %q\n", trunc)
+				w.Printf("sbx: unparsed version output %q\n", trunc)
 				return
 			}
-			fmt.Fprintf(out, "sbx: %s\n", ver)
+			w.Printf("sbx: %s\n", ver)
 			if err := sbxcompat.Check(raw); err != nil {
-				fmt.Fprintf(out, "sbx compat: FAIL\n  %v\n", err)
+				w.Printf("sbx compat: FAIL\n  %v\n", err)
 				return
 			}
-			fmt.Fprintln(out, "sbx compat: ok")
+			w.Println("sbx compat: ok")
 		},
 	}
 }

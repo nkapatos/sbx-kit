@@ -7,10 +7,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 
+	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxcompat"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 )
 
 //go:embed templates/*
@@ -55,7 +56,7 @@ type skillData struct {
 
 // Create writes recipes/, optional kits/ and images/, and AGENTS.md.
 func Create(o CreateOpts) error {
-	if err := validateDirName(o.DirName); err != nil {
+	if err := catalog.ValidDirName(o.DirName); err != nil {
 		return err
 	}
 	if o.RecipeName == "" {
@@ -65,10 +66,7 @@ func Create(o CreateOpts) error {
 		o.SbxAgent = "shell"
 	}
 	if o.Resources == "" {
-		o.Resources = "remote-llm"
-	}
-	if len(o.DefaultKits) == 0 {
-		o.DefaultKits = []string{"agent-workspace"}
+		o.Resources = catalog.DefaultResources
 	}
 
 	root := filepath.Join(o.CatalogRoot, o.DirName)
@@ -89,7 +87,7 @@ func Create(o CreateOpts) error {
 		SbxAgent:    o.SbxAgent,
 		DefaultKits: o.DefaultKits,
 		Resources:   o.Resources,
-		RecipeID:    o.DirName + "/" + o.RecipeName,
+		RecipeID:    catalog.JoinID(o.DirName, o.RecipeName),
 	}
 
 	if err := os.MkdirAll(filepath.Join(root, "recipes"), 0o755); err != nil {
@@ -98,13 +96,17 @@ func Create(o CreateOpts) error {
 	if err := writeTemplate(filepath.Join(root, "recipes", "agents.yaml"), "agents.yaml.tmpl", data, o.Force); err != nil {
 		return err
 	}
+	resFile := filepath.Join(root, "recipes", "resources-"+o.Resources+".env")
+	if err := writeTemplate(resFile, "resources.env.tmpl", data, o.Force); err != nil {
+		return err
+	}
 
 	for _, sub := range []string{"kits", "images"} {
 		if err := os.MkdirAll(filepath.Join(root, sub), 0o755); err != nil {
 			return err
 		}
 		keep := filepath.Join(root, sub, ".gitkeep")
-		if err := writeFileIfMissing(keep, o.Force); err != nil {
+		if err := writeFileIfMissing(keep); err != nil {
 			return err
 		}
 	}
@@ -115,13 +117,12 @@ func Create(o CreateOpts) error {
 		}
 	}
 
-	out := o.Out
-	if out == nil {
-		out = os.Stdout
-	}
+	out := stdio.Out(o.Out)
 	fmt.Fprintf(out, "created catalog directory %s\n", root)
 	fmt.Fprintf(out, "  recipe id:  %s\n", data.RecipeID)
 	fmt.Fprintf(out, "  edit:       %s/recipes/agents.yaml\n", root)
+	fmt.Fprintf(out, "  resources:  %s/recipes/resources-%s.env\n", root, o.Resources)
+	fmt.Fprintf(out, "  overlay:    installed automatically on sbx-kit box run\n")
 	fmt.Fprintf(out, "  verify:     sbx-kit recipes verify %s\n", data.RecipeID)
 	fmt.Fprintf(out, "  run:        sbx-kit box run %s --yes\n", data.RecipeID)
 	return nil
@@ -144,20 +145,6 @@ func RenderSkill(o SkillOpts) (string, error) {
 	return execTemplate("skill.md.tmpl", data)
 }
 
-func validateDirName(name string) error {
-	name = strings.TrimSpace(name)
-	if name == "" {
-		return fmt.Errorf("directory name is required")
-	}
-	if name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
-		return fmt.Errorf("invalid directory name %q", name)
-	}
-	if strings.HasPrefix(name, ".") {
-		return fmt.Errorf("invalid directory name %q", name)
-	}
-	return nil
-}
-
 func writeTemplate(path, tmplName string, data any, force bool) error {
 	body, err := execTemplate(tmplName, data)
 	if err != nil {
@@ -171,11 +158,8 @@ func writeTemplate(path, tmplName string, data any, force bool) error {
 	return os.WriteFile(path, []byte(body), 0o644)
 }
 
-func writeFileIfMissing(path string, force bool) error {
+func writeFileIfMissing(path string) error {
 	if _, err := os.Stat(path); err == nil {
-		if force {
-			return nil
-		}
 		return nil
 	}
 	return os.WriteFile(path, []byte(""), 0o644)

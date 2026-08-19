@@ -23,6 +23,21 @@ func TestExperimentalSpecPrintsStatus(t *testing.T) {
 	}
 }
 
+func TestExperimentalPromptsParked(t *testing.T) {
+	root := NewRoot()
+	out := &bytes.Buffer{}
+	root.SetOut(out)
+	root.SetErr(out)
+	root.SetArgs([]string{"experimental", "prompts", "state"})
+	err := root.Execute()
+	if err == nil || !strings.Contains(err.Error(), "prompts") {
+		t.Fatalf("expected prompts stub error, got %v", err)
+	}
+	if !strings.Contains(out.String(), "sbx-kit-state") {
+		t.Fatalf("expected state prompt, got %s", out.String())
+	}
+}
+
 func TestRecipesVerifySkipKits(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	catalogRoot := t.TempDir()

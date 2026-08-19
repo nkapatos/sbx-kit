@@ -135,7 +135,11 @@ func GetBySandbox(name string) (*Record, error) {
 		rec := matches[0]
 		return &rec, nil
 	default:
-		return nil, fmt.Errorf("multiple bindings match %q; fix ~/.local/state/sbx-kit/bindings.json", name)
+		p, perr := path()
+		if perr != nil {
+			return nil, fmt.Errorf("multiple bindings match %q", name)
+		}
+		return nil, fmt.Errorf("multiple bindings match %q; fix %s", name, p)
 	}
 }
 

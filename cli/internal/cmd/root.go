@@ -50,15 +50,9 @@ func NewRoot() *cobra.Command {
 	root.SetVersionTemplate("{{.Version}}\n")
 	root.SetOut(os.Stdout)
 	root.SetErr(os.Stderr)
-	uiWriter = ui.New(os.Stdout, os.Stderr)
 	root.PersistentPreRun = func(c *cobra.Command, args []string) {
-		if uiWriter == nil {
-			uiWriter = ui.New(c.OutOrStdout(), c.ErrOrStderr())
-			return
-		}
-		// Follow cobra's redirected writers (tests call SetOut after NewRoot).
-		uiWriter.Out = c.OutOrStdout()
-		uiWriter.Err = c.ErrOrStderr()
+		// Rebuild so IsTTY/color follow cobra redirects (tests SetOut to buffers).
+		uiWriter = ui.New(c.OutOrStdout(), c.ErrOrStderr())
 	}
 
 	root.AddGroup(

@@ -35,42 +35,15 @@ func IsRepo(dir string) bool {
 }
 
 func Clone(url, dest string) error {
-	if err := lookGit(); err != nil {
-		return err
-	}
-	cmd := exec.Command("git", "clone", "--", url, dest)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git clone: %w", err)
-	}
-	return nil
+	return git("clone", "--", url, dest)
 }
 
 func Fetch(dir string) error {
-	if err := lookGit(); err != nil {
-		return err
-	}
-	cmd := exec.Command("git", "-C", dir, "fetch", "-q")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git fetch: %w", err)
-	}
-	return nil
+	return git("-C", dir, "fetch", "-q")
 }
 
 func Pull(dir string) error {
-	if err := lookGit(); err != nil {
-		return err
-	}
-	cmd := exec.Command("git", "-C", dir, "pull", "--ff-only")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git pull: %w", err)
-	}
-	return nil
+	return git("-C", dir, "pull", "--ff-only")
 }
 
 func Status(dir string) (string, error) {
@@ -95,6 +68,26 @@ func RemoteURL(dir string) string {
 func lookGit() error {
 	if _, err := exec.LookPath("git"); err != nil {
 		return fmt.Errorf("git not found on PATH")
+	}
+	return nil
+}
+
+func git(args ...string) error {
+	if err := lookGit(); err != nil {
+		return err
+	}
+	cmd := exec.Command("git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	verb := "git"
+	if len(args) > 0 {
+		verb = args[0]
+		if verb == "-C" && len(args) > 2 {
+			verb = args[2]
+		}
+	}
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("git %s: %w", verb, err)
 	}
 	return nil
 }

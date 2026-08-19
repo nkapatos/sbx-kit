@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# sbx-kit-state — pack/unpack portable workplace state (CLI overlay).
+# Manifest: $SBX_KIT_STATE_MANIFEST or /home/agent/.local/share/sbx-kit/state.manifest
+set -euo pipefail
+
+MANIFEST="${SBX_KIT_STATE_MANIFEST:-/home/agent/.local/share/sbx-kit/state.manifest}"
+DEFAULT_ARCHIVE="${SBX_KIT_STATE_ARCHIVE:-/tmp/sbx-kit-state.tgz}"
+
+usage() {
+  echo "usage: sbx-kit-state pack [archive] | unpack [archive] | check" >&2
+  exit 2
+}
+
+load_manifest() {
+  if [[ ! -f "$MANIFEST" ]]; then
+    echo "sbx-kit-state: missing manifest: $MANIFEST" >&2
+    echo "  (sbx-kit overlay not installed? recreate with sbx-kit box run)" >&2
+    exit 1
+  fi
+  INCLUDES=()
+  EXCLUDES=()
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [[ -z "$line" ]] && continue
+    key="${line%% *}"
+    val="${line#* }"
+    case "$key" in
+      INCLUDE)
+        INCLUDES+=("$val")
+        ;;
+      EXCLUDE)
+        EXCLUDES+=("$val")
+        ;;
+      *)
+        echo "sbx-kit-state: bad manifest line: $line" >&2
+        exit 1
+        ;;
+    esac
+  done <"$MANIFEST"
+  if [[ ${#INCLUDES[@]} -eq 0 ]]; then
+    echo "sbx-kit-state: manifest has no INCLUDE lines: $MANIFEST" >&2
+    exit 1
+  fi
+}
+
+cmd_check() {
+  load_manifest
+  echo "manifest: $MANIFEST"
+  echo "includes:"
+  printf '  %s\n' "${INCLUDES[@]}"
+  echo "excludes:"
+  printf '  %s\n' "${EXCLUDES[@]:-}"
+  command -v tar >/dev/null
+  echo "ok"
+}
+
+cmd_pack() {
+  local archive="${1:-$DEFAULT_ARCHIVE}"
+  load_manifest
+  checkpoint_sqlite_trees
+
+  local args=(czf "$archive")
+  local ex
+  for ex in "${EXCLUDES[@]:-}"; do
+    [[ -n "$ex" ]] || continue
+    args+=(--exclude="$ex")
+  done
+
+  local present=()
+  local p rel
+  for p in "${INCLUDES[@]}"; do
+    if [[ -e "$p" ]]; then
+      present+=("$p")
+    else
+      echo "sbx-kit-state: skip missing include: $p" >&2
+    fi
+  done
+  if [[ ${#present[@]} -eq 0 ]]; then
+    echo "sbx-kit-state: nothing to pack (all INCLUDE paths missing)" >&2
+    mkdir -p /home/agent/.local/share/sbx-kit/portable
+    tar czf "$archive" -C / home/agent/.local/share/sbx-kit/portable
+    echo "wrote minimal archive: $archive"
+    return 0
+  fi
+
+  local rels=()
+  for p in "${present[@]}"; do
+    rel="${p#/}"
+    rels+=("$rel")
+  done
+  tar "${args[@]}" -C / "${rels[@]}"
+  echo "wrote $archive"
+}
+
+# Best-effort: if an INCLUDE tree has SQLite DBs, checkpoint WAL. No-op when
+# sqlite3 is missing or there are no DBs (agent-agnostic).
+checkpoint_sqlite_trees() {
+  local root db
+  for root in "${INCLUDES[@]}"; do
+    [[ -d "$root" ]] || continue
+    while IFS= read -r -d '' db; do
+      if command -v sqlite3 >/dev/null 2>&1; then
+        if sqlite3 "$db" "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null 2>&1; then
+          echo "sbx-kit-state: checkpointed $db" >&2
+        else
+          echo "sbx-kit-state: checkpoint skipped (busy?) $db" >&2
+        fi
+      else
+        echo "sbx-kit-state: sqlite3 not found; packing WAL sidecars for $db" >&2
+      fi
+    done < <(find "$root" -type f -name '*.db' -print0 2>/dev/null)
+  done
+}
+
+cmd_unpack() {
+  local archive="${1:-$DEFAULT_ARCHIVE}"
+  if [[ ! -f "$archive" ]]; then
+    echo "sbx-kit-state: archive not found: $archive" >&2
+    exit 1
+  fi
+  mkdir -p /home/agent
+  tar xzf "$archive" -C /
+  if [[ "$(id -u)" -eq 0 ]]; then
+    chown -R agent:agent /home/agent/.local/share/sbx-kit 2>/dev/null || true
+  fi
+  echo "unpacked $archive"
+}
+
+main() {
+  [[ $# -ge 1 ]] || usage
+  case "$1" in
+    pack) shift; cmd_pack "${1:-}" ;;
+    unpack) shift; cmd_unpack "${1:-}" ;;
+    check) cmd_check ;;
+    -h|--help|help) usage ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

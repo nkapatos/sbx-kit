@@ -1,0 +1,14 @@
+# sbx-kit platform overlay. Agent-agnostic: only the portable dir.
+# Extra INCLUDE lines are user/kit concern, not this CLI.
+#
+# INCLUDE <absolute path in the sandbox>
+# EXCLUDE <tar --exclude pattern>
+
+INCLUDE /home/agent/.local/share/sbx-kit/portable
+
+EXCLUDE **/.env
+EXCLUDE **/.env.*
+EXCLUDE **/*credential*
+EXCLUDE **/*credentials*
+EXCLUDE **/*secret*
+EXCLUDE **/.netrc

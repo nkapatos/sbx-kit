@@ -15,8 +15,8 @@ type Profile struct {
 	DockerSize string
 }
 
-func Load(toolkitRoot, profile string) (*Profile, error) {
-	path := filepath.Join(toolkitRoot, "recipes", "resources-"+profile+".env")
+func Load(dirRoot, profile string) (*Profile, error) {
+	path := filepath.Join(dirRoot, "recipes", "resources-"+profile+".env")
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("resources profile %q: %w", profile, err)

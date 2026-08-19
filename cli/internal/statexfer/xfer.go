@@ -1,3 +1,13 @@
+// Package statexfer copies portable workplace state between a running
+// sandbox and the host profile archive.
+//
+// Pack/unpack is performed in-VM by sbx-kit-state, installed by the CLI
+// overlay (not a user kit). The default manifest includes only the portable
+// share; extra INCLUDE lines are overlay/user concern. SQLite WAL checkpoint
+// is best-effort when .db files exist under INCLUDE trees.
+//
+// Parked in-box prompts for assisted pack/handoff: experimental prompts
+// (cli/internal/boxprompt); share that set between boxes later.
 package statexfer
 
 import (
@@ -9,28 +19,23 @@ import (
 	"time"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 	"github.com/nkapatos/sbx-kit/cli/internal/xdg"
 )
 
 const (
 	// RemoteArchive is the in-VM pack/unpack path.
 	RemoteArchive = "/tmp/sbx-kit-state.tgz"
-	// Helper is installed by the agent-workspace kit.
+	// Helper is installed by the CLI overlay.
 	Helper = "sbx-kit-state"
 	// DefaultStopWait is a short grace period when export sees status=running.
+	// Useful when an agent has SQLite WALs; a no-op for agents that do not.
 	DefaultStopWait = 15 * time.Second
 )
 
 // Export packs VM portable state and copies it to the host profile archive.
-// If the sandbox is still "running", waits for it to stop so agent SQLite WALs
-// can checkpoint cleanly inside sbx-kit-state pack.
-func dest(w io.Writer) io.Writer {
-	if w == nil {
-		return os.Stdout
-	}
-	return w
-}
-
+// If the sandbox is still "running", waits briefly for detach (best-effort)
+// so kits that checkpoint SQLite can flush; kits without a DB still pack.
 func Export(r *sbxutil.Runner, sandbox, profileID string, w io.Writer) error {
 	if err := xdg.Ensure(); err != nil {
 		return err
@@ -43,17 +48,17 @@ func Export(r *sbxutil.Runner, sandbox, profileID string, w io.Writer) error {
 		return err
 	}
 
-	out := dest(w)
+	out := stdio.Out(w)
 	if s, err := r.Get(sandbox); err == nil && s != nil && strings.EqualFold(s.Status, "running") {
 		fmt.Fprintf(out, "==> sandbox %s is running; waiting briefly for detach before packing (best-effort)\n", sandbox)
-		if err := r.WaitNotRunning(sandbox, 15*time.Second); err != nil {
-			fmt.Fprintf(out, "==> warning: %v\n==> packing anyway; prefer detach so SQLite WALs can flush\n", err)
+		if err := r.WaitNotRunning(sandbox, DefaultStopWait); err != nil {
+			fmt.Fprintf(out, "==> warning: %v\n==> packing anyway; detach first if this agent uses SQLite\n", err)
 		}
 	}
 
 	fmt.Fprintf(out, "==> packing state in %s via %s\n", sandbox, Helper)
-	if err := r.ExecVisible(sandbox, Helper, "pack", RemoteArchive); err != nil {
-		return fmt.Errorf("pack failed (is agent-workspace kit installed?): %w", err)
+	if err := r.Exec(sandbox, Helper, "pack", RemoteArchive); err != nil {
+		return fmt.Errorf("pack failed (is the sbx-kit overlay installed?): %w", err)
 	}
 
 	fmt.Fprintf(out, "==> copying %s:%s -> %s\n", sandbox, RemoteArchive, hostArch)
@@ -81,14 +86,14 @@ func Import(r *sbxutil.Runner, sandbox, profileID string, w io.Writer) error {
 		return fmt.Errorf("empty state archive: %s", hostArch)
 	}
 
-	out := dest(w)
+	out := stdio.Out(w)
 	fmt.Fprintf(out, "==> copying %s -> %s:%s\n", hostArch, sandbox, RemoteArchive)
 	if err := r.Cp(hostArch, sandbox+":"+RemoteArchive); err != nil {
 		return err
 	}
 	fmt.Fprintf(out, "==> unpacking state in %s via %s\n", sandbox, Helper)
-	if err := r.ExecVisible(sandbox, Helper, "unpack", RemoteArchive); err != nil {
-		return fmt.Errorf("unpack failed (is agent-workspace kit installed?): %w", err)
+	if err := r.Exec(sandbox, Helper, "unpack", RemoteArchive); err != nil {
+		return fmt.Errorf("unpack failed (is the sbx-kit overlay installed?): %w", err)
 	}
 	fmt.Fprintf(out, "==> state restored into %s\n", sandbox)
 	return nil
@@ -120,6 +125,6 @@ func DiscardArchive(profileID string, w io.Writer) error {
 		return err
 	}
 	_ = os.Remove(filepath.Dir(hostArch)) // best-effort remove profiles/<id>/
-	fmt.Fprintf(dest(w), "==> discarded archive for profile %s\n", profileID)
+	fmt.Fprintf(stdio.Out(w), "==> discarded archive for profile %s\n", profileID)
 	return nil
 }

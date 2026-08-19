@@ -38,4 +38,14 @@ func TestRecipesCreateAndSkill(t *testing.T) {
 	if !strings.Contains(out.String(), "name: sbx-kit") {
 		t.Fatalf("skill out: %s", out.String())
 	}
+	if !strings.Contains(out.String(), "/etc/sbx-kit/context.md") {
+		t.Fatalf("skill should point box agents at overlay context.md: %s", out.String())
+	}
+	if strings.Contains(out.String(), "agent-workspace") {
+		t.Fatalf("skill must not require agent-workspace: %s", out.String())
+	}
+	stub := filepath.Join(catalogRoot, "mine", "kits", "agent-workspace", "README.md")
+	if _, err := os.Stat(stub); err == nil {
+		t.Fatal("did not expect agent-workspace pull stub")
+	}
 }

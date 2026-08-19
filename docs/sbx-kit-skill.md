@@ -10,4 +10,8 @@ sbx-kit recipes skill -o docs/sbx-kit-skill.md
 
 Regenerate after changing `cli/internal/recipecreate/templates/skill.md.tmpl`.
 
-See also: `sbx-kit recipes create <dir>` scaffolds a catalog bundle with `AGENTS.md` for directory-specific agent guidance.
+The skill covers **two lands**: CLI overlay (`/etc/sbx-kit/context.md` in the box)
+vs user catalog kits (optional `agentContext` may *point at* overlay docs).
+
+See also: `sbx-kit recipes create <dir>` scaffolds a catalog bundle with `AGENTS.md`
+for directory-specific **catalog** guidance (not box runtime docs).

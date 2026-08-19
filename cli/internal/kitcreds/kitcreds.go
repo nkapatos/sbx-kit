@@ -1,3 +1,6 @@
+// Package kitcreds reads credential service ids from kit spec.yaml files
+// for host-side hints (sbx secret set). It does not validate kit schema —
+// that belongs to sbx (see recipes verify kits).
 package kitcreds
 
 import (

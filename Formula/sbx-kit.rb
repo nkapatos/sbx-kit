@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SbxKit < Formula
-  desc "CLI for Docker AI Sandboxes templates, kits, and project init"
+  desc "Recipes, kits, and custom images on top of Docker sbx"
   homepage "https://github.com/nkapatos/sbx-kit"
   license "MIT"
 

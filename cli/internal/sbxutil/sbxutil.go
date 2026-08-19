@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxcompat"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 )
 
 // Runner executes sbx subcommands. Tests can substitute a fake.
@@ -31,42 +32,42 @@ func Default() *Runner {
 	}
 }
 
-// KitVerify runs sbx kit verify on a kit directory path.
-func (r *Runner) KitVerify(kitPath string) error {
-	return r.RunInteractive("kit", "verify", kitPath)
-}
-
-// EnsureKitVerify checks sbx meets MinKitVerify for delegated kit verify.
-func (r *Runner) EnsureKitVerify() error {
-	if r.SkipCompatCheck {
-		return nil
-	}
+func (r *Runner) ensureDefaults() {
 	if r.LookPath == nil {
 		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
 	}
 	if r.Command == nil {
 		r.Command = exec.Command
 	}
+}
+
+// KitVerify runs sbx kit validate on a kit directory path.
+func (r *Runner) KitVerify(kitPath string) error {
+	return r.RunInteractive("kit", "validate", kitPath)
+}
+
+// EnsureKitVerify checks sbx meets MinKitVerify for delegated kit validate.
+func (r *Runner) EnsureKitVerify() error {
+	if r.SkipCompatCheck {
+		return nil
+	}
+	r.ensureDefaults()
 	return sbxcompat.EnsureFeature(func() (string, error) {
 		bin, err := r.LookPath()
 		if err != nil {
 			return "", err
 		}
 		return r.versionOutput(bin)
-	}, sbxcompat.MinKitVerify, "sbx kit verify")
+	}, sbxcompat.MinKitVerify, "sbx kit validate")
 }
 
 func (r *Runner) requireBin() (string, error) {
-	if r.LookPath == nil {
-		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
-	}
+	r.ensureDefaults()
 	return r.LookPath()
 }
 
 func (r *Runner) require() (string, error) {
-	if r.Command == nil {
-		r.Command = exec.Command
-	}
+	r.ensureDefaults()
 	bin, err := r.requireBin()
 	if err != nil {
 		return "", fmt.Errorf("sbx not found on PATH (need Docker sbx >= %s)", sbxcompat.MinVersion)
@@ -83,12 +84,7 @@ func (r *Runner) require() (string, error) {
 
 // ProbeVersion returns raw `sbx version` output without enforcing the gate.
 func (r *Runner) ProbeVersion() (string, error) {
-	if r.LookPath == nil {
-		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
-	}
-	if r.Command == nil {
-		r.Command = exec.Command
-	}
+	r.ensureDefaults()
 	bin, err := r.LookPath()
 	if err != nil {
 		return "", err
@@ -134,10 +130,10 @@ func (r *Runner) RunInteractive(args ...string) error {
 }
 
 func (r *Runner) out() io.Writer {
-	if r != nil && r.Out != nil {
-		return r.Out
+	if r == nil {
+		return stdio.Out(nil)
 	}
-	return os.Stdout
+	return stdio.Out(r.Out)
 }
 
 // RunEnv is like RunInteractive but with extra env.
@@ -180,11 +176,6 @@ func (r *Runner) Output(args ...string) (string, error) {
 func (r *Runner) Exec(sandbox string, command ...string) error {
 	args := append([]string{"exec", sandbox, "--"}, command...)
 	return r.RunInteractive(args...)
-}
-
-// ExecVisible is an alias for Exec.
-func (r *Runner) ExecVisible(sandbox string, command ...string) error {
-	return r.Exec(sandbox, command...)
 }
 
 // Cp copies between host and sandbox. One side must be "name:path".

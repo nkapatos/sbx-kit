@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 )
 
 const (
@@ -29,7 +30,7 @@ type Opts struct {
 func Run(o Opts) error {
 	agentName := o.Agent
 	if agentName == "" {
-		agentName = "cursor"
+		return fmt.Errorf("recipe name is required")
 	}
 	agent, ok := o.Manifest.Agents[agentName]
 	if !ok {
@@ -55,10 +56,7 @@ func Run(o Opts) error {
 	}
 	section := buildSection(display, agent, o.Manifest.Defaults.Kits)
 	readme := filepath.Join(abs, "README.md")
-	w := o.Out
-	if w == nil {
-		w = os.Stdout
-	}
+	w := stdio.Out(o.Out)
 	if _, err := os.Stat(readme); os.IsNotExist(err) {
 		title := "# " + filepath.Base(abs) + "\n\n"
 		if err := os.WriteFile(readme, []byte(title+section), 0o644); err != nil {
@@ -118,7 +116,7 @@ func buildSection(name string, a catalog.Agent, defaultKits []string) string {
 ` + runBlock + `
 ` + "```" + `
 
-3. On a **new** sandbox, install pins once (agent follows kit ` + "`agentContext`" + `, or manually):
+3. On a **new** sandbox, install pins once (agent follows ` + "`/etc/sbx-kit/context.md`" + ` then kit ` + "`agentContext`" + `, or manually):
 
 ` + "```bash" + `
 sbx exec -it <sandbox> -- bash -lc 'cd "$PWD" && mise trust mise.toml; mise install'
@@ -140,8 +138,9 @@ From the project root:
 ` + "```" + `
 
 This recipe does **not** attach ` + "`mise-workspace`" + `. Use the image's
-preinstalled tools (typical for official Hub kinds). The agent follows kit
-` + "`agentContext`" + ` and ` + "`/etc/sbx-kit/floor.md`" + ` inside the box.
+preinstalled tools (typical for official Hub kinds). Inside the box the agent
+reads ` + "`/etc/sbx-kit/context.md`" + ` (overlay) then ` + "`/etc/sbx-kit/floor.md`" + `;
+kit ` + "`agentContext`" + ` is extra user land.
 `
 	}
 

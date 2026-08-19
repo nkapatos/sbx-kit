@@ -17,6 +17,12 @@ func TestParseID(t *testing.T) {
 	if _, _, err := ParseID("../x/y"); err == nil {
 		t.Fatal("expected invalid directory")
 	}
+	if err := ValidDirName("mine"); err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidDirName(".hidden"); err == nil {
+		t.Fatal("expected invalid hidden directory")
+	}
 	dir, name, err = ParseID("mine/nested/name")
 	if err != nil || dir != "mine" || name != "nested/name" {
 		t.Fatalf("got %q %q %v", dir, name, err)

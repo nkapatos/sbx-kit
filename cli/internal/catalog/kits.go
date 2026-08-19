@@ -47,28 +47,3 @@ func ListKitPaths(dirRoot string) ([]string, error) {
 	sort.Strings(out)
 	return out, nil
 }
-
-// ListAllKitPaths returns every kit path under all directories in the catalog.
-func ListAllKitPaths(catalogRoot string) ([]string, error) {
-	dirs, err := List(catalogRoot)
-	if err != nil {
-		return nil, err
-	}
-	seen := map[string]struct{}{}
-	var out []string
-	for _, d := range dirs {
-		paths, err := ListKitPaths(d.Root)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", d.Name, err)
-		}
-		for _, p := range paths {
-			if _, ok := seen[p]; ok {
-				continue
-			}
-			seen[p] = struct{}{}
-			out = append(out, p)
-		}
-	}
-	sort.Strings(out)
-	return out, nil
-}

@@ -26,7 +26,14 @@ type Agent struct {
 	Stub             bool     `yaml:"stub"`
 }
 
+const (
+	// DefaultResources is used when agents.yaml omits defaults.resources.
+	DefaultResources = "remote-llm"
+)
+
 func File(root string) string {
+	// TODO: interim path. Recipe spec is parked (experimental spec); a future
+	// schemaVersion may rename this (e.g. recipes.yaml). Update IsDir with it.
 	return filepath.Join(root, "recipes", "agents.yaml")
 }
 
@@ -46,7 +53,7 @@ func Load(path string) (*Manifest, error) {
 }
 
 // ResolveKits is recipe kits first, then directory defaults not already listed.
-// An empty recipe list means "defaults only" (typically agent-workspace).
+// An empty recipe list means "defaults only". The CLI overlay is not a kit.
 func ResolveKits(recipeKits, defaults []string) []string {
 	if len(recipeKits) == 0 {
 		return append([]string(nil), defaults...)
@@ -68,7 +75,7 @@ func ResolveKits(recipeKits, defaults []string) []string {
 	return out
 }
 
-// KitPaths maps catalog kit names to directories under the toolkit root.
+// KitPaths maps kit names to directories under the recipe directory's kits/.
 func KitPaths(root string, names []string) []string {
 	out := make([]string, 0, len(names))
 	for _, n := range names {

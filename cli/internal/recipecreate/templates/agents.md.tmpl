@@ -20,7 +20,18 @@ sbx-kit box run {{ .RecipeID }} --yes
 sbx-kit recipes verify kits {{ .DirName }}
 ```
 
-Recipe checks are done by sbx-kit. Kit checks are done by sbx (`sbx kit verify`). Migrate kits with sbx, not sbx-kit.
+Recipe checks are done by sbx-kit. Kit checks are done by sbx (`sbx kit validate`). Migrate kits with sbx, not sbx-kit.
+
+## Overlay vs kits (two lands)
+
+**sbx-kit land:** `sbx-kit box run` installs a CLI overlay. The in-box index is
+`/etc/sbx-kit/context.md` (then `floor.md`, `cli.md`). That is the overlay
+analog of kit `agentContext`. It is not listed in `agents.yaml`.
+
+**User land:** kits under `kits/` are optional. `defaults.kits` lists only what
+you pass to `recipes create --kit`. Kit `agentContext` is for *that kit*. A kit
+may point at `/etc/sbx-kit/context.md`; it must not replace the overlay.
+Do not invent kit YAML; schema is owned by sbx.
 
 ## Edit the starter recipe
 

@@ -65,7 +65,7 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 
 	resProfile := manifest.Defaults.Resources
 	if resProfile == "" {
-		resProfile = "remote-llm"
+		resProfile = catalog.DefaultResources
 	}
 	res, err := resources.Load(src.Root, resProfile)
 	if err != nil {

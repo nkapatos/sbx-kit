@@ -3,16 +3,16 @@ package recipeverify
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
 	"github.com/nkapatos/sbx-kit/cli/internal/sbxcompat"
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 )
 
-// KitRunner runs sbx kit verify (tests inject a fake).
+// KitRunner runs sbx kit validate (tests inject a fake).
 type KitRunner interface {
 	KitVerify(path string) error
 	EnsureKitVerify() error
@@ -26,24 +26,31 @@ type Options struct {
 }
 
 func (o *Options) out() io.Writer {
-	if o.Out != nil {
-		return o.Out
-	}
-	return os.Stdout
+	return stdio.Out(o.Out)
 }
 
 // Describe returns help text for recipes verify commands.
 func Describe() string {
 	return `Recipe manifests are checked by sbx-kit.
-Kit specs are checked by sbx — sbx-kit runs sbx kit verify on kit paths.
+Kit specs are checked by sbx — sbx-kit runs sbx kit validate on kit paths.
 Migrate kits with sbx, not sbx-kit.`
 }
 
-// VerifyRecipe checks agents.yaml and references; optionally delegates kit verify.
+// VerifyRecipe checks agents.yaml and references; optionally delegates kit validate.
 func VerifyRecipe(catalogRoot, id string, opts Options) error {
 	targets, err := recipeTargets(catalogRoot, id)
 	if err != nil {
 		return err
+	}
+	if id == "" && len(targets) == 0 {
+		dirs, err := catalog.List(catalogRoot)
+		if err != nil {
+			return err
+		}
+		if len(dirs) == 0 {
+			fmt.Fprintln(opts.out(), "(no directories)")
+			return nil
+		}
 	}
 	var errs []string
 	kitPaths := map[string]struct{}{}
@@ -70,7 +77,7 @@ func VerifyRecipe(catalogRoot, id string, opts Options) error {
 	return nil
 }
 
-// VerifyKits runs sbx kit verify on kits under catalog directory dir (empty = all).
+// VerifyKits runs sbx kit validate on kits under catalog directory dir (empty = all).
 func VerifyKits(catalogRoot, dir string, opts Options) error {
 	dirs, err := catalog.List(catalogRoot)
 	if err != nil {
@@ -130,10 +137,6 @@ func recipeTargets(catalogRoot, id string) ([]recipeTarget, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(dirs) == 0 {
-		fmt.Fprintln(os.Stdout, "(no directories)")
-		return nil, nil
-	}
 
 	var out []recipeTarget
 	for _, d := range dirs {
@@ -176,7 +179,7 @@ func verifyOneRecipe(t recipeTarget, opts Options) error {
 
 func verifyKitPaths(paths []string, opts Options) error {
 	if opts.Runner == nil {
-		return fmt.Errorf("kit verify: no sbx runner configured")
+		return fmt.Errorf("kit validate: no sbx runner configured")
 	}
 	if err := opts.Runner.EnsureKitVerify(); err != nil {
 		return err
@@ -185,9 +188,9 @@ func verifyKitPaths(paths []string, opts Options) error {
 	var errs []string
 	for _, p := range paths {
 		name := filepath.Base(p)
-		fmt.Fprintf(opts.out(), "==> kit %s: verify with sbx\n", name)
+		fmt.Fprintf(opts.out(), "==> kit %s: validate with sbx\n", name)
 		if err := opts.Runner.KitVerify(p); err != nil {
-			errs = append(errs, fmt.Sprintf("kit %s: %v\n  run: sbx kit verify %s", name, err, p))
+			errs = append(errs, fmt.Sprintf("kit %s: %v\n  run: sbx kit validate %s", name, err, p))
 		}
 	}
 	if len(errs) > 0 {
@@ -205,7 +208,7 @@ func sortedKeys(m map[string]struct{}) []string {
 	return out
 }
 
-// SbxKitRunner delegates kit verify to the sbx CLI.
+// SbxKitRunner delegates kit validate to the sbx CLI.
 type SbxKitRunner struct {
 	ProbeVersion func() (string, error)
 	KitVerifyFn  func(path string) error
@@ -216,12 +219,12 @@ func (r SbxKitRunner) EnsureKitVerify() error {
 	if probe == nil {
 		return fmt.Errorf("sbx not available\n  install Docker sbx >= %s", sbxcompat.MinKitVerify)
 	}
-	return sbxcompat.EnsureFeature(probe, sbxcompat.MinKitVerify, "sbx kit verify")
+	return sbxcompat.EnsureFeature(probe, sbxcompat.MinKitVerify, "sbx kit validate")
 }
 
 func (r SbxKitRunner) KitVerify(path string) error {
 	if r.KitVerifyFn == nil {
-		return fmt.Errorf("sbx kit verify not configured")
+		return fmt.Errorf("sbx kit validate not configured")
 	}
 	return r.KitVerifyFn(path)
 }

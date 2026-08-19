@@ -38,7 +38,7 @@ SBX_KIT_CATALOG overrides the configured path for one shell.`,
 					def = existing
 				}
 				var err error
-				dir, err = promptLine(cmd.InOrStdin(), cmd.OutOrStdout(), "Catalog path:", def)
+				dir, err = promptLine(cmd.InOrStdin(), UI().Out, "Catalog path:", def)
 				if err != nil {
 					return err
 				}
@@ -50,9 +50,9 @@ SBX_KIT_CATALOG overrides the configured path for one shell.`,
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "catalog: %s\n", abs)
-			fmt.Fprintf(cmd.OutOrStdout(), "add a directory:  sbx-kit catalog add <url>\n")
-			fmt.Fprintf(cmd.OutOrStdout(), "optional: export %s=%s\n", toolkit.CatalogEnv, abs)
+			UI().Printf("catalog: %s\n", abs)
+			UI().Printf("add a directory:  sbx-kit catalog add <url>\n")
+			UI().Printf("optional: export %s=%s\n", toolkit.CatalogEnv, abs)
 			return nil
 		},
 	}

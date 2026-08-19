@@ -15,8 +15,8 @@ import (
 // MinVersion is the oldest sbx CLI sbx-kit supports for any sbx delegation.
 const MinVersion = "0.38.0"
 
-// MinKitVerify is the oldest sbx that provides `sbx kit verify`.
-// Bump when sbx ships or changes kit verify; must be >= MinVersion.
+// MinKitVerify is the oldest sbx that provides `sbx kit validate`.
+// Bump when sbx ships or changes kit validate; must be >= MinVersion.
 const MinKitVerify = MinVersion
 
 // MaxVersion, if non-empty, is an exclusive upper bound (sbx < MaxVersion).
@@ -68,7 +68,7 @@ func checkVer(ver string) error {
 	return nil
 }
 
-// CheckFeature ensures ver meets a feature floor (e.g. MinKitVerify for kit verify).
+// CheckFeature ensures ver meets a feature floor (e.g. MinKitVerify for kit validate).
 func CheckFeature(versionOutput, featureMin, featureLabel string) error {
 	if err := Check(versionOutput); err != nil {
 		return err
@@ -174,7 +174,7 @@ func mustParts(v string) [3]int {
 
 // RequirementSummary is shown by `sbx-kit version`.
 func RequirementSummary() string {
-	s := fmt.Sprintf("requires sbx >= %s (kit verify >= %s; kit schema owned by sbx)", MinVersion, MinKitVerify)
+	s := fmt.Sprintf("requires sbx >= %s (kit validate >= %s; kit schema owned by sbx)", MinVersion, MinKitVerify)
 	if MaxVersion != "" {
 		s = fmt.Sprintf("requires sbx >= %s and < %s", MinVersion, MaxVersion)
 	}

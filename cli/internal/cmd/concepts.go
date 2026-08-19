@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +12,7 @@ func newConceptsCmd() *cobra.Command {
 		Long:    conceptsText(),
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprint(cmd.OutOrStdout(), conceptsText())
+			UI().Printf("%s", conceptsText())
 		},
 	}
 }
@@ -26,7 +24,9 @@ Glossary
   catalog     path sbx-kit manages (sbx-kit setup; default ~/sbx-kit-catalog)
   directory   subdirectory with recipes/ (and optional kits/, images/)
   recipe      <dir>/<name> — sbx kind + kits + optional image
-  kit         create-time YAML sbx applies at sandbox create (schema owned by sbx)
+  overlay     CLI-owned files in the box (/etc/sbx-kit/context.md is the index)
+  kit         optional create-time YAML sbx applies at sandbox create (schema owned by sbx)
+              kit agentContext is user land; it may point at overlay docs
   image       custom Dockerfile or registry tag (sbx-kit recipes image)
   box         one sbx sandbox bound to a host project path
 

@@ -15,7 +15,7 @@ var (
 )
 
 // NewProfileID builds a stable opaque vault id for recipe + absolute project path.
-// Used under ~/.local/share/sbx-kit/profiles/<id>/ — not as the sbx --name.
+// Used under the XDG share profiles dir — not as the sbx --name.
 func NewProfileID(recipe, absProject string) string {
 	sum := sha256.Sum256([]byte(absProject))
 	short := hex.EncodeToString(sum[:])[:8]
@@ -24,11 +24,6 @@ func NewProfileID(recipe, absProject string) string {
 		recipe = "agent"
 	}
 	return truncate(fmt.Sprintf("sbxk-%s-%s", recipe, short), 63)
-}
-
-// FromProject is an alias for NewProfileID (legacy name).
-func FromProject(agent, absProject string) string {
-	return NewProfileID(agent, absProject)
 }
 
 // FromDir returns a friendly sbx sandbox name from the project directory basename.

@@ -112,12 +112,12 @@ func newRecipesVerifyCmd() *cobra.Command {
 			return recipeverify.VerifyRecipe(catalogRoot, id, verifyOpts(cmd, skipKits))
 		},
 	}
-	cmd.Flags().BoolVar(&skipKits, "skip-kits", false, "recipe manifest only; do not run sbx kit verify")
+	cmd.Flags().BoolVar(&skipKits, "skip-kits", false, "recipe manifest only; do not run sbx kit validate")
 
 	kits := &cobra.Command{
 		Use:   "kits [dir]",
-		Short: "Verify catalog kits with sbx",
-		Long:  "Kit checks are done by sbx. sbx-kit runs sbx kit verify on each kit under kits/.",
+		Short: "Validate catalog kits with sbx",
+		Long:  "Kit checks are done by sbx. sbx-kit runs sbx kit validate on each kit under kits/.",
 		Example: `  sbx-kit recipes verify kits
   sbx-kit recipes verify kits mine`,
 		Args: cobra.MaximumNArgs(1),

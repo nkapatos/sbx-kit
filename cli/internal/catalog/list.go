@@ -14,7 +14,7 @@ type Dir struct {
 	Root string
 }
 
-// IsDir reports whether dir looks like a recipe directory.
+// IsDir reports whether dir looks like a recipe directory (has File(dir)).
 func IsDir(dir string) bool {
 	st, err := os.Stat(File(dir))
 	return err == nil && !st.IsDir()

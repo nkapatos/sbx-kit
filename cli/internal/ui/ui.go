@@ -12,6 +12,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-isatty"
+
+	"github.com/nkapatos/sbx-kit/cli/internal/stdio"
 )
 
 const labelWidth = 12
@@ -50,10 +52,10 @@ func (w *Writer) Color() bool {
 }
 
 func (w *Writer) out() io.Writer {
-	if w == nil || w.Out == nil {
-		return os.Stdout
+	if w == nil {
+		return stdio.Out(nil)
 	}
-	return w.Out
+	return stdio.Out(w.Out)
 }
 
 func (w *Writer) err() io.Writer {

@@ -2,14 +2,24 @@
 name: sbx-kit
 description: >-
   Work with Docker sbx through sbx-kit: catalog directories, recipes,
-  box lifecycle, and delegated kit verify. Use when editing agents.yaml,
-  catalog kits/images, or running sbx-kit box commands.
+  box lifecycle, overlay vs user kits, and delegated kit validate. Use when
+  editing agents.yaml, catalog kits/images, box run/state, or telling an
+  in-box agent where platform docs live (/etc/sbx-kit/context.md).
 ---
 # sbx-kit on Docker sbx
 
-sbx-kit is a **host-side convenience layer** on the Docker **sbx** CLI. It does not replace sbx. sbx runs sandboxes; sbx-kit manages catalog directories, recipe manifests, bindings, and portable state.
+sbx-kit is a **host-side convenience layer** on the Docker **sbx** CLI. It does not replace sbx. sbx runs sandboxes; sbx-kit manages catalog directories, recipe manifests, bindings, portable state, and a **platform overlay** inside each box.
 
-Requires sbx >= {{ .MinSbx }} (kit verify >= {{ .MinKitVerify }}). Check with `sbx-kit version`.
+Requires sbx >= {{ .MinSbx }} (kit validate >= {{ .MinKitVerify }}). Check with `sbx-kit version`.
+
+## Two lands (do not mix)
+
+| Land | Who owns it | What lives there |
+|------|-------------|------------------|
+| **sbx-kit** | this CLI | Host commands; overlay installed into the box (`/etc/sbx-kit/`, `sbx-kit-state`, portable dir). Not a kit. Not listed in `agents.yaml`. |
+| **User** | catalog + sbx | `recipes/agents.yaml`, optional `kits/` / `images/`. Kit schema, validate, migrate, and kit `agentContext` belong to **sbx**. |
+
+The overlay cannot be omitted by dropping a kit name. User kits cannot replace it. Do not prepend overlay files into user recipes.
 
 ## Layers
 
@@ -25,11 +35,12 @@ Requires sbx >= {{ .MinSbx }} (kit verify >= {{ .MinKitVerify }}). Check with `s
 - **catalog** — path from `setup` (default `~/sbx-kit-catalog`; env `SBX_KIT_CATALOG`)
 - **directory** — child of catalog with `recipes/`, optional `kits/`, `images/`
 - **recipe** — `<dir>/<name>` from `recipes/agents.yaml`
-- **kit** — create-time YAML under `kits/` — **schema and verify belong to sbx**
+- **overlay** — CLI-owned files in the box (create/attach). Analog of kit `agentContext` for **platform** docs: `/etc/sbx-kit/context.md`
+- **kit** — optional create-time YAML under `kits/` — **schema and verify belong to sbx**
 - **image** — Dockerfile or registry tag under `images/`
 - **box** — one sbx sandbox bound to a host project path
 
-## Typical workflow
+## Typical workflow (host)
 
 ```bash
 sbx-kit setup
@@ -40,16 +51,48 @@ sbx-kit box run <dir>/<name> --yes
 sbx-kit box bindings
 ```
 
+`recipes create` writes `kits: []` unless you pass `--kit`. Empty is valid.
+
+## Box agent: where to read
+
+Kit **`agentContext`** (v1) / **`agentInstructions.content`** (v2) is **user land**. sbx injects it (often a `## Kits` pointer plus `kits-agent-context/*.md` next to the memory file). Use that for *this kit's* taste (mise, editor, credentials). It is the wrong place to define the sbx-kit overlay — a missing kit would hide platform docs.
+
+**Platform docs** (sbx-kit land) are files the CLI installs. The box agent should start here:
+
+| Path | Role |
+|------|------|
+| `/etc/sbx-kit/context.md` | Overlay index (read first). Same job as kit `agentContext`, for the CLI. |
+| `/etc/sbx-kit/floor.md` | Probe of *this* image (Hub vs custom; mise/gh/npm/go) |
+| `/etc/sbx-kit/cli.md` | Host verbs for the CLI version that created the box |
+| `/home/agent/.local/share/sbx-kit/portable/README.md` | Default `box state` tree |
+
+Do not assume mise, Cursor, or SQLite. Follow `floor.md` + `context.md` for tools.
+
+### Optional: user kit points at overlay
+
+A user kit **may** add a pointer so stacked mixins disclose platform docs on demand. That is a hyperlink from user land into sbx-kit land — not a substitute for the overlay.
+
+```yaml
+# in a user kit spec.yaml (schema owned by sbx)
+agentContext: |
+  Platform (sbx-kit overlay, not this kit): read `/etc/sbx-kit/context.md`.
+  Then this kit: …
+```
+
+Do not inline overlay command lists or floor interpretation into the kit. Those files are regenerated on attach.
+
+Project `AGENTS.md` in the git worktree is **project land**. Do not stamp overlay text there. Catalog-directory `AGENTS.md` from `recipes create` is for agents editing the catalog, not the box runtime.
+
 ## Verify (who owns what)
 
 ```bash
-sbx-kit recipes verify [id]           # manifest + optional sbx kit verify
+sbx-kit recipes verify [id]           # manifest + optional sbx kit validate
 sbx-kit recipes verify --skip-kits    # manifest only
-sbx-kit recipes verify kits [dir]     # sbx kit verify only
+sbx-kit recipes verify kits [dir]     # sbx kit validate only
 ```
 
 - Recipe manifests → **sbx-kit**
-- Kit specs → **sbx** (`sbx kit verify`, migrate with sbx)
+- Kit specs → **sbx** (`sbx kit validate`, migrate with sbx)
 - Runtime secrets → **sbx** (`sbx secret set`); hints via `sbx-kit box check`
 
 {{ if .HasCatalogHint -}}
@@ -61,7 +104,7 @@ Configured catalog: `{{ .CatalogRoot }}`
 {{ if .HasDirHint -}}
 ## Directory {{ .DirName }}
 
-Recipes are ids like `{{ .DirName }}/<agent-name>`. Kits live in `{{ .DirName }}/kits/`. See `AGENTS.md` in that directory if present.
+Recipes are ids like `{{ .DirName }}/<agent-name>`. Kits live in `{{ .DirName }}/kits/`. See `AGENTS.md` in that directory if present (catalog guidance). Box runtime docs are `/etc/sbx-kit/context.md`.
 
 {{ end -}}
 ## Interim recipe manifest
@@ -71,7 +114,7 @@ Path: `<catalog>/<dir>/recipes/agents.yaml`
 ```yaml
 defaults:
   resources: remote-llm
-  kits: [agent-workspace]
+  kits: []
 agents:
   cursor:
     sbx_agent: cursor
@@ -79,7 +122,7 @@ agents:
     image_name: ""   # optional custom template
 ```
 
-Formal spec is still evolving (`sbx-kit experimental spec`).
+Formal spec is still evolving (`sbx-kit experimental spec`). Do not invent `spec.yaml`; kit schema belongs to sbx.
 
 ## Upstream sbx docs (read when needed)
 
@@ -90,19 +133,19 @@ Use these for sbx-native concepts — sbx-kit intentionally delegates here inste
 | Sandboxes overview | https://docs.docker.com/ai/sandboxes/ | Isolation, `sbx run`, daemon, what runs inside the box |
 | Customize | https://docs.docker.com/ai/sandboxes/customize/ | **Templates vs kits** — image bake vs YAML at create |
 | Integrations | https://docs.docker.com/ai/sandboxes/integrations/ | SSH `.sbx`, workspace mount paths, Cursor remote |
-| Kit spec v2 | https://github.com/docker/sbx-kits-contrib/blob/main/spec/SPEC-v2.md | Authoring or migrating `kits/*/spec.yaml` |
+| Kit spec v2 | https://github.com/docker/sbx-kits-contrib/blob/main/spec/SPEC-v2.md | Authoring or migrating `kits/*/spec.yaml` (`agentContext` / `agentInstructions`) |
 
 Do not implement kit schema or v1→v2 migration in sbx-kit — use sbx CLI and the spec above.
 
 ## Host vs box
 
-- **Host**: catalog path, git directories, secrets, bindings, state archives, `sbx-kit` commands
-- **Box**: agent session, `/home/agent`, `sbx exec`, Docker inside the sandbox — see Docker Sandboxes docs
+- **Host**: catalog path, git directories, secrets, bindings, state archives, `sbx-kit` commands, **this skill**
+- **Box**: agent session, overlay under `/etc/sbx-kit/`, `/home/agent`, `sbx exec` — see overlay `context.md` then Docker Sandboxes docs
 
 ## box check vs recipes verify
 
 - `sbx-kit box check` — bound sandbox + recipe kits + `sbx secret ls` (runtime readiness)
-- `sbx-kit recipes verify` — catalog content before create (manifest + delegated kit verify)
+- `sbx-kit recipes verify` — catalog content before create (manifest + delegated kit validate)
 
 ## More
 

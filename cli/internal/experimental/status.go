@@ -2,7 +2,7 @@ package experimental
 
 import "fmt"
 
-// ErrNotReady is returned by stub entry points until an feature is implemented.
+// ErrNotReady is returned by stub entry points until a feature is implemented.
 type ErrNotReady struct {
 	Feature string
 	Track   string

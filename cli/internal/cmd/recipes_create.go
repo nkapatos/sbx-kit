@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
 	"github.com/nkapatos/sbx-kit/cli/internal/recipecreate"
 )
 
@@ -26,10 +26,13 @@ func newRecipesCreateCmd() *cobra.Command {
 		Long: `Creates <catalog>/<dir>/ with recipes/agents.yaml, kits/, images/,
 and AGENTS.md for AI agents working on this bundle.
 
-Kit schema is owned by sbx — see AGENTS.md links and sbx-kit recipes skill.`,
+Kit schema is owned by sbx — see AGENTS.md links and sbx-kit recipes skill.
+
+The CLI overlay (sbx-kit-state, portable dir) is installed on box run, not
+listed as a kit. --kit is optional catalog kits only.`,
 		Example: `  sbx-kit recipes create mine
   sbx-kit recipes create team --recipe cursor --sbx-agent cursor
-  sbx-kit recipes create mine --kit agent-workspace --kit mise-workspace`,
+  sbx-kit recipes create mine --kit mise-workspace`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			catalogRoot, err := requireToolkitRoot()
@@ -52,8 +55,8 @@ Kit schema is owned by sbx — see AGENTS.md links and sbx-kit recipes skill.`,
 
 	cmd.Flags().StringVar(&recipeName, "recipe", "shell", "first agent name in agents.yaml")
 	cmd.Flags().StringVar(&sbxAgent, "sbx-agent", "shell", "sbx agent kind for the starter recipe")
-	cmd.Flags().StringVar(&resources, "resources", "remote-llm", "defaults.resources profile name")
-	cmd.Flags().StringArrayVar(&kits, "kit", nil, "defaults.kits entry (repeatable; default: agent-workspace)")
+	cmd.Flags().StringVar(&resources, "resources", catalog.DefaultResources, "defaults.resources profile name")
+	cmd.Flags().StringArrayVar(&kits, "kit", nil, "optional defaults.kits entry (repeatable)")
 	cmd.Flags().BoolVar(&noAgentsMD, "no-agents-md", false, "skip AGENTS.md")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite manifest and AGENTS.md if present")
 	return cmd
@@ -72,7 +75,10 @@ func newRecipesSkillCmd() *cobra.Command {
 		Long: `Prints or writes a Cursor-style SKILL.md for sbx-kit.
 
 Includes sbx-kit commands and curated upstream sbx doc links (sandboxes,
-customize, integrations, kit spec v2). Kit schema authority stays with sbx.`,
+customize, integrations, kit spec v2). Kit schema authority stays with sbx.
+
+--cursor writes .cursor/skills/sbx-kit/SKILL.md relative to the current
+working directory. Run it from the project root (or pass --output).`,
 		Example: `  sbx-kit recipes skill
   sbx-kit recipes skill --dir mine --output ./SKILL.md
   sbx-kit recipes skill --cursor
@@ -93,7 +99,7 @@ customize, integrations, kit spec v2). Kit schema authority stays with sbx.`,
 				path = filepath.Join(".cursor", "skills", "sbx-kit", "SKILL.md")
 			}
 			if path == "" || path == "-" {
-				fmt.Fprint(cmd.OutOrStdout(), body)
+				UI().Printf("%s", body)
 				return nil
 			}
 			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -102,7 +108,7 @@ customize, integrations, kit spec v2). Kit schema authority stays with sbx.`,
 			if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "wrote %s\n", path)
+			UI().Printf("wrote %s\n", path)
 			return nil
 		},
 	}

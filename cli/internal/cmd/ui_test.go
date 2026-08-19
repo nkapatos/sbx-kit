@@ -20,6 +20,9 @@ func TestUIFollowsCobraOut(t *testing.T) {
 	if UI().Out != out {
 		t.Fatal("UI.Out should follow cobra SetOut after Execute")
 	}
+	if UI().IsTTY {
+		t.Fatal("buffer Out should not be treated as a TTY")
+	}
 }
 
 func TestSetUI(t *testing.T) {

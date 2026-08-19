@@ -10,22 +10,24 @@ import (
 
 	"github.com/nkapatos/sbx-kit/cli/internal/catalog"
 	"github.com/nkapatos/sbx-kit/cli/internal/recipeverify"
+	"github.com/nkapatos/sbx-kit/cli/internal/sbxutil"
 )
 
 func newRecipesCmd() *cobra.Command {
 	ls := newRecipesLsCmd()
 	cmd := &cobra.Command{
-		Use:     "recipes",
-		Short:   "List and manage recipe content",
-		Long:    `Recipe ids are <dir>/<name>. Verify is stubbed — see sbx-kit experimental verify.`,
+		Use:   "recipes",
+		Short: "List and manage recipe content",
+		Long:  `Recipe ids are <dir>/<name>. ` + recipeverify.Describe(),
 		Example: `  sbx-kit recipes
   sbx-kit recipes ls
+  sbx-kit recipes verify
+  sbx-kit recipes verify kits mine
   sbx-kit recipes image ls`,
 		RunE: ls.RunE,
 	}
 	cmd.AddCommand(ls)
 	cmd.AddCommand(newRecipesVerifyCmd())
-	cmd.AddCommand(newRecipesKitCmd())
 	cmd.AddCommand(newImageCmd())
 	return cmd
 }
@@ -92,13 +94,18 @@ func runRecipesList(cmd *cobra.Command, args []string) error {
 }
 
 func newRecipesVerifyCmd() *cobra.Command {
-	return &cobra.Command{
+	var skipKits bool
+
+	cmd := &cobra.Command{
 		Use:   "verify [id]",
-		Short: "Verify recipe manifests (stub → experimental)",
-		Long:  recipeverify.Describe() + "\n\nUse: sbx-kit experimental verify recipe [id]",
-		Args:  cobra.MaximumNArgs(1),
+		Short: "Verify recipe manifests (and kits via sbx)",
+		Long:  recipeverify.Describe(),
+		Example: `  sbx-kit recipes verify
+  sbx-kit recipes verify mine/cursor
+  sbx-kit recipes verify --skip-kits mine/cursor
+  sbx-kit recipes verify kits mine`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), "stub — use: sbx-kit experimental verify recipe [id]")
 			catalogRoot, err := requireToolkitRoot()
 			if err != nil {
 				return err
@@ -107,19 +114,19 @@ func newRecipesVerifyCmd() *cobra.Command {
 			if len(args) == 1 {
 				id = args[0]
 			}
-			return recipeverify.VerifyRecipe(catalogRoot, id)
+			return recipeverify.VerifyRecipe(catalogRoot, id, verifyOpts(cmd, skipKits))
 		},
 	}
-}
+	cmd.Flags().BoolVar(&skipKits, "skip-kits", false, "recipe manifest only; do not run sbx kit verify")
 
-func newRecipesKitCmd() *cobra.Command {
-	verify := &cobra.Command{
-		Use:   "verify [dir]",
-		Short: "Verify kits in a directory (stub → experimental)",
-		Long:  recipeverify.Describe() + "\n\nUse: sbx-kit experimental verify kit [dir]",
-		Args:  cobra.MaximumNArgs(1),
+	kits := &cobra.Command{
+		Use:   "kits [dir]",
+		Short: "Verify catalog kits with sbx",
+		Long:  "Kit checks are done by sbx. sbx-kit runs sbx kit verify on each kit under kits/.",
+		Example: `  sbx-kit recipes verify kits
+  sbx-kit recipes verify kits mine`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), "stub — use: sbx-kit experimental verify kit [dir]")
 			catalogRoot, err := requireToolkitRoot()
 			if err != nil {
 				return err
@@ -128,16 +135,25 @@ func newRecipesKitCmd() *cobra.Command {
 			if len(args) == 1 {
 				dir = args[0]
 			}
-			return recipeverify.VerifyKits(catalogRoot, dir)
+			opts := verifyOpts(cmd, false)
+			opts.SkipKits = false
+			return recipeverify.VerifyKits(catalogRoot, dir, opts)
 		},
 	}
-	cmd := &cobra.Command{
-		Use:   "kit",
-		Short: "Recipe directory kits (verify stub)",
-		RunE:  func(cmd *cobra.Command, args []string) error { return cmd.Help() },
-	}
-	cmd.AddCommand(verify)
+	cmd.AddCommand(kits)
 	return cmd
+}
+
+func verifyOpts(cmd *cobra.Command, skipKits bool) recipeverify.Options {
+	r := sbxutil.Default()
+	return recipeverify.Options{
+		Out:      cmd.OutOrStdout(),
+		SkipKits: skipKits,
+		Runner: recipeverify.SbxKitRunner{
+			ProbeVersion: r.ProbeVersion,
+			KitVerifyFn:  r.KitVerify,
+		},
+	}
 }
 
 func recipeImage(a catalog.Agent) string {

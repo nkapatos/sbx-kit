@@ -38,10 +38,12 @@ Workflow
   sbx-kit catalog status
   sbx-kit catalog update
   sbx-kit recipes
+  sbx-kit recipes verify
   sbx-kit box run <dir>/<name> --yes
   sbx-kit box bindings
 
-Parked work lives under sbx-kit experimental (verify, spec, skill, kit-v2).
+Recipe checks: sbx-kit recipes verify. Kit checks: sbx (via sbx-kit recipes verify kits).
+Parked recipe spec: sbx-kit experimental spec.
 
 See also: sbx-kit --help
 `

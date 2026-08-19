@@ -1,14 +1,13 @@
 # sbx-kit skill (draft)
 
-Agent-agnostic bridge between sbx-kit and Docker sbx. Spec and verify commands are
-still experimental — see `sbx-kit experimental --help`.
+Agent-agnostic bridge between sbx-kit and Docker sbx.
 
 ## Layers
 
 | Layer | Commands |
 |-------|----------|
 | Catalog | `setup`, `catalog add\|ls\|status\|update` |
-| Recipes | `recipes`, `recipes image …`, `recipes verify` (stub) |
+| Recipes | `recipes`, `recipes verify`, `recipes verify kits`, `recipes image …` |
 | Box | `box run`, `box bindings`, `box check`, `box upgrade`, `box rm`, `box state` |
 | Project | `project readme` |
 
@@ -17,7 +16,7 @@ still experimental — see `sbx-kit experimental --help`.
 - **catalog** — path from `setup` (default `~/sbx-kit-catalog`)
 - **directory** — child of catalog with `recipes/`, optional `kits/`, `images/`
 - **recipe** — `<dir>/<name>` from `recipes/agents.yaml`
-- **kit** — sbx create-time YAML under `kits/` (sbx kit spec v1 today, v2 migration via sbx)
+- **kit** — sbx create-time YAML under `kits/` (schema owned by sbx)
 - **image** — Dockerfile or registry tag under `images/`
 
 ## Workflow
@@ -26,23 +25,23 @@ still experimental — see `sbx-kit experimental --help`.
 sbx-kit setup
 sbx-kit catalog add <url>
 sbx-kit recipes
+sbx-kit recipes verify
 sbx-kit box run <dir>/<name> --yes
 sbx-kit box bindings
 ```
 
-## Compose a recipe (interim)
-
-Edit `recipes/agents.yaml` in a catalog directory. Kits stack per entry plus directory defaults.
-
-## Validate (experimental)
+## Verify
 
 ```bash
-sbx-kit experimental verify recipe [id]
-sbx-kit experimental verify kit [dir]
-sbx-kit experimental spec
+sbx-kit recipes verify              # recipe manifests + sbx kit verify
+sbx-kit recipes verify mine/cursor
+sbx-kit recipes verify --skip-kits  # manifest only
+sbx-kit recipes verify kits mine    # sbx kit verify only
 ```
 
-Kit schema authority: `sbx kit verify` (sbx v2; v1 kits supported until migrated).
+Recipe manifests are checked by sbx-kit. Kit specs are checked by sbx. Migrate kits with sbx, not sbx-kit.
+
+`sbx-kit version` shows the required sbx range (`MinVersion`, `MinKitVerify`).
 
 ## Host vs box
 

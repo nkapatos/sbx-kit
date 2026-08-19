@@ -37,6 +37,17 @@ func TestCheckMin(t *testing.T) {
 	}
 }
 
+func TestCheckFeature(t *testing.T) {
+	Reset()
+	t.Setenv(skipEnv, "")
+	if err := CheckFeature("0.37.0", MinKitVerify, "sbx kit verify"); err == nil {
+		t.Fatal("expected error below MinKitVerify")
+	}
+	if err := CheckFeature("0.38.0", MinKitVerify, "sbx kit verify"); err != nil {
+		t.Fatalf("0.38.0: %v", err)
+	}
+}
+
 func TestSkipEnv(t *testing.T) {
 	Reset()
 	t.Setenv(skipEnv, "1")

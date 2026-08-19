@@ -1,6 +1,6 @@
 // Package sbxcompat gates sbx-kit against a tested Docker sbx CLI range.
-// Kits/templates remain experimental upstream; lock the floor so behavior
-// changes fail fast instead of with cryptic YAML errors.
+// Bump MinVersion (and feature floors like MinKitVerify) on sbx-kit releases
+// when we depend on newer sbx behavior — match sbx's release cadence, not kit schema.
 package sbxcompat
 
 import (
@@ -12,13 +12,14 @@ import (
 	"sync"
 )
 
-// MinVersion is the oldest sbx CLI this toolkit tree is tested against.
-// Bump when we rely on newer sbx behavior. Floor is this host: 0.38.0.
-// Kits may still be schemaVersion "1" until spec.yaml files are rewritten to v2.
+// MinVersion is the oldest sbx CLI sbx-kit supports for any sbx delegation.
 const MinVersion = "0.38.0"
 
+// MinKitVerify is the oldest sbx that provides `sbx kit verify`.
+// Bump when sbx ships or changes kit verify; must be >= MinVersion.
+const MinKitVerify = MinVersion
+
 // MaxVersion, if non-empty, is an exclusive upper bound (sbx < MaxVersion).
-// Leave empty while tracking latest; set when a known break lands upstream.
 const MaxVersion = ""
 
 const skipEnv = "SBX_KIT_SKIP_SBX_CHECK"
@@ -52,6 +53,10 @@ func Check(versionOutput string) error {
 		return fmt.Errorf("cannot parse sbx version from %q: %w\n  tip: install Docker sbx >= %s, or set %s=1 to skip",
 			strings.TrimSpace(versionOutput), err, MinVersion, skipEnv)
 	}
+	return checkVer(ver)
+}
+
+func checkVer(ver string) error {
 	if cmpSemver(ver, MinVersion) < 0 {
 		return fmt.Errorf("sbx %s is too old for this sbx-kit (need >= %s)\n  upgrade: brew upgrade docker/tap/sbx   # or your distro package\n  override: %s=1",
 			ver, MinVersion, skipEnv)
@@ -59,6 +64,25 @@ func Check(versionOutput string) error {
 	if MaxVersion != "" && cmpSemver(ver, MaxVersion) >= 0 {
 		return fmt.Errorf("sbx %s is newer than this sbx-kit supports (need < %s)\n  upgrade sbx-kit, or set %s=1 to skip",
 			ver, MaxVersion, skipEnv)
+	}
+	return nil
+}
+
+// CheckFeature ensures ver meets a feature floor (e.g. MinKitVerify for kit verify).
+func CheckFeature(versionOutput, featureMin, featureLabel string) error {
+	if err := Check(versionOutput); err != nil {
+		return err
+	}
+	if os.Getenv(skipEnv) != "" {
+		return nil
+	}
+	ver, err := ParseVersion(versionOutput)
+	if err != nil {
+		return err
+	}
+	if cmpSemver(ver, featureMin) < 0 {
+		return fmt.Errorf("sbx %s is too old for %s (need >= %s)\n  upgrade sbx to match this sbx-kit release",
+			ver, featureLabel, featureMin)
 	}
 	return nil
 }
@@ -82,6 +106,17 @@ func Ensure(getVersion func() (string, error)) error {
 	return cachedErr
 }
 
+// EnsureFeature runs Ensure then checks a feature floor against the cached version.
+func EnsureFeature(getVersion func() (string, error), featureMin, featureLabel string) error {
+	if err := Ensure(getVersion); err != nil {
+		return err
+	}
+	mu.Lock()
+	raw := cached
+	mu.Unlock()
+	return CheckFeature(raw, featureMin, featureLabel)
+}
+
 // LastVersion returns the last successfully parsed version string (may be empty).
 func LastVersion() string {
 	mu.Lock()
@@ -102,7 +137,6 @@ func ParseVersion(s string) (string, error) {
 	if m == nil {
 		return "", fmt.Errorf("no semver token found")
 	}
-	// Strip pre-release/build for the comparison floor (0.38.0-rc3 → 0.38.0).
 	core := m[1]
 	if i := strings.IndexAny(core, "-+"); i >= 0 {
 		core = core[:i]
@@ -140,7 +174,7 @@ func mustParts(v string) [3]int {
 
 // RequirementSummary is shown by `sbx-kit version`.
 func RequirementSummary() string {
-	s := fmt.Sprintf("requires sbx >= %s (kits authored as schemaVersion 1)", MinVersion)
+	s := fmt.Sprintf("requires sbx >= %s (kit verify >= %s; kit schema owned by sbx)", MinVersion, MinKitVerify)
 	if MaxVersion != "" {
 		s = fmt.Sprintf("requires sbx >= %s and < %s", MinVersion, MaxVersion)
 	}

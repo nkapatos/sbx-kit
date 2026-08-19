@@ -28,14 +28,43 @@ func Default() *Runner {
 	}
 }
 
-func (r *Runner) require() (string, error) {
+// KitVerify runs sbx kit verify on a kit directory path.
+func (r *Runner) KitVerify(kitPath string) error {
+	return r.RunInteractive("kit", "verify", kitPath)
+}
+
+// EnsureKitVerify checks sbx meets MinKitVerify for delegated kit verify.
+func (r *Runner) EnsureKitVerify() error {
+	if r.SkipCompatCheck {
+		return nil
+	}
 	if r.LookPath == nil {
 		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
 	}
 	if r.Command == nil {
 		r.Command = exec.Command
 	}
-	bin, err := r.LookPath()
+	return sbxcompat.EnsureFeature(func() (string, error) {
+		bin, err := r.LookPath()
+		if err != nil {
+			return "", err
+		}
+		return r.versionOutput(bin)
+	}, sbxcompat.MinKitVerify, "sbx kit verify")
+}
+
+func (r *Runner) requireBin() (string, error) {
+	if r.LookPath == nil {
+		r.LookPath = func() (string, error) { return exec.LookPath("sbx") }
+	}
+	return r.LookPath()
+}
+
+func (r *Runner) require() (string, error) {
+	if r.Command == nil {
+		r.Command = exec.Command
+	}
+	bin, err := r.requireBin()
 	if err != nil {
 		return "", fmt.Errorf("sbx not found on PATH (need Docker sbx >= %s)", sbxcompat.MinVersion)
 	}

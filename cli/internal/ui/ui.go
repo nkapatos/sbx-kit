@@ -9,6 +9,9 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-isatty"
 )
 
 const labelWidth = 12
@@ -38,11 +41,7 @@ func isTTY(w io.Writer) bool {
 	if !ok {
 		return false
 	}
-	fi, err := f.Stat()
-	if err != nil {
-		return false
-	}
-	return fi.Mode()&os.ModeCharDevice != 0
+	return isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 }
 
 // Color reports whether styled output should be used.
@@ -64,9 +63,23 @@ func (w *Writer) err() io.Writer {
 	return w.Err
 }
 
+func (w *Writer) style(dest io.Writer) (header, label, warn, errStyle lipgloss.Style) {
+	plain := lipgloss.NewStyle()
+	if w == nil || w.NoColor || !isTTY(dest) {
+		return plain, plain, plain, plain
+	}
+	r := lipgloss.NewRenderer(dest)
+	header = lipgloss.NewStyle().Bold(true).Renderer(r)
+	label = lipgloss.NewStyle().Faint(true).Renderer(r)
+	warn = lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true).Renderer(r)
+	errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true).Renderer(r)
+	return
+}
+
 // Header prints a section banner: "==> text".
 func (w *Writer) Header(text string) {
-	fmt.Fprintf(w.out(), "==> %s\n", text)
+	h, _, _, _ := w.style(w.out())
+	fmt.Fprintln(w.out(), h.Render("==> "+text))
 }
 
 // Detail prints an indented labeled value.
@@ -74,12 +87,20 @@ func (w *Writer) Detail(label, value string) {
 	if value == "" {
 		return
 	}
-	fmt.Fprintf(w.out(), "  %-*s  %s\n", labelWidth, label+":", value)
+	_, lab, _, _ := w.style(w.out())
+	fmt.Fprintf(w.out(), "  %s  %s\n", lab.Render(fmt.Sprintf("%-*s", labelWidth, label+":")), value)
 }
 
 // Warn prints a warning to Err.
 func (w *Writer) Warn(text string) {
-	fmt.Fprintf(w.err(), "warning: %s\n", text)
+	_, _, warn, _ := w.style(w.err())
+	fmt.Fprintln(w.err(), warn.Render("warning: "+text))
+}
+
+// ErrorPrefix prints a styled "Error:" prefix then the message to Err.
+func (w *Writer) ErrorPrefix(msg string) {
+	_, _, _, es := w.style(w.err())
+	fmt.Fprintf(w.err(), "%s %s\n", es.Render("Error:"), msg)
 }
 
 // Empty prints a parenthesized empty-state line, plus an optional hint.
@@ -100,7 +121,7 @@ func (w *Writer) Printf(format string, a ...any) {
 	fmt.Fprintf(w.out(), format, a...)
 }
 
-// Table writes aligned columns. headers are uppercased when not already.
+// Table writes aligned columns.
 func (w *Writer) Table(headers []string, rows [][]string) error {
 	tw := tabwriter.NewWriter(w.out(), 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, strings.Join(headers, "\t"))

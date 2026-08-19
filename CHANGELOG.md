@@ -4,17 +4,33 @@ All notable changes to this project are generated from conventional commits.
 
 ## [unreleased]
 
+### Documentation
+
+- keep README as a front door; summarize unreleased work
+
 ### Features
 
-- recipes verify (delegates kit checks to sbx)
-- recipes create and recipes skill for catalog scaffolding and agent guidance
-- shared CLI output layer (lipgloss, NO_COLOR, TTY-aware)
+- *(cli)* add recipes verify with sbx kit delegation
+- *(cli)* add recipes create and skill for agent guidance
+- *(ui)* add shared CLI output helpers
+- *(ui)* style headers, labels, and warnings with lipgloss
+- *(cli)* install the platform overlay without a required user kit
+
+### Miscellaneous
+
+- match brew version string to sbx-kit version
 
 ### Refactor
 
-- layered CLI: catalog, recipes, box, project
-- kit schema and migration stay with sbx
-- command output goes through ui.Writer (prep for a future TUI)
+- *(cli)* unify catalog, source, and recipe terminology
+- *(cli)* group commands and align catalog/directory UX
+- *(cli)* layer box, project, recipes, and experimental stubs
+- *(cmd)* thread ui.Writer through the root command
+- pass io.Writer through library progress output
+- *(cmd)* render through ui.Writer; split check and bindings
+- *(cli)* hide experimental, trim concepts, style errors
+
+## [0.1.2] - 2026-08-19
 
 ### Bug Fixes
 

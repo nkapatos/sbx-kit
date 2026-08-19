@@ -7,12 +7,12 @@ class SbxKit < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.1.2/sbx-kit_darwin_arm64.tar.gz"
-      sha256 "c18e0fa5b3ba6edf2e6d7d70081eeb22cc991fc69b6f2eeab6faab7cd2b52496"
+      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.2.0/sbx-kit_darwin_arm64.tar.gz"
+      sha256 "9983b81728003c052dfbb6d171845b90498a2a19679c39d0d679c3b9cdbc47d1"
     end
     on_intel do
-      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.1.2/sbx-kit_darwin_amd64.tar.gz"
-      sha256 "030855847a3cb8bbb90f60164a7e949569fea652b505862085d82b6fee46c088"
+      url "https://github.com/nkapatos/sbx-kit/releases/download/v0.2.0/sbx-kit_darwin_amd64.tar.gz"
+      sha256 "1b1c1bc39a630e4bf521adf175f9ec7f2bce1a0d890011fdb1bcd83183228242"
     end
   end
 

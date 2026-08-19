@@ -15,8 +15,7 @@ func newRecipesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "recipes",
 		Short: "List recipes in the catalog",
-		Long: `Recipes are sbx-kit shortcuts: sbx kind, optional image, and kits.
-IDs are <source>/<name>. See sbx-kit concepts for details.`,
+		Long:  `Recipe ids are <dir>/<name>. See sbx-kit concepts.`,
 		Example: `  sbx-kit recipes
   sbx-kit run mine/cursor --yes`,
 		Args: cobra.NoArgs,
@@ -25,21 +24,21 @@ IDs are <source>/<name>. See sbx-kit concepts for details.`,
 			if err != nil {
 				return err
 			}
-			srcs, err := catalog.List(catalogRoot)
+			dirs, err := catalog.List(catalogRoot)
 			if err != nil {
 				return err
 			}
-			if len(srcs) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "(no sources)")
-				fmt.Fprintln(cmd.OutOrStdout(), "add one:  sbx-kit source add <git-url>")
+			if len(dirs) == 0 {
+				fmt.Fprintln(cmd.OutOrStdout(), "(no directories)")
+				fmt.Fprintln(cmd.OutOrStdout(), "add one:  sbx-kit catalog add <url>")
 				return nil
 			}
 
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			fmt.Fprintln(w, "RECIPE\tSBX_AGENT\tIMAGE\tKITS\tSTATUS")
 			any := false
-			for _, src := range srcs {
-				manifest, err := catalog.Load(catalog.File(src.Root))
+			for _, d := range dirs {
+				manifest, err := catalog.Load(catalog.File(d.Root))
 				if err != nil {
 					return err
 				}
@@ -57,7 +56,7 @@ IDs are <source>/<name>. See sbx-kit concepts for details.`,
 					}
 					kits := catalog.ResolveKits(a.Kits, manifest.Defaults.Kits)
 					image := recipeImage(a)
-					id := catalog.JoinID(src.Name, name)
+					id := catalog.JoinID(d.Name, name)
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 						id, a.SbxAgent, image, strings.Join(kits, ","), status)
 				}

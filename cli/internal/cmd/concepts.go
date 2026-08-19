@@ -23,25 +23,23 @@ func conceptsText() string {
 	return `sbx-kit is a convenience layer on Docker sbx. It does not replace sbx.
 
 Glossary
-  catalog    host path from sbx-kit setup (holds sources)
-  source     subdirectory with recipes/, kits/, images/
-  recipe     <source>/<name> — sbx kind + kits + optional image
-  kit        create-time YAML sbx applies at sandbox create
-  image      custom Dockerfile or registry tag (sbx-kit image, not sbx template ls)
+  catalog     path sbx-kit manages (sbx-kit setup; default ~/sbx-kit-catalog)
+  directory   subdirectory with recipes/ (and optional kits/, images/)
+  recipe      <dir>/<name> — sbx kind + kits + optional image
+  kit         create-time YAML sbx applies at sandbox create
+  image       custom Dockerfile or registry tag (sbx-kit image)
 
-sbx terms
-  sbx run <kind>       sandbox kind plus optional -t image
-  sbx template ls      images imported into the sbx engine
-  sbx kit              create-time YAML at sandbox create
+Most commands need sbx-kit setup first, or a cwd inside your catalog.
 
 Workflow
   sbx-kit setup
-  sbx-kit source add <git-url>
-  sbx-kit source fetch
+  sbx-kit catalog add <url>
+  sbx-kit catalog ls
+  sbx-kit catalog status
+  sbx-kit catalog update
   sbx-kit recipes
-  sbx-kit run <source>/<name> --yes
-  sbx-kit image ls|load|pull
-  sbx-kit check | status
+  sbx-kit run <dir>/<name> --yes
+  sbx-kit bindings
 
 See also: sbx-kit --help
 `

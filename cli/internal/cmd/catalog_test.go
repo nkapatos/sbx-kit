@@ -15,7 +15,7 @@ func TestTemplateOverrideEnv(t *testing.T) {
 	}
 }
 
-func TestSetupCatalogAndSourceLs(t *testing.T) {
+func TestSetupCatalogAndCatalogLs(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	t.Setenv("SBX_KIT_CATALOG", "")
 	catalogRoot := t.TempDir()
@@ -44,12 +44,12 @@ func TestSetupCatalogAndSourceLs(t *testing.T) {
 	out = &bytes.Buffer{}
 	root.SetOut(out)
 	root.SetErr(out)
-	root.SetArgs([]string{"source", "ls"})
+	root.SetArgs([]string{"catalog", "ls"})
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "mine") {
-		t.Fatalf("source ls: %s", out.String())
+		t.Fatalf("catalog ls: %s", out.String())
 	}
 
 	root = NewRoot()
@@ -65,7 +65,7 @@ func TestSetupCatalogAndSourceLs(t *testing.T) {
 	}
 }
 
-func TestSetupRefusesSourceDir(t *testing.T) {
+func TestSetupRefusesRecipeDir(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	t.Setenv("SBX_KIT_CATALOG", "")
 	catalogRoot := t.TempDir()
@@ -80,7 +80,7 @@ func TestSetupRefusesSourceDir(t *testing.T) {
 	root := NewRoot()
 	root.SetArgs([]string{"setup", "--catalog", catalogRoot})
 	err := root.Execute()
-	if err == nil || !strings.Contains(err.Error(), "looks like a source") {
+	if err == nil || !strings.Contains(err.Error(), "recipe directory") {
 		t.Fatalf("got %v", err)
 	}
 }

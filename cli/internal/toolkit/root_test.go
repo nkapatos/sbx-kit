@@ -82,13 +82,13 @@ func TestRootWalksFromCatalogDir(t *testing.T) {
 	}
 }
 
-func TestRootRejectsSourceAsCatalog(t *testing.T) {
+func TestRootRejectsRecipeDirAsCatalog(t *testing.T) {
 	catalogRoot := makeCatalog(t)
-	src := filepath.Join(catalogRoot, "mine")
-	t.Setenv(CatalogEnv, src)
+	recDir := filepath.Join(catalogRoot, "mine")
+	t.Setenv(CatalogEnv, recDir)
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	_, err := Root()
-	if err == nil || !strings.Contains(err.Error(), "looks like a source") {
+	if err == nil || !strings.Contains(err.Error(), "recipe directory") {
 		t.Fatalf("got %v", err)
 	}
 }

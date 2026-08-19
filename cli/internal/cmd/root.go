@@ -10,6 +10,12 @@ import (
 	"github.com/nkapatos/sbx-kit/cli/internal/version"
 )
 
+const (
+	groupCatalog = "catalog"
+	groupSandbox = "sandbox"
+	groupOther   = "other"
+)
+
 // NewRoot builds the sbx-kit command tree.
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
@@ -27,39 +33,80 @@ func NewRoot() *cobra.Command {
 	root.SetOut(os.Stdout)
 	root.SetErr(os.Stderr)
 
-	root.AddCommand(newSetupCmd())
-	root.AddCommand(newSourceCmd())
-	root.AddCommand(newConceptsCmd())
-	root.AddCommand(newRecipesCmd())
-	root.AddCommand(newRunCmd())
-	root.AddCommand(newRmCmd())
-	root.AddCommand(newUpgradeCmd())
-	root.AddCommand(newStateCmd())
-	root.AddCommand(newStatusCmd())
-	root.AddCommand(newCheckCmd())
-	root.AddCommand(newInitCmd())
-	root.AddCommand(newImageCmd())
-	root.AddCommand(newVersionCmd())
+	root.AddGroup(
+		&cobra.Group{ID: groupCatalog, Title: "Catalog:"},
+		&cobra.Group{ID: groupSandbox, Title: "Sandbox:"},
+		&cobra.Group{ID: groupOther, Title: "Other:"},
+	)
+
+	setup := newSetupCmd()
+	setup.GroupID = groupCatalog
+	catalog := newCatalogCmd()
+	catalog.GroupID = groupCatalog
+	recipes := newRecipesCmd()
+	recipes.GroupID = groupCatalog
+
+	run := newRunCmd()
+	run.GroupID = groupSandbox
+	bindings := newBindingsCmd()
+	bindings.GroupID = groupSandbox
+	check := newCheckCmd()
+	check.GroupID = groupSandbox
+	upgrade := newUpgradeCmd()
+	upgrade.GroupID = groupSandbox
+	rm := newRmCmd()
+	rm.GroupID = groupSandbox
+	state := newStateCmd()
+	state.GroupID = groupSandbox
+
+	image := newImageCmd()
+	image.GroupID = groupOther
+	init := newInitCmd()
+	init.GroupID = groupOther
+	concepts := newConceptsCmd()
+	concepts.GroupID = groupOther
+	ver := newVersionCmd()
+	ver.GroupID = groupOther
+
+	root.AddCommand(
+		setup,
+		catalog,
+		recipes,
+		run,
+		bindings,
+		check,
+		upgrade,
+		rm,
+		state,
+		image,
+		init,
+		concepts,
+		ver,
+	)
 
 	return root
 }
 
 func longHelp() string {
-	return `Convenience layer on Docker sbx: recipes (kind + kits + optional image),
-portable state, and custom images.
+	return `Convenience layer on Docker sbx: recipes, kits, and custom images.
 
+Catalog
   sbx-kit setup
-  sbx-kit source add <git-url>
-  sbx-kit source ls | fetch
+  sbx-kit catalog add | ls | status | update
   sbx-kit recipes
-  sbx-kit run mine/cursor --yes
+
+Sandbox
+  sbx-kit run <dir>/<name> --yes
   sbx-kit run --name <sandbox>
-  sbx-kit check | status
+  sbx-kit bindings | check | upgrade | rm | state
+
+Other
   sbx-kit image ls | load | pull
+  sbx-kit init
 
 Glossary: sbx-kit concepts
-Catalog: sbx-kit setup  (override: SBX_KIT_CATALOG)
-Recipe id: <source>/<name>`
+Default catalog: ~/sbx-kit-catalog (sbx-kit setup)
+Recipe id: <dir>/<name>`
 }
 
 func requireToolkitRoot() (string, error) {

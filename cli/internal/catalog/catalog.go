@@ -45,7 +45,7 @@ func Load(path string) (*Manifest, error) {
 	return &c, nil
 }
 
-// ResolveKits is recipe kits first, then source defaults not already listed.
+// ResolveKits is recipe kits first, then directory defaults not already listed.
 // An empty recipe list means "defaults only" (typically agent-workspace).
 func ResolveKits(recipeKits, defaults []string) []string {
 	if len(recipeKits) == 0 {

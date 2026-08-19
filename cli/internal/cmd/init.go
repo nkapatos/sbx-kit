@@ -25,7 +25,7 @@ func newInitCmd() *cobra.Command {
 				projectDir = args[0]
 			}
 			if recipe == "" {
-				return fmt.Errorf("pass --recipe <source>/<name> (see sbx-kit recipes)")
+				return fmt.Errorf("pass --recipe <dir>/<name> (see sbx-kit recipes)")
 			}
 			catalogRoot, err := requireToolkitRoot()
 			if err != nil {
@@ -49,6 +49,6 @@ func newInitCmd() *cobra.Command {
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "recipe <source>/<name>")
+	addRecipeFlag(cmd, &recipe)
 	return cmd
 }

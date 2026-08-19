@@ -22,7 +22,7 @@ type resolvedSandbox struct {
 	TemplateFB  string
 	Resources   *resources.Profile
 	ResProfile  string
-	Root        string // source directory (kits/, images/, recipes/)
+	Root        string // recipe directory (recipes/, kits/, images/)
 	Catalog     string // catalog root from setup
 }
 

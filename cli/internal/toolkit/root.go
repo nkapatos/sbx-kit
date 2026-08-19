@@ -9,18 +9,18 @@ import (
 const (
 	CatalogEnv = "SBX_KIT_CATALOG"
 
-	sourceManifestRel = "recipes/agents.yaml"
+	recipeManifestRel = "recipes/agents.yaml"
 	errNeedSetup      = "no catalog configured; run: sbx-kit setup"
 )
 
-// IsSource reports whether dir is a source (has recipes/agents.yaml).
-func IsSource(dir string) bool {
-	st, err := os.Stat(filepath.Join(dir, sourceManifestRel))
+// IsRecipeDir reports whether dir holds recipes (has recipes/agents.yaml).
+func IsRecipeDir(dir string) bool {
+	st, err := os.Stat(filepath.Join(dir, recipeManifestRel))
 	return err == nil && !st.IsDir()
 }
 
-// HasSources reports whether dir has at least one source child.
-func HasSources(dir string) bool {
+// HasRecipeDirs reports whether dir has at least one recipe directory child.
+func HasRecipeDirs(dir string) bool {
 	ents, err := os.ReadDir(dir)
 	if err != nil {
 		return false
@@ -29,7 +29,7 @@ func HasSources(dir string) bool {
 		if !e.IsDir() || isHidden(e.Name()) {
 			continue
 		}
-		if IsSource(filepath.Join(dir, e.Name())) {
+		if IsRecipeDir(filepath.Join(dir, e.Name())) {
 			return true
 		}
 	}
@@ -40,16 +40,16 @@ func isHidden(name string) bool {
 	return name == "" || name[0] == '.'
 }
 
-// Root locates the catalog directory (parent of sources).
+// Root locates the catalog path configured by setup.
 //
 // Order: SBX_KIT_CATALOG, setup config, then walk cwd.
 func Root() (string, error) {
 	if t := os.Getenv(CatalogEnv); t != "" {
-		return checkCatalog(filepath.Clean(t), CatalogEnv+"="+t)
+		return checkCatalogRoot(filepath.Clean(t), CatalogEnv+"="+t)
 	}
 
 	if t, err := ConfiguredCatalog(); err == nil && t != "" {
-		return checkCatalog(t, "setup catalog "+t)
+		return checkCatalogRoot(t, "setup catalog "+t)
 	}
 
 	if wd, err := os.Getwd(); err == nil {
@@ -61,7 +61,7 @@ func Root() (string, error) {
 	return "", fmt.Errorf("%s", errNeedSetup)
 }
 
-func checkCatalog(dir, label string) (string, error) {
+func checkCatalogRoot(dir, label string) (string, error) {
 	st, err := os.Stat(dir)
 	if err != nil {
 		return "", fmt.Errorf("%s is not a directory", label)
@@ -69,8 +69,8 @@ func checkCatalog(dir, label string) (string, error) {
 	if !st.IsDir() {
 		return "", fmt.Errorf("%s is not a directory", label)
 	}
-	if IsSource(dir) {
-		return "", fmt.Errorf("%s looks like a source (has %s); point setup at the catalog directory", label, sourceManifestRel)
+	if IsRecipeDir(dir) {
+		return "", fmt.Errorf("%s is a recipe directory; run setup on the catalog path above it", label)
 	}
 	return dir, nil
 }
@@ -78,10 +78,10 @@ func checkCatalog(dir, label string) (string, error) {
 func walkForRoot(start string) string {
 	dir := start
 	for {
-		if HasSources(dir) {
+		if HasRecipeDirs(dir) {
 			return dir
 		}
-		if IsSource(dir) {
+		if IsRecipeDir(dir) {
 			parent := filepath.Dir(dir)
 			if parent == dir {
 				return ""

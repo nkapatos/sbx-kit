@@ -29,9 +29,7 @@ sbx secret ls (--sandbox when the box exists).`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (with --path)")
-	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
+	addTargetFlags(cmd, &recipe, &path, &name)
 	return cmd
 }
 

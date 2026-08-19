@@ -85,9 +85,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "recipe <source>/<name>")
-	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name (uses bound recipe)")
+	addTargetFlags(cmd, &recipe, &path, &name)
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd
 }

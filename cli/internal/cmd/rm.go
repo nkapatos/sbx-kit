@@ -26,8 +26,8 @@ func newRmCmd() *cobra.Command {
 vault, then sbx rm.
 
 Without --keep-state, /home/agent workplace state is discarded with the box.`,
-		Example: `  sbx-kit rm --recipe shell --keep-state
-  sbx-kit rm --recipe cursor --path ~/proj --keep-state
+		Example: `  sbx-kit rm --recipe mine/shell --keep-state
+  sbx-kit rm --recipe mine/cursor --path ~/proj --keep-state
   sbx-kit rm --name my-project --keep-state --force`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,7 +42,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 				return err
 			}
 			if !exists {
-				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?); try: sbx-kit status", rs.SandboxName)
+				return fmt.Errorf("sandbox %q not found in sbx ls (stale binding?); try: sbx-kit bindings", rs.SandboxName)
 			}
 
 			if keepState {
@@ -61,9 +61,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (via project binding)")
-	cmd.Flags().StringVar(&path, "path", ".", "project directory")
-	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
+	addTargetFlags(cmd, &recipe, &path, &name)
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host vault before rm")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")
 	return cmd

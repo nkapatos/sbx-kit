@@ -7,56 +7,67 @@ import (
 )
 
 func TestParseID(t *testing.T) {
-	cat, name, err := ParseID("mine/cursor")
-	if err != nil || cat != "mine" || name != "cursor" {
-		t.Fatalf("got %q %q %v", cat, name, err)
+	dir, name, err := ParseID("mine/cursor")
+	if err != nil || dir != "mine" || name != "cursor" {
+		t.Fatalf("got %q %q %v", dir, name, err)
 	}
 	if _, _, err := ParseID("cursor"); err == nil {
 		t.Fatal("expected error")
 	}
 	if _, _, err := ParseID("../x/y"); err == nil {
-		t.Fatal("expected invalid source")
+		t.Fatal("expected invalid directory")
 	}
-	cat, name, err = ParseID("mine/nested/name")
-	if err != nil || cat != "mine" || name != "nested/name" {
-		t.Fatalf("got %q %q %v", cat, name, err)
+	dir, name, err = ParseID("mine/nested/name")
+	if err != nil || dir != "mine" || name != "nested/name" {
+		t.Fatalf("got %q %q %v", dir, name, err)
 	}
 }
 
 func TestListAndLookup(t *testing.T) {
-	tree := t.TempDir()
-	writeCat(t, tree, "aa", "cursor: {}\n")
-	writeCat(t, tree, "bb", "shell: {}\n")
-	if err := os.MkdirAll(filepath.Join(tree, "not-a-catalog"), 0o755); err != nil {
+	catalogRoot := t.TempDir()
+	writeDir(t, catalogRoot, "aa", "cursor: {}\n")
+	writeDir(t, catalogRoot, "bb", "shell: {}\n")
+	if err := os.MkdirAll(filepath.Join(catalogRoot, "not-a-dir"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	srcs, err := List(tree)
+	dirs, err := List(catalogRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(srcs) != 2 || srcs[0].Name != "aa" || srcs[1].Name != "bb" {
-		t.Fatalf("got %+v", srcs)
+	if len(dirs) != 2 || dirs[0].Name != "aa" || dirs[1].Name != "bb" {
+		t.Fatalf("got %+v", dirs)
 	}
 
-	src, c, ag, err := Lookup(tree, "aa/cursor")
+	d, manifest, ag, err := Lookup(catalogRoot, "aa/cursor")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if src.Name != "aa" || c.Agents["cursor"].SbxAgent != "" {
-		t.Fatalf("src=%+v cat=%+v agent=%+v", src, c, ag)
+	if d.Name != "aa" || manifest.Agents["cursor"].SbxAgent != "" {
+		t.Fatalf("dir=%+v manifest=%+v agent=%+v", d, manifest, ag)
 	}
-	if _, _, _, err := Lookup(tree, "aa/missing"); err == nil {
+	if _, _, _, err := Lookup(catalogRoot, "aa/missing"); err == nil {
 		t.Fatal("expected missing recipe")
 	}
-	if _, _, _, err := Lookup(tree, "nope/cursor"); err == nil {
-		t.Fatal("expected missing source")
+	if _, _, _, err := Lookup(catalogRoot, "nope/cursor"); err == nil {
+		t.Fatal("expected missing directory")
 	}
 }
 
-func writeCat(t *testing.T, tree, name, agentsBody string) {
+func TestFilterDirs(t *testing.T) {
+	dirs := []Dir{{Name: "aa"}, {Name: "bb"}}
+	got, err := FilterDirs(dirs, "aa")
+	if err != nil || len(got) != 1 || got[0].Name != "aa" {
+		t.Fatalf("got %+v err=%v", got, err)
+	}
+	if _, err := FilterDirs(dirs, "nope"); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func writeDir(t *testing.T, catalogRoot, name, agentsBody string) {
 	t.Helper()
-	p := filepath.Join(tree, name, "recipes", "agents.yaml")
+	p := filepath.Join(catalogRoot, name, "recipes", "agents.yaml")
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		t.Fatal(err)
 	}

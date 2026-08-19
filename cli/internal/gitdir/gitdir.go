@@ -60,6 +60,19 @@ func Fetch(dir string) error {
 	return nil
 }
 
+func Pull(dir string) error {
+	if err := lookGit(); err != nil {
+		return err
+	}
+	cmd := exec.Command("git", "-C", dir, "pull", "--ff-only")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("git pull: %w", err)
+	}
+	return nil
+}
+
 func Status(dir string) (string, error) {
 	if err := lookGit(); err != nil {
 		return "", err

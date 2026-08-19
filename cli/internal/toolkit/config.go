@@ -61,8 +61,8 @@ func WriteCatalog(dir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if IsSource(abs) {
-		return "", fmt.Errorf("%s looks like a source (has %s); pass the catalog directory", abs, sourceManifestRel)
+	if IsRecipeDir(abs) {
+		return "", fmt.Errorf("%s is a recipe directory; pass the catalog path that contains it", abs)
 	}
 	if err := os.MkdirAll(abs, 0o755); err != nil {
 		return "", err

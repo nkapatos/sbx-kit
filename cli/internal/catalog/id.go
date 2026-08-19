@@ -5,23 +5,23 @@ import (
 	"strings"
 )
 
-// ParseID splits <source>/<name>.
-func ParseID(id string) (sourceName, name string, err error) {
+// ParseID splits <dir>/<recipe>.
+func ParseID(id string) (dirName, recipeName string, err error) {
 	id = strings.TrimSpace(id)
-	src, rest, ok := strings.Cut(id, "/")
-	if !ok || src == "" || rest == "" {
-		return "", "", fmt.Errorf("recipe id is <source>/<name> (got %q; try: sbx-kit recipes)", id)
+	dir, rest, ok := strings.Cut(id, "/")
+	if !ok || dir == "" || rest == "" {
+		return "", "", fmt.Errorf("recipe id is <dir>/<name> (got %q; try: sbx-kit recipes)", id)
 	}
-	if src == "." || src == ".." || strings.ContainsAny(src, `/\`) {
-		return "", "", fmt.Errorf("invalid source %q", src)
+	if dir == "." || dir == ".." || strings.ContainsAny(dir, `/\`) {
+		return "", "", fmt.Errorf("invalid directory %q", dir)
 	}
-	if strings.HasPrefix(src, ".") {
-		return "", "", fmt.Errorf("invalid source %q", src)
+	if strings.HasPrefix(dir, ".") {
+		return "", "", fmt.Errorf("invalid directory %q", dir)
 	}
-	return src, rest, nil
+	return dir, rest, nil
 }
 
-// JoinID builds <source>/<name>.
-func JoinID(sourceName, name string) string {
-	return sourceName + "/" + name
+// JoinID builds <dir>/<recipe>.
+func JoinID(dirName, recipeName string) string {
+	return dirName + "/" + recipeName
 }

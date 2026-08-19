@@ -16,8 +16,8 @@ func newSetupCmd() *cobra.Command {
 		Short: "Configure the catalog path",
 		Long: `Writes the catalog path to ~/.config/sbx-kit/config.yaml.
 
-The catalog holds sources: subdirectories with recipes/, kits/, and images/.
-Git is optional.
+The catalog holds directories of recipes (each with recipes/, and optional
+kits/ and images/).
 
 With no --catalog, setup asks for the path (default ~/sbx-kit-catalog).
 SBX_KIT_CATALOG overrides the configured path for one shell.`,
@@ -51,11 +51,11 @@ SBX_KIT_CATALOG overrides the configured path for one shell.`,
 				return err
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "catalog: %s\n", abs)
-			fmt.Fprintf(cmd.OutOrStdout(), "add a source:  sbx-kit source add <git-url>\n")
+			fmt.Fprintf(cmd.OutOrStdout(), "add a directory:  sbx-kit catalog add <url>\n")
 			fmt.Fprintf(cmd.OutOrStdout(), "optional: export %s=%s\n", toolkit.CatalogEnv, abs)
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&catalogPath, "catalog", "", "catalog directory (parent of sources)")
+	cmd.Flags().StringVar(&catalogPath, "catalog", "", "catalog path (parent of recipe directories)")
 	return cmd
 }

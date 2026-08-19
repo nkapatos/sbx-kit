@@ -67,6 +67,94 @@ create_tag() {
   git push origin "$tag"
 }
 
+unpublish() {
+  local tag="$1"
+  echo "unpublishing $tag (release did not finish)" >&2
+  gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+  git push origin ":refs/tags/$tag" 2>/dev/null || true
+  git tag -d "$tag" 2>/dev/null || true
+}
+
+require_tap_token() {
+  if [[ -z "${HOMEBREW_TAP_TOKEN:-}" ]]; then
+    echo "HOMEBREW_TAP_TOKEN is required to push Formula to ${TAP_REPO}" >&2
+    echo "Add a PAT (contents:write on ${TAP_REPO}) as repo secret HOMEBREW_TAP_TOKEN." >&2
+    exit 1
+  fi
+}
+
+# GitHub git HTTP wants basic x-access-token:PAT, not a bearer header.
+tap_git() {
+  local auth
+  auth="$(printf 'x-access-token:%s' "${HOMEBREW_TAP_TOKEN}" | base64 -w0)"
+  GIT_TERMINAL_PROMPT=0 git -c "http.extraheader=AUTHORIZATION: basic ${auth}" "$@"
+}
+
+clone_tap() {
+  local dest="$1"
+  if ! tap_git clone "https://github.com/${TAP_REPO}.git" "$dest"; then
+    echo "failed to clone https://github.com/${TAP_REPO}" >&2
+    echo "Repo can be empty. Check it exists, is reachable, and HOMEBREW_TAP_TOKEN is a PAT with contents:write (git HTTPS)." >&2
+    exit 1
+  fi
+}
+
+ensure_tap_access() {
+  require_tap_token
+  local probe
+  probe="$(mktemp -d)/probe"
+  clone_tap "$probe"
+  rm -rf "$(dirname "$probe")"
+  echo "tap ${TAP_REPO} reachable"
+}
+
+# Copy Formula (and a stub README on first run) to the Homebrew tap.
+# Empty tap repos are fine — first push creates main.
+push_formula_to_tap() {
+  local tag="$1"
+  require_tap_token
+
+  local tap_dir
+  tap_dir="$(mktemp -d)/tap"
+  clone_tap "$tap_dir"
+
+  mkdir -p "$tap_dir/Formula"
+  cp "$FORMULA" "$tap_dir/Formula/sbx-kit.rb"
+  if [[ ! -f "$tap_dir/README.md" ]]; then
+    cat > "$tap_dir/README.md" <<EOF
+# sbx-kit
+
+\`\`\`
+brew tap ${GITHUB_REPOSITORY%%/*}/sbx-kit
+brew install sbx-kit
+\`\`\`
+EOF
+  fi
+
+  (
+    cd "$tap_dir"
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    if git rev-parse --verify HEAD >/dev/null 2>&1; then
+      branch="$(git rev-parse --abbrev-ref HEAD)"
+      if [[ "$branch" == "HEAD" ]]; then
+        git checkout -B main
+        branch=main
+      fi
+    else
+      git checkout -B main
+      branch=main
+    fi
+    git add Formula/sbx-kit.rb README.md
+    if git diff --cached --quiet; then
+      echo "tap Formula already matches $tag"
+      exit 0
+    fi
+    git commit -m "chore(formula): point tap at ${tag}"
+    tap_git push -u origin "HEAD:${branch}"
+  )
+}
+
 build_darwin_asset() {
   local arch="$1" tag="$2"
   local ver="${tag#v}"
@@ -100,87 +188,20 @@ set_formula_asset() {
   grep -Fq "$sha" "$FORMULA" || { echo "failed to set formula sha256 for ${arch}" >&2; exit 1; }
 }
 
-tap_git() {
-  git -c "http.extraheader=AUTHORIZATION: bearer ${HOMEBREW_TAP_TOKEN}" "$@"
-}
-
-# Copy Formula (and a stub README on first run) to nkapatos/homebrew-sbx-kit.
-# Requires HOMEBREW_TAP_TOKEN with contents:write on that repo.
-push_formula_to_tap() {
-  local tag="$1"
-  if [[ -z "${HOMEBREW_TAP_TOKEN:-}" ]]; then
-    echo "HOMEBREW_TAP_TOKEN is required to push Formula to ${TAP_REPO}" >&2
-    echo "Add a PAT (contents:write on ${TAP_REPO}) as repo secret HOMEBREW_TAP_TOKEN." >&2
-    exit 1
-  fi
-
-  local tap_dir
-  tap_dir="$(mktemp -d)/tap"
-  if ! tap_git clone "https://github.com/${TAP_REPO}.git" "$tap_dir"; then
-    echo "failed to clone https://github.com/${TAP_REPO} — create that public repo first" >&2
-    exit 1
-  fi
-
-  mkdir -p "$tap_dir/Formula"
-  cp "$FORMULA" "$tap_dir/Formula/sbx-kit.rb"
-  if [[ ! -f "$tap_dir/README.md" ]]; then
-    cat > "$tap_dir/README.md" <<EOF
-# sbx-kit
-
-\`\`\`
-brew tap ${GITHUB_REPOSITORY%%/*}/sbx-kit
-brew install sbx-kit
-\`\`\`
-EOF
-  fi
-
-  (
-    cd "$tap_dir"
-    git config user.name "github-actions[bot]"
-    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-    if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
-      git checkout -B main
-      branch=main
-    fi
-    git add Formula/sbx-kit.rb README.md
-    if git diff --cached --quiet; then
-      echo "tap Formula already matches $tag"
-      exit 0
-    fi
-    git commit -m "chore(formula): point tap at ${tag}"
-    tap_git push origin "HEAD:${branch}"
-  )
-}
-
 main() {
   git config user.name "github-actions[bot]"
   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-  # Tag this checkout (already tested). Do not pull — that would release untested HEAD.
-  local tag
+  local tag published=""
   tag="$(resolve_dispatch_tag)"
   echo "Publishing $tag"
+
+  # Fail before tagging if the tap is missing or the PAT cannot talk to git HTTPS.
+  ensure_tap_access
 
   mkdir -p dist
   build_darwin_asset arm64 "$tag"
   build_darwin_asset amd64 "$tag"
-
-  create_tag "$tag"
-
-  git cliff --config "$CLIFF_CONFIG" --latest --strip header > /tmp/release-notes.md
-  if [[ ! -s /tmp/release-notes.md ]]; then
-    echo "$tag" > /tmp/release-notes.md
-  fi
-
-  local assets=(dist/sbx-kit_darwin_arm64.tar.gz dist/sbx-kit_darwin_amd64.tar.gz)
-  if gh release view "$tag" >/dev/null 2>&1; then
-    echo "GitHub release $tag already exists; updating notes and assets"
-    gh release edit "$tag" --notes-file /tmp/release-notes.md
-    gh release upload "$tag" "${assets[@]}" --clobber
-  else
-    gh release create "$tag" --title "$tag" --notes-file /tmp/release-notes.md --verify-tag "${assets[@]}"
-  fi
 
   local sha_arm sha_amd
   sha_arm="$(sha256sum dist/sbx-kit_darwin_arm64.tar.gz | awk '{print $1}')"
@@ -192,6 +213,27 @@ main() {
   set_formula_asset arm64 "$tag" "$sha_arm" "$GITHUB_REPOSITORY"
   set_formula_asset amd64 "$tag" "$sha_amd" "$GITHUB_REPOSITORY"
 
+  git cliff --config "$CLIFF_CONFIG" --latest --strip header > /tmp/release-notes.md
+  if [[ ! -s /tmp/release-notes.md ]]; then
+    echo "$tag" > /tmp/release-notes.md
+  fi
+
+  trap 'if [[ -n "${published:-}" ]]; then unpublish "$published"; fi' ERR
+
+  create_tag "$tag"
+  published="$tag"
+
+  local assets=(dist/sbx-kit_darwin_arm64.tar.gz dist/sbx-kit_darwin_amd64.tar.gz)
+  if gh release view "$tag" >/dev/null 2>&1; then
+    echo "GitHub release $tag already exists; updating notes and assets"
+    gh release edit "$tag" --notes-file /tmp/release-notes.md
+    gh release upload "$tag" "${assets[@]}" --clobber
+  else
+    gh release create "$tag" --title "$tag" --notes-file /tmp/release-notes.md --verify-tag "${assets[@]}"
+  fi
+
+  push_formula_to_tap "$tag"
+
   git add "$FORMULA" CHANGELOG.md
   if git diff --cached --quiet; then
     echo "Formula and CHANGELOG already match $tag"
@@ -202,7 +244,7 @@ main() {
     git push origin "HEAD:${DEFAULT_BRANCH:?}"
   fi
 
-  push_formula_to_tap "$tag"
+  trap - ERR
 }
 
 main "$@"

@@ -8,39 +8,39 @@ import (
 )
 
 func TestRootFromEnv(t *testing.T) {
-	tree := makeTree(t)
-	t.Setenv(TreeEnv, tree)
+	catalogRoot := makeCatalog(t)
+	t.Setenv(CatalogEnv, catalogRoot)
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	got, err := Root()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != tree {
-		t.Fatalf("got %s want %s", got, tree)
+	if got != catalogRoot {
+		t.Fatalf("got %s want %s", got, catalogRoot)
 	}
 }
 
 func TestRootFromSetupConfig(t *testing.T) {
-	tree := makeTree(t)
-	t.Setenv(TreeEnv, "")
+	catalogRoot := makeCatalog(t)
+	t.Setenv(CatalogEnv, "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	if _, err := WriteTree(tree); err != nil {
+	if _, err := WriteCatalog(catalogRoot); err != nil {
 		t.Fatal(err)
 	}
 	got, err := Root()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != tree {
-		t.Fatalf("got %s want %s", got, tree)
+	if got != catalogRoot {
+		t.Fatalf("got %s want %s", got, catalogRoot)
 	}
 }
 
 func TestRootWalksCwd(t *testing.T) {
-	tree := makeTree(t)
-	t.Setenv(TreeEnv, "")
+	catalogRoot := makeCatalog(t)
+	t.Setenv(CatalogEnv, "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	sub := filepath.Join(tree, "mine", "kits", "x")
+	sub := filepath.Join(catalogRoot, "mine", "kits", "x")
 	if err := os.MkdirAll(sub, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -56,20 +56,20 @@ func TestRootWalksCwd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != tree {
-		t.Fatalf("got %s want %s", got, tree)
+	if got != catalogRoot {
+		t.Fatalf("got %s want %s", got, catalogRoot)
 	}
 }
 
-func TestRootWalksFromTreeDir(t *testing.T) {
-	tree := makeTree(t)
-	t.Setenv(TreeEnv, "")
+func TestRootWalksFromCatalogDir(t *testing.T) {
+	catalogRoot := makeCatalog(t)
+	t.Setenv(CatalogEnv, "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	cwd, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Chdir(tree); err != nil {
+	if err := os.Chdir(catalogRoot); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.Chdir(cwd) })
@@ -77,25 +77,25 @@ func TestRootWalksFromTreeDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != tree {
-		t.Fatalf("got %s want %s", got, tree)
+	if got != catalogRoot {
+		t.Fatalf("got %s want %s", got, catalogRoot)
 	}
 }
 
-func TestRootRejectsCatalogAsTree(t *testing.T) {
-	tree := makeTree(t)
-	cat := filepath.Join(tree, "mine")
-	t.Setenv(TreeEnv, cat)
+func TestRootRejectsSourceAsCatalog(t *testing.T) {
+	catalogRoot := makeCatalog(t)
+	src := filepath.Join(catalogRoot, "mine")
+	t.Setenv(CatalogEnv, src)
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	_, err := Root()
-	if err == nil || !strings.Contains(err.Error(), "looks like a catalog") {
+	if err == nil || !strings.Contains(err.Error(), "looks like a source") {
 		t.Fatalf("got %v", err)
 	}
 }
 
-func TestRootEmptyTreeOK(t *testing.T) {
+func TestRootEmptyCatalogOK(t *testing.T) {
 	empty := t.TempDir()
-	t.Setenv(TreeEnv, empty)
+	t.Setenv(CatalogEnv, empty)
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	got, err := Root()
 	if err != nil {
@@ -106,10 +106,10 @@ func TestRootEmptyTreeOK(t *testing.T) {
 	}
 }
 
-func TestWriteTreeCreatesDir(t *testing.T) {
+func TestWriteCatalogCreatesDir(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	dir := filepath.Join(t.TempDir(), "new-tree")
-	got, err := WriteTree(dir)
+	dir := filepath.Join(t.TempDir(), "new-catalog")
+	got, err := WriteCatalog(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestWriteTreeCreatesDir(t *testing.T) {
 	if err != nil || !st.IsDir() {
 		t.Fatalf("expected dir %s: %v", got, err)
 	}
-	cfg, err := ConfiguredTree()
+	cfg, err := ConfiguredCatalog()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestWriteTreeCreatesDir(t *testing.T) {
 }
 
 func TestRootMissing(t *testing.T) {
-	t.Setenv(TreeEnv, "")
+	t.Setenv(CatalogEnv, "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	empty := t.TempDir()
 	cwd, err := os.Getwd()
@@ -147,7 +147,7 @@ func TestRootMissing(t *testing.T) {
 	}
 }
 
-func makeTree(t *testing.T) string {
+func makeCatalog(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	p := filepath.Join(root, "mine", "recipes", "agents.yaml")

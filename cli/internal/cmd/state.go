@@ -44,7 +44,7 @@ func newStateExportCmd() *cobra.Command {
 			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
@@ -72,7 +72,7 @@ func newStateImportCmd() *cobra.Command {
 			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
 		},
 	}
-	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd

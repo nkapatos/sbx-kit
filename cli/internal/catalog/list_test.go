@@ -15,7 +15,7 @@ func TestParseID(t *testing.T) {
 		t.Fatal("expected error")
 	}
 	if _, _, err := ParseID("../x/y"); err == nil {
-		t.Fatal("expected invalid catalog")
+		t.Fatal("expected invalid source")
 	}
 	cat, name, err = ParseID("mine/nested/name")
 	if err != nil || cat != "mine" || name != "nested/name" {
@@ -50,7 +50,7 @@ func TestListAndLookup(t *testing.T) {
 		t.Fatal("expected missing recipe")
 	}
 	if _, _, _, err := Lookup(tree, "nope/cursor"); err == nil {
-		t.Fatal("expected missing catalog")
+		t.Fatal("expected missing source")
 	}
 }
 

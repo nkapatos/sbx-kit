@@ -20,16 +20,16 @@ type Opts struct {
 	Agent      string
 	RecipeID   string
 	ProjectDir string
-	Catalog    *catalog.Catalog
+	Manifest   *catalog.Manifest
 }
 
-// Run writes or updates the README section for the given catalog recipe.
+// Run writes or updates the README section for the given recipe.
 func Run(o Opts) error {
 	agentName := o.Agent
 	if agentName == "" {
 		agentName = "cursor"
 	}
-	agent, ok := o.Catalog.Agents[agentName]
+	agent, ok := o.Manifest.Agents[agentName]
 	if !ok {
 		return fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", agentName)
 	}
@@ -51,7 +51,7 @@ func Run(o Opts) error {
 	if display == "" {
 		display = agentName
 	}
-	section := buildSection(display, agent, o.Catalog.Defaults.Kits)
+	section := buildSection(display, agent, o.Manifest.Defaults.Kits)
 	readme := filepath.Join(abs, "README.md")
 	if _, err := os.Stat(readme); os.IsNotExist(err) {
 		title := "# " + filepath.Base(abs) + "\n\n"
@@ -88,7 +88,7 @@ func Run(o Opts) error {
 func buildSection(name string, a catalog.Agent, defaultKits []string) string {
 	stubNote := ""
 	if a.Stub {
-		stubNote = " (kit still a stub in the catalog)"
+		stubNote = " (kit still a stub)"
 	}
 	image := a.ImageName
 	if image == "" {

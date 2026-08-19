@@ -61,7 +61,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "catalog recipe (via project binding)")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (via project binding)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	cmd.Flags().BoolVar(&keepState, "keep-state", false, "export portable state to host vault before rm")

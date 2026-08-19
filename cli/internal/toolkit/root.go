@@ -7,19 +7,20 @@ import (
 )
 
 const (
-	TreeEnv      = "SBX_KIT_TREE"
-	catalogRel   = "recipes/agents.yaml"
-	errNeedSetup = "no recipes tree; run: sbx-kit setup"
+	CatalogEnv = "SBX_KIT_CATALOG"
+
+	sourceManifestRel = "recipes/agents.yaml"
+	errNeedSetup      = "no catalog configured; run: sbx-kit setup"
 )
 
-// IsCatalog reports whether dir is a catalog (recipes/agents.yaml).
-func IsCatalog(dir string) bool {
-	st, err := os.Stat(filepath.Join(dir, catalogRel))
+// IsSource reports whether dir is a source (has recipes/agents.yaml).
+func IsSource(dir string) bool {
+	st, err := os.Stat(filepath.Join(dir, sourceManifestRel))
 	return err == nil && !st.IsDir()
 }
 
-// HasCatalogs reports whether dir has at least one one-level catalog child.
-func HasCatalogs(dir string) bool {
+// HasSources reports whether dir has at least one source child.
+func HasSources(dir string) bool {
 	ents, err := os.ReadDir(dir)
 	if err != nil {
 		return false
@@ -28,7 +29,7 @@ func HasCatalogs(dir string) bool {
 		if !e.IsDir() || isHidden(e.Name()) {
 			continue
 		}
-		if IsCatalog(filepath.Join(dir, e.Name())) {
+		if IsSource(filepath.Join(dir, e.Name())) {
 			return true
 		}
 	}
@@ -39,16 +40,16 @@ func isHidden(name string) bool {
 	return name == "" || name[0] == '.'
 }
 
-// Root locates the recipes tree (parent of catalogs).
+// Root locates the catalog directory (parent of sources).
 //
-// Order: SBX_KIT_TREE, then setup config, then walk cwd.
+// Order: SBX_KIT_CATALOG, setup config, then walk cwd.
 func Root() (string, error) {
-	if t := os.Getenv(TreeEnv); t != "" {
-		return checkTree(filepath.Clean(t), TreeEnv+"="+t)
+	if t := os.Getenv(CatalogEnv); t != "" {
+		return checkCatalog(filepath.Clean(t), CatalogEnv+"="+t)
 	}
 
-	if t, err := ConfiguredTree(); err == nil && t != "" {
-		return checkTree(t, "setup tree "+t)
+	if t, err := ConfiguredCatalog(); err == nil && t != "" {
+		return checkCatalog(t, "setup catalog "+t)
 	}
 
 	if wd, err := os.Getwd(); err == nil {
@@ -60,7 +61,7 @@ func Root() (string, error) {
 	return "", fmt.Errorf("%s", errNeedSetup)
 }
 
-func checkTree(dir, label string) (string, error) {
+func checkCatalog(dir, label string) (string, error) {
 	st, err := os.Stat(dir)
 	if err != nil {
 		return "", fmt.Errorf("%s is not a directory", label)
@@ -68,8 +69,8 @@ func checkTree(dir, label string) (string, error) {
 	if !st.IsDir() {
 		return "", fmt.Errorf("%s is not a directory", label)
 	}
-	if IsCatalog(dir) {
-		return "", fmt.Errorf("%s looks like a catalog (has %s); point setup at the parent directory", label, catalogRel)
+	if IsSource(dir) {
+		return "", fmt.Errorf("%s looks like a source (has %s); point setup at the catalog directory", label, sourceManifestRel)
 	}
 	return dir, nil
 }
@@ -77,10 +78,10 @@ func checkTree(dir, label string) (string, error) {
 func walkForRoot(start string) string {
 	dir := start
 	for {
-		if HasCatalogs(dir) {
+		if HasSources(dir) {
 			return dir
 		}
-		if IsCatalog(dir) {
+		if IsSource(dir) {
 			parent := filepath.Dir(dir)
 			if parent == dir {
 				return ""

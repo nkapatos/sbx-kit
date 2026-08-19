@@ -11,7 +11,7 @@ import (
 )
 
 type userConfig struct {
-	Tree string `yaml:"tree"`
+	Catalog string `yaml:"catalog"`
 }
 
 func configFile() (string, error) {
@@ -22,8 +22,8 @@ func configFile() (string, error) {
 	return filepath.Join(dir, "config.yaml"), nil
 }
 
-// ConfiguredTree returns the tree path from setup config, or empty.
-func ConfiguredTree() (string, error) {
+// ConfiguredCatalog returns the catalog path from setup config, or empty.
+func ConfiguredCatalog() (string, error) {
 	path, err := configFile()
 	if err != nil {
 		return "", err
@@ -39,30 +39,30 @@ func ConfiguredTree() (string, error) {
 	if err := yaml.Unmarshal(b, &c); err != nil {
 		return "", fmt.Errorf("parse %s: %w", path, err)
 	}
-	if c.Tree == "" {
+	if c.Catalog == "" {
 		return "", nil
 	}
-	return filepath.Clean(c.Tree), nil
+	return filepath.Clean(c.Catalog), nil
 }
 
-// DefaultTree is ~/sbx-kit-recipes.
-func DefaultTree() string {
+// DefaultCatalog is ~/sbx-kit-catalog.
+func DefaultCatalog() string {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
-		return "sbx-kit-recipes"
+		return "sbx-kit-catalog"
 	}
-	return filepath.Join(home, "sbx-kit-recipes")
+	return filepath.Join(home, "sbx-kit-catalog")
 }
 
-// WriteTree records the tree path in ~/.config/sbx-kit/config.yaml and
-// creates the directory if needed. The tree is the parent of catalogs.
-func WriteTree(dir string) (string, error) {
+// WriteCatalog records the catalog path in ~/.config/sbx-kit/config.yaml and
+// creates the directory if needed.
+func WriteCatalog(dir string) (string, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return "", err
 	}
-	if IsCatalog(abs) {
-		return "", fmt.Errorf("%s looks like a catalog (has %s); pass the parent directory", abs, catalogRel)
+	if IsSource(abs) {
+		return "", fmt.Errorf("%s looks like a source (has %s); pass the catalog directory", abs, sourceManifestRel)
 	}
 	if err := os.MkdirAll(abs, 0o755); err != nil {
 		return "", err
@@ -74,12 +74,7 @@ func WriteTree(dir string) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return "", err
 	}
-	c := userConfig{}
-	if b, err := os.ReadFile(path); err == nil {
-		_ = yaml.Unmarshal(b, &c)
-	}
-	c.Tree = abs
-	out, err := yaml.Marshal(&c)
+	out, err := yaml.Marshal(userConfig{Catalog: abs})
 	if err != nil {
 		return "", err
 	}

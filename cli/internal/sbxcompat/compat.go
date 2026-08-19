@@ -26,9 +26,9 @@ const skipEnv = "SBX_KIT_SKIP_SBX_CHECK"
 var (
 	versionToken = regexp.MustCompile(`(?i)\bv?(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)\b`)
 
-	mu       sync.Mutex
-	cachedOK bool
-	cached   string
+	mu        sync.Mutex
+	cachedOK  bool
+	cached    string
 	cachedErr error
 )
 

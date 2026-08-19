@@ -28,7 +28,7 @@ func NewRoot() *cobra.Command {
 	root.SetErr(os.Stderr)
 
 	root.AddCommand(newSetupCmd())
-	root.AddCommand(newCatalogCmd())
+	root.AddCommand(newSourceCmd())
 	root.AddCommand(newConceptsCmd())
 	root.AddCommand(newRecipesCmd())
 	root.AddCommand(newRunCmd())
@@ -46,24 +46,20 @@ func NewRoot() *cobra.Command {
 
 func longHelp() string {
 	return `Convenience layer on Docker sbx: recipes (kind + kits + optional image),
-portable state, and custom images (build locally or pull a registry, then
-import into sbx).
+portable state, and custom images.
 
   sbx-kit setup
-  sbx-kit catalog add <git-url>
-  sbx-kit catalog ls | fetch
+  sbx-kit source add <git-url>
+  sbx-kit source ls | fetch
   sbx-kit recipes
   sbx-kit run mine/cursor --yes
   sbx-kit run --name <sandbox>
   sbx-kit check | status
   sbx-kit image ls | load | pull
 
-Stock recipes call sbx with no -t. Custom recipes pin an image (-t).
-sbx template ls is the engine import store — use that, not image ls.
-
-Host vault: ~/.local/share/sbx-kit/profiles/  and  ~/.local/state/sbx-kit/
-Tree: sbx-kit setup  (override: SBX_KIT_TREE)
-Recipe ids: <catalog>/<name>`
+Glossary: sbx-kit concepts
+Catalog: sbx-kit setup  (override: SBX_KIT_CATALOG)
+Recipe id: <source>/<name>`
 }
 
 func requireToolkitRoot() (string, error) {

@@ -27,7 +27,7 @@ func newUpgradeCmd() *cobra.Command {
 
   1. pack state to the host profile
   2. sbx rm
-  3. create from the current catalog recipe (same sandbox name)
+  3. create from the current recipe (same sandbox name)
   4. restore archive and attach
 
 Requires the agent-workspace kit (sbx-kit-state).`,
@@ -64,7 +64,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 			overrideKey := templateOverrideEnv(rs.AgentName)
 			_, err = run.Sbx(run.Opts{
 				Root:             rs.Root,
-				AgentCatalogName: rs.AgentName,
+				RecipeID:         rs.AgentName,
 				SbxAgent:         rs.SbxAgent,
 				ImageName:        rs.ImageName,
 				TemplateFallback: rs.TemplateFB,
@@ -85,7 +85,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "catalog recipe")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name>")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name (uses bound recipe)")
 	cmd.Flags().BoolVar(&force, "force", false, "pass --force to sbx rm")

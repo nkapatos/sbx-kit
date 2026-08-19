@@ -29,7 +29,7 @@ sbx secret ls (--sandbox when the box exists).`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "catalog recipe (with --path)")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name> (with --path)")
 	cmd.Flags().StringVar(&path, "path", ".", "project directory")
 	cmd.Flags().StringVar(&name, "name", "", "existing sandbox name")
 	return cmd
@@ -57,14 +57,16 @@ func runCheck(recipeID, path, name string) error {
 	}
 
 	kitPaths := rs.KitPaths
-	if len(kitPaths) == 0 && rs.AgentName != "" && rs.Root != "" {
-		tree := rs.Tree
-		if tree == "" {
-			tree, _ = requireToolkitRoot()
+	if len(kitPaths) == 0 && rs.AgentName != "" {
+		catalogRoot := rs.Catalog
+		if catalogRoot == "" {
+			catalogRoot, _ = requireToolkitRoot()
 		}
-		if src, cat, ag, err := catalog.Lookup(tree, rs.AgentName); err == nil {
-			kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
-			kitPaths = catalog.KitPaths(src.Root, kits)
+		if catalogRoot != "" {
+			if src, manifest, ag, err := catalog.Lookup(catalogRoot, rs.AgentName); err == nil {
+				kits := catalog.ResolveKits(ag.Kits, manifest.Defaults.Kits)
+				kitPaths = catalog.KitPaths(src.Root, kits)
+			}
 		}
 	}
 

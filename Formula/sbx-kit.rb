@@ -39,7 +39,7 @@ class SbxKit < Formula
 
   def caveats
     <<~EOS
-      Point sbx-kit at a recipes tree (parent of catalogs):
+      Point sbx-kit at a catalog:
         sbx-kit setup
     EOS
   end

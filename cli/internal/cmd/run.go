@@ -41,11 +41,7 @@ func newRunCmd() *cobra.Command {
       Attach the sole sandbox bound to the current directory.
 
   sbx-kit run <recipe> [--path <dir>]
-      CREATE. Recipe id is <catalog>/<name> (e.g. mine/cursor).
-      Friendly sbx name defaults to the project dirname.
-      --yes skips prompts (dirname or --sandbox-name).
-      Stock recipes: sbx run <kind> --kit … (no -t).
-      Custom recipes: sbx run <kind> -t <image> --kit ….
+      CREATE. Recipe id is <source>/<name> (e.g. mine/cursor).
 
   sbx-kit run --name <sandbox>
       ATTACH by friendly sbx name (what sbx ls shows).
@@ -110,7 +106,7 @@ Pass-through after -- goes to sbx.`,
 				projectPath = "."
 			}
 			if clone || yes || resourcesProfile != "" || sandboxName != "" {
-				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit run <catalog>/<name> --yes)")
+				return fmt.Errorf("bare run is attach-only; pass a recipe to create (sbx-kit run <source>/<name> --yes)")
 			}
 			rec, err := soleBindingRecord(projectPath)
 			if err != nil {
@@ -120,7 +116,7 @@ Pass-through after -- goes to sbx.`,
 		},
 	}
 
-	addRecipeFlag(cmd, &recipeFlag, "recipe id <catalog>/<name> (CREATE; prefer positional)")
+	addRecipeFlag(cmd, &recipeFlag, "recipe id <source>/<name> (CREATE; prefer positional)")
 	cmd.Flags().StringVar(&projectPath, "path", ".", "project directory (create, or bare-run attach filter)")
 	cmd.Flags().StringVar(&attachName, "name", "", "existing sandbox name (ATTACH only)")
 	cmd.Flags().StringVar(&sandboxName, "sandbox-name", "", "name at create (default: project dirname)")
@@ -133,11 +129,11 @@ Pass-through after -- goes to sbx.`,
 }
 
 func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string, clone, restoreState, yes bool, extra []string) error {
-	tree, err := requireToolkitRoot()
+	catalogRoot, err := requireToolkitRoot()
 	if err != nil {
 		return err
 	}
-	src, cat, ag, err := catalog.Lookup(tree, recipeID)
+	src, manifest, ag, err := catalog.Lookup(catalogRoot, recipeID)
 	if err != nil {
 		return err
 	}
@@ -147,7 +143,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 
 	profile := resourcesProfile
 	if profile == "" {
-		profile = cat.Defaults.Resources
+		profile = manifest.Defaults.Resources
 	}
 	if profile == "" {
 		profile = "remote-llm"
@@ -157,7 +153,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		return err
 	}
 
-	kits := catalog.ResolveKits(ag.Kits, cat.Defaults.Kits)
+	kits := catalog.ResolveKits(ag.Kits, manifest.Defaults.Kits)
 	kitPaths := catalog.KitPaths(src.Root, kits)
 
 	if clone && !containsFlag(extra, "--clone") {
@@ -174,7 +170,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 	overrideKey := templateOverrideEnv(recipeID)
 	opts := run.Opts{
 		Root:             src.Root,
-		AgentCatalogName: recipeID,
+		RecipeID:         recipeID,
 		SbxAgent:         ag.SbxAgent,
 		ImageName:        ag.ImageName,
 		TemplateFallback: ag.TemplateFallback,

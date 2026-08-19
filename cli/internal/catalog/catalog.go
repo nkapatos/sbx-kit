@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Catalog struct {
+type Manifest struct {
 	Defaults Defaults         `yaml:"defaults"`
 	Agents   map[string]Agent `yaml:"agents"`
 }
@@ -30,12 +30,12 @@ func File(root string) string {
 	return filepath.Join(root, "recipes", "agents.yaml")
 }
 
-func Load(path string) (*Catalog, error) {
+func Load(path string) (*Manifest, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var c Catalog
+	var c Manifest
 	if err := yaml.Unmarshal(b, &c); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
@@ -45,7 +45,7 @@ func Load(path string) (*Catalog, error) {
 	return &c, nil
 }
 
-// ResolveKits is recipe kits first, then catalog defaults not already listed.
+// ResolveKits is recipe kits first, then source defaults not already listed.
 // An empty recipe list means "defaults only" (typically agent-workspace).
 func ResolveKits(recipeKits, defaults []string) []string {
 	if len(recipeKits) == 0 {

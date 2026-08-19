@@ -6,7 +6,7 @@ import (
 
 func addRecipeFlag(cmd *cobra.Command, recipe *string, usage string) {
 	if usage == "" {
-		usage = "catalog recipe id"
+		usage = "recipe <source>/<name>"
 	}
 	cmd.Flags().StringVar(recipe, "recipe", "", usage)
 }

@@ -16,7 +16,7 @@ import (
 
 type Opts struct {
 	Root             string
-	AgentCatalogName string // catalog recipe id
+	RecipeID         string
 	SbxAgent         string
 	ImageName        string
 	TemplateFallback string
@@ -79,14 +79,14 @@ func Sbx(o Opts) (*Result, error) {
 	// Opaque vault id: stable per recipe+path (or reused from binding / caller).
 	profileID := o.ProfileID
 	var existing *binding.Record
-	if rec, err := binding.Get(absProject, o.AgentCatalogName); err == nil && rec != nil {
+	if rec, err := binding.Get(absProject, o.RecipeID); err == nil && rec != nil {
 		existing = rec
 		if profileID == "" {
 			profileID = rec.ProfileID
 		}
 	}
 	if profileID == "" {
-		profileID = sbxname.NewProfileID(o.AgentCatalogName, absProject)
+		profileID = sbxname.NewProfileID(o.RecipeID, absProject)
 	}
 
 	// Friendly sbx name (what sbx ls shows).
@@ -170,7 +170,7 @@ func Sbx(o Opts) (*Result, error) {
 	// Persist mapping before sbx create/run (kit-owned; sbx only sees --name).
 	if err := binding.Put(binding.Record{
 		ProjectDir:  absProject,
-		Agent:       o.AgentCatalogName,
+		Agent:       o.RecipeID,
 		SandboxName: name,
 		ProfileID:   profileID,
 	}); err != nil {
@@ -244,7 +244,7 @@ func confirmCreate(o Opts, absProject, name string) (bool, error) {
 	if o.ConfirmFn == nil {
 		return false, fmt.Errorf("create confirmation required but no prompt configured (pass --yes)")
 	}
-	return o.ConfirmFn(o.AgentCatalogName, absProject, name)
+	return o.ConfirmFn(o.RecipeID, absProject, name)
 }
 
 func buildArgs(verb, sbxAgent, template string, kits, extra []string, project string) []string {

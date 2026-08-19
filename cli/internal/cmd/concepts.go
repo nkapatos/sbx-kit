@@ -22,29 +22,25 @@ func newConceptsCmd() *cobra.Command {
 func conceptsText() string {
 	return `sbx-kit is a convenience layer on Docker sbx. It does not replace sbx.
 
-  sbx run <kind>     sandbox kind (cursor, shell, …) plus optional -t image
-  sbx template ls    images already imported into the sbx engine
-  sbx kit            create-time YAML sbx applies at sandbox create
+Glossary
+  catalog    host path from sbx-kit setup (holds sources)
+  source     subdirectory with recipes/, kits/, images/
+  recipe     <source>/<name> — sbx kind + kits + optional image
+  kit        create-time YAML sbx applies at sandbox create
+  image      custom Dockerfile or registry tag (sbx-kit image, not sbx template ls)
 
-  recipe             (sbx-kit) <catalog>/<name>: kind + kits + optional image
-  catalog            (sbx-kit) one-level child of the tree (git clone or local dir)
-  image              (sbx-kit) our Dockerfiles / registry tags — build or pull,
-                     then import so they show up in sbx template ls
+sbx terms
+  sbx run <kind>       sandbox kind plus optional -t image
+  sbx template ls      images imported into the sbx engine
+  sbx kit              create-time YAML at sandbox create
 
-sbx's first argument is the sandbox kind. A recipe picks that for you.
-Mixin kits stack on a Hub kind. A sandbox kit (pi) *is* the kind — the recipe's
-sbx_agent matches the kit name, and the shell image lives in the kit (or a
-recipe -t pin). Credentials live on the kit that needs them (many services
-per kit); the host stores values with sbx secret set (any you use).
-
-Catalog default kit: agent-workspace (portable state).
-
+Workflow
   sbx-kit setup
-  sbx-kit catalog add <git-url>
-  sbx-kit catalog fetch
+  sbx-kit source add <git-url>
+  sbx-kit source fetch
   sbx-kit recipes
-  sbx-kit run <catalog>/<name> --yes
-  sbx-kit image ls|load|pull   custom images (not sbx template ls)
+  sbx-kit run <source>/<name> --yes
+  sbx-kit image ls|load|pull
   sbx-kit check | status
 
 See also: sbx-kit --help

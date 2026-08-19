@@ -15,7 +15,7 @@ func newInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init [project-dir]",
 		Short: "Add a Docker Sandbox section to the project README",
-		Long:  `Writes or updates a short "## Docker Sandbox" section using a catalog recipe.`,
+		Long:  `Writes or updates a short "## Docker Sandbox" section using a recipe.`,
 		Example: `  sbx-kit init --recipe mine/shell .
   sbx-kit init --recipe mine/cursor ~/my-project`,
 		Args: cobra.MaximumNArgs(1),
@@ -25,13 +25,13 @@ func newInitCmd() *cobra.Command {
 				projectDir = args[0]
 			}
 			if recipe == "" {
-				return fmt.Errorf("pass --recipe <catalog>/<name> (see sbx-kit recipes)")
+				return fmt.Errorf("pass --recipe <source>/<name> (see sbx-kit recipes)")
 			}
-			tree, err := requireToolkitRoot()
+			catalogRoot, err := requireToolkitRoot()
 			if err != nil {
 				return err
 			}
-			src, cat, _, err := catalog.Lookup(tree, recipe)
+			src, manifest, _, err := catalog.Lookup(catalogRoot, recipe)
 			if err != nil {
 				return err
 			}
@@ -44,11 +44,11 @@ func newInitCmd() *cobra.Command {
 				Agent:      recName,
 				RecipeID:   recipe,
 				ProjectDir: projectDir,
-				Catalog:    cat,
+				Manifest:   manifest,
 			})
 		},
 	}
 
-	addRecipeFlag(cmd, &recipe, "catalog recipe <catalog>/<name>")
+	addRecipeFlag(cmd, &recipe, "recipe <source>/<name>")
 	return cmd
 }

@@ -22,19 +22,19 @@ type resolvedSandbox struct {
 	TemplateFB  string
 	Resources   *resources.Profile
 	ResProfile  string
-	Root        string // catalog directory (kits/, images/, recipes/)
-	Tree        string
+	Root        string // source directory (kits/, images/, recipes/)
+	Catalog     string // catalog root from setup
 }
 
 func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 	if err := xdg.Ensure(); err != nil {
 		return nil, err
 	}
-	tree, err := requireToolkitRoot()
+	catalogRoot, err := requireToolkitRoot()
 	if err != nil {
 		return nil, err
 	}
-	src, cat, agent, err := catalog.Lookup(tree, agentName)
+	src, manifest, agent, err := catalog.Lookup(catalogRoot, agentName)
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +60,10 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		}
 	}
 
-	kits := catalog.ResolveKits(agent.Kits, cat.Defaults.Kits)
+	kits := catalog.ResolveKits(agent.Kits, manifest.Defaults.Kits)
 	kitPaths := catalog.KitPaths(src.Root, kits)
 
-	resProfile := cat.Defaults.Resources
+	resProfile := manifest.Defaults.Resources
 	if resProfile == "" {
 		resProfile = "remote-llm"
 	}
@@ -84,17 +84,17 @@ func resolveFromAgent(agentName, projectDir string) (*resolvedSandbox, error) {
 		Resources:   res,
 		ResProfile:  resProfile,
 		Root:        src.Root,
-		Tree:        tree,
+		Catalog:     catalogRoot,
 	}, nil
 }
 
 func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
-	tree, err := requireToolkitRoot()
+	catalogRoot, err := requireToolkitRoot()
 	if err != nil {
 		return nil, err
 	}
 	if _, _, err := catalog.ParseID(arg); err == nil {
-		if _, _, _, lookupErr := catalog.Lookup(tree, arg); lookupErr == nil {
+		if _, _, _, lookupErr := catalog.Lookup(catalogRoot, arg); lookupErr == nil {
 			return resolveFromAgent(arg, projectDir)
 		}
 	}
@@ -114,7 +114,7 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 				SandboxName: rec.SandboxName,
 				ProfileID:   rec.ProfileID,
 				Root:        "",
-				Tree:        tree,
+				Catalog:     catalogRoot,
 			}, nil
 		}
 		full.SandboxName = rec.SandboxName
@@ -125,6 +125,6 @@ func resolveSandboxArg(arg, projectDir string) (*resolvedSandbox, error) {
 		SandboxName: arg,
 		ProfileID:   arg,
 		ProjectDir:  projectDir,
-		Tree:        tree,
+		Catalog:     catalogRoot,
 	}, nil
 }

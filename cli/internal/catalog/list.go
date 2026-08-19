@@ -8,21 +8,21 @@ import (
 	"strings"
 )
 
-// Source is one catalog (a one-level child of the tree).
+// Source is one bundle under the catalog (recipes/, kits/, images/).
 type Source struct {
 	Name string
 	Root string
 }
 
-// IsDir reports whether dir looks like a catalog.
+// IsDir reports whether dir looks like a source.
 func IsDir(dir string) bool {
 	st, err := os.Stat(File(dir))
 	return err == nil && !st.IsDir()
 }
 
-// List returns catalogs under tree, sorted by name. Hidden dirs are skipped.
-func List(tree string) ([]Source, error) {
-	ents, err := os.ReadDir(tree)
+// List returns sources under the catalog, sorted by name. Hidden dirs are skipped.
+func List(catalogRoot string) ([]Source, error) {
+	ents, err := os.ReadDir(catalogRoot)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -34,7 +34,7 @@ func List(tree string) ([]Source, error) {
 		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
 			continue
 		}
-		root := filepath.Join(tree, e.Name())
+		root := filepath.Join(catalogRoot, e.Name())
 		if !IsDir(root) {
 			continue
 		}
@@ -44,23 +44,23 @@ func List(tree string) ([]Source, error) {
 	return out, nil
 }
 
-// Lookup loads <catalog>/<name> from the tree.
-func Lookup(tree, recipeID string) (src Source, c *Catalog, agent Agent, err error) {
-	catName, rec, err := ParseID(recipeID)
+// Lookup loads <source>/<name> from the catalog.
+func Lookup(catalogRoot, recipeID string) (src Source, manifest *Manifest, agent Agent, err error) {
+	sourceName, rec, err := ParseID(recipeID)
 	if err != nil {
 		return Source{}, nil, Agent{}, err
 	}
-	root := filepath.Join(tree, catName)
+	root := filepath.Join(catalogRoot, sourceName)
 	if !IsDir(root) {
 		return Source{}, nil, Agent{}, fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", recipeID)
 	}
-	c, err = Load(File(root))
+	manifest, err = Load(File(root))
 	if err != nil {
 		return Source{}, nil, Agent{}, err
 	}
-	agent, ok := c.Agents[rec]
+	agent, ok := manifest.Agents[rec]
 	if !ok {
 		return Source{}, nil, Agent{}, fmt.Errorf("unknown recipe %q (try: sbx-kit recipes)", recipeID)
 	}
-	return Source{Name: catName, Root: root}, c, agent, nil
+	return Source{Name: sourceName, Root: root}, manifest, agent, nil
 }

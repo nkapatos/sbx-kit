@@ -7,8 +7,24 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/nkapatos/sbx-kit/cli/internal/toolkit"
+	"github.com/nkapatos/sbx-kit/cli/internal/ui"
 	"github.com/nkapatos/sbx-kit/cli/internal/version"
 )
+
+var uiWriter *ui.Writer
+
+// UI returns the process output writer. Tests may replace it with SetUI.
+func UI() *ui.Writer {
+	if uiWriter == nil {
+		uiWriter = ui.New(os.Stdout, os.Stderr)
+	}
+	return uiWriter
+}
+
+// SetUI replaces the process output writer (tests).
+func SetUI(w *ui.Writer) {
+	uiWriter = w
+}
 
 const (
 	groupCatalog      = "catalog"
@@ -35,6 +51,16 @@ func NewRoot() *cobra.Command {
 	root.SetVersionTemplate("{{.Version}}\n")
 	root.SetOut(os.Stdout)
 	root.SetErr(os.Stderr)
+	uiWriter = ui.New(os.Stdout, os.Stderr)
+	root.PersistentPreRun = func(c *cobra.Command, args []string) {
+		if uiWriter == nil {
+			uiWriter = ui.New(c.OutOrStdout(), c.ErrOrStderr())
+			return
+		}
+		// Follow cobra's redirected writers (tests call SetOut after NewRoot).
+		uiWriter.Out = c.OutOrStdout()
+		uiWriter.Err = c.ErrOrStderr()
+	}
 
 	root.AddGroup(
 		&cobra.Group{ID: groupCatalog, Title: "Catalog:"},

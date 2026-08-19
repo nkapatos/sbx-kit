@@ -2,6 +2,7 @@ package initproj
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,7 @@ type Opts struct {
 	RecipeID   string
 	ProjectDir string
 	Manifest   *catalog.Manifest
+	Out        io.Writer
 }
 
 // Run writes or updates the README section for the given recipe.
@@ -53,12 +55,16 @@ func Run(o Opts) error {
 	}
 	section := buildSection(display, agent, o.Manifest.Defaults.Kits)
 	readme := filepath.Join(abs, "README.md")
+	w := o.Out
+	if w == nil {
+		w = os.Stdout
+	}
 	if _, err := os.Stat(readme); os.IsNotExist(err) {
 		title := "# " + filepath.Base(abs) + "\n\n"
 		if err := os.WriteFile(readme, []byte(title+section), 0o644); err != nil {
 			return err
 		}
-		fmt.Printf("Created %s with Docker Sandbox section (recipe=%s)\n", readme, display)
+		fmt.Fprintf(w, "Created %s with Docker Sandbox section (recipe=%s)\n", readme, display)
 		return nil
 	}
 
@@ -68,21 +74,21 @@ func Run(o Opts) error {
 	}
 	body := string(existing)
 
-	var out string
+	var next string
 	if strings.Contains(body, markerStart) {
-		out, err = replaceSection(body, section)
+		next, err = replaceSection(body, section)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Updated Docker Sandbox section in %s (recipe=%s)\n", readme, display)
+		fmt.Fprintf(w, "Updated Docker Sandbox section in %s (recipe=%s)\n", readme, display)
 	} else {
 		if !strings.HasSuffix(body, "\n") {
 			body += "\n"
 		}
-		out = body + "\n" + section
-		fmt.Printf("Appended Docker Sandbox section to %s (recipe=%s)\n", readme, display)
+		next = body + "\n" + section
+		fmt.Fprintf(w, "Appended Docker Sandbox section to %s (recipe=%s)\n", readme, display)
 	}
-	return os.WriteFile(readme, []byte(out), 0o644)
+	return os.WriteFile(readme, []byte(next), 0o644)
 }
 
 func buildSection(name string, a catalog.Agent, defaultKits []string) string {

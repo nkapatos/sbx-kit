@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,7 @@ type CreateOpts struct {
 	Resources   string
 	WriteAgents bool
 	Force       bool
+	Out         io.Writer
 }
 
 // SkillOpts renders agent skill markdown.
@@ -113,11 +115,15 @@ func Create(o CreateOpts) error {
 		}
 	}
 
-	fmt.Printf("created catalog directory %s\n", root)
-	fmt.Printf("  recipe id:  %s\n", data.RecipeID)
-	fmt.Printf("  edit:       %s/recipes/agents.yaml\n", root)
-	fmt.Printf("  verify:     sbx-kit recipes verify %s\n", data.RecipeID)
-	fmt.Printf("  run:        sbx-kit box run %s --yes\n", data.RecipeID)
+	out := o.Out
+	if out == nil {
+		out = os.Stdout
+	}
+	fmt.Fprintf(out, "created catalog directory %s\n", root)
+	fmt.Fprintf(out, "  recipe id:  %s\n", data.RecipeID)
+	fmt.Fprintf(out, "  edit:       %s/recipes/agents.yaml\n", root)
+	fmt.Fprintf(out, "  verify:     sbx-kit recipes verify %s\n", data.RecipeID)
+	fmt.Fprintf(out, "  run:        sbx-kit box run %s --yes\n", data.RecipeID)
 	return nil
 }
 

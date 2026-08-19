@@ -150,6 +150,7 @@ func newRecipesVerifyCmd() *cobra.Command {
 
 func verifyOpts(cmd *cobra.Command, skipKits bool) recipeverify.Options {
 	r := sbxutil.Default()
+	r.Out = UI().Out
 	return recipeverify.Options{
 		Out:      cmd.OutOrStdout(),
 		SkipKits: skipKits,

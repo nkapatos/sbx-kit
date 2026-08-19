@@ -39,7 +39,7 @@ func newStateExportCmd() *cobra.Command {
 			if !exists {
 				return fmt.Errorf("sandbox %q not found", rs.SandboxName)
 			}
-			return statexfer.Export(r, rs.SandboxName, rs.ProfileID)
+			return statexfer.Export(r, rs.SandboxName, rs.ProfileID, UI().Out)
 		},
 	}
 	addTargetFlags(cmd, &recipe, &path, &name)
@@ -65,7 +65,7 @@ func newStateImportCmd() *cobra.Command {
 			if !exists {
 				return fmt.Errorf("sandbox %q not found", rs.SandboxName)
 			}
-			return statexfer.Import(r, rs.SandboxName, rs.ProfileID)
+			return statexfer.Import(r, rs.SandboxName, rs.ProfileID, UI().Out)
 		},
 	}
 	addTargetFlags(cmd, &recipe, &path, &name)

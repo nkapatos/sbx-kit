@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +44,7 @@ type Opts struct {
 	// restore=true → import after create; discard=true → delete archive; both false → abort.
 	StaleArchiveFn func(profileID string) (restore, discard bool, err error)
 	Runner         *sbxutil.Runner
+	Out            io.Writer
 }
 
 // Result is returned after create/attach preparation.
@@ -53,10 +55,21 @@ type Result struct {
 	Label       string
 }
 
+func dest(w io.Writer) io.Writer {
+	if w == nil {
+		return os.Stdout
+	}
+	return w
+}
+
 func Sbx(o Opts) (*Result, error) {
+	out := dest(o.Out)
 	r := o.Runner
 	if r == nil {
 		r = sbxutil.Default()
+	}
+	if r.Out == nil {
+		r.Out = out
 	}
 	if _, err := r.LookPath(); err != nil {
 		return nil, fmt.Errorf("sbx not found on PATH")
@@ -111,15 +124,15 @@ func Sbx(o Opts) (*Result, error) {
 		env = setEnv(env, "DOCKER_SANDBOXES_DOCKER_SIZE", o.Resources.DockerSize)
 	}
 
-	fmt.Printf("==> resources profile=%s memory=%s cpus=%s root=%s docker=%s\n",
+	fmt.Fprintf(out, "==> resources profile=%s memory=%s cpus=%s root=%s docker=%s\n",
 		o.ResourcesProfile, o.Resources.Memory, o.Resources.CPUs, o.Resources.RootSize, o.Resources.DockerSize)
-	fmt.Printf("==> sandbox name=%s  profile=%s\n", name, profileID)
+	fmt.Fprintf(out, "==> sandbox name=%s  profile=%s\n", name, profileID)
 
 	res := &Result{SandboxName: name, ProfileID: profileID, ProjectDir: absProject, Label: name}
 
 	exists, err := r.Exists(name)
 	if err != nil {
-		fmt.Printf("==> warning: could not list sandboxes: %v\n", err)
+		fmt.Fprintf(out, "==> warning: could not list sandboxes: %v\n", err)
 		exists = false
 	}
 
@@ -136,7 +149,7 @@ func Sbx(o Opts) (*Result, error) {
 					return res, err
 				}
 				if discard {
-					if err := statexfer.DiscardArchive(profileID); err != nil {
+					if err := statexfer.DiscardArchive(profileID, out); err != nil {
 						return res, err
 					}
 				} else if wantRestore {
@@ -147,7 +160,7 @@ func Sbx(o Opts) (*Result, error) {
 			} else if o.ConfirmCreate {
 				return res, fmt.Errorf("archive exists for profile %s; pass --restore-state, discard it, or abort", profileID)
 			} else {
-				fmt.Printf("==> note: archive exists for profile %s (not restoring; pass --restore-state)\n", profileID)
+				fmt.Fprintf(out, "==> note: archive exists for profile %s (not restoring; pass --restore-state)\n", profileID)
 			}
 		}
 	}
@@ -183,7 +196,7 @@ func Sbx(o Opts) (*Result, error) {
 			return res, err
 		}
 		if !has {
-			fmt.Printf("==> warning: --restore-state set but no archive at profile %s\n", profileID)
+			fmt.Fprintf(out, "==> warning: --restore-state set but no archive at profile %s\n", profileID)
 		}
 		if !exists {
 			createArgs := buildArgs("create", o.SbxAgent, template, o.KitPaths, extra, absProject)
@@ -192,7 +205,7 @@ func Sbx(o Opts) (*Result, error) {
 			}
 		}
 		if has {
-			if err := statexfer.Import(r, name, profileID); err != nil {
+			if err := statexfer.Import(r, name, profileID, out); err != nil {
 				return res, err
 			}
 		}
@@ -200,7 +213,7 @@ func Sbx(o Opts) (*Result, error) {
 	}
 
 	if exists {
-		fmt.Printf("==> re-attaching existing sandbox %s\n", name)
+		fmt.Fprintf(out, "==> re-attaching existing sandbox %s\n", name)
 		return res, r.RunEnv(env, "run", "--name", name)
 	}
 

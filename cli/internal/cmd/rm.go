@@ -46,7 +46,7 @@ Without --keep-state, /home/agent workplace state is discarded with the box.`,
 			}
 
 			if keepState {
-				if err := statexfer.Export(r, rs.SandboxName, rs.ProfileID); err != nil {
+				if err := statexfer.Export(r, rs.SandboxName, rs.ProfileID, UI().Out); err != nil {
 					return err
 				}
 			} else {

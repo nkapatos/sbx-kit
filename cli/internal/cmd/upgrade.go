@@ -45,12 +45,13 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 			}
 
 			r := sbxutil.Default()
+			r.Out = UI().Out
 			exists, err := r.Exists(rs.SandboxName)
 			if err != nil {
 				return err
 			}
 			if exists {
-				if err := statexfer.Export(r, rs.SandboxName, rs.ProfileID); err != nil {
+				if err := statexfer.Export(r, rs.SandboxName, rs.ProfileID, UI().Out); err != nil {
 					return err
 				}
 				if err := r.Rm(rs.SandboxName, force); err != nil {
@@ -80,6 +81,7 @@ Requires the agent-workspace kit (sbx-kit-state).`,
 				SandboxName:      rs.SandboxName,
 				ProfileID:        rs.ProfileID,
 				Runner:           r,
+				Out:              UI().Out,
 			})
 			return err
 		},

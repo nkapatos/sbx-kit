@@ -187,6 +187,7 @@ func runCreateRecipe(recipeID, projectPath, sandboxName, resourcesProfile string
 		}
 		opts.StaleArchiveFn = promptStaleArchive
 	}
+	opts.Out = UI().Out
 	_, err = run.Sbx(opts)
 	return err
 }
@@ -226,7 +227,7 @@ func runAttachOnly(name string, restoreState bool) error {
 		}
 		if !has {
 			fmt.Printf("==> warning: --restore-state set but no archive at profile %s\n", profileID)
-		} else if err := statexfer.Import(r, sbxName, profileID); err != nil {
+		} else if err := statexfer.Import(r, sbxName, profileID, UI().Out); err != nil {
 			return err
 		}
 	}

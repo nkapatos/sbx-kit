@@ -109,6 +109,7 @@ func newImageLoadCmd() *cobra.Command {
 				Engine:     engine,
 				NameOrPath: nameOrPath,
 				ImageTag:   tag,
+				Out:        UI().Out,
 			})
 		},
 	}
@@ -161,6 +162,7 @@ func newImagePullCmd() *cobra.Command {
 			return template.Pull(template.PullOpts{
 				Engine:   engine,
 				ImageTag: args[0],
+				Out:      UI().Out,
 			})
 		},
 	}

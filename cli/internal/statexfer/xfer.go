@@ -2,6 +2,7 @@ package statexfer
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,14 @@ const (
 // Export packs VM portable state and copies it to the host profile archive.
 // If the sandbox is still "running", waits for it to stop so agent SQLite WALs
 // can checkpoint cleanly inside sbx-kit-state pack.
-func Export(r *sbxutil.Runner, sandbox, profileID string) error {
+func dest(w io.Writer) io.Writer {
+	if w == nil {
+		return os.Stdout
+	}
+	return w
+}
+
+func Export(r *sbxutil.Runner, sandbox, profileID string, w io.Writer) error {
 	if err := xdg.Ensure(); err != nil {
 		return err
 	}
@@ -35,28 +43,29 @@ func Export(r *sbxutil.Runner, sandbox, profileID string) error {
 		return err
 	}
 
+	out := dest(w)
 	if s, err := r.Get(sandbox); err == nil && s != nil && strings.EqualFold(s.Status, "running") {
-		fmt.Printf("==> sandbox %s is running; waiting briefly for detach before packing (best-effort)\n", sandbox)
+		fmt.Fprintf(out, "==> sandbox %s is running; waiting briefly for detach before packing (best-effort)\n", sandbox)
 		if err := r.WaitNotRunning(sandbox, 15*time.Second); err != nil {
-			fmt.Printf("==> warning: %v\n==> packing anyway; prefer detach so SQLite WALs can flush\n", err)
+			fmt.Fprintf(out, "==> warning: %v\n==> packing anyway; prefer detach so SQLite WALs can flush\n", err)
 		}
 	}
 
-	fmt.Printf("==> packing state in %s via %s\n", sandbox, Helper)
+	fmt.Fprintf(out, "==> packing state in %s via %s\n", sandbox, Helper)
 	if err := r.ExecVisible(sandbox, Helper, "pack", RemoteArchive); err != nil {
 		return fmt.Errorf("pack failed (is agent-workspace kit installed?): %w", err)
 	}
 
-	fmt.Printf("==> copying %s:%s -> %s\n", sandbox, RemoteArchive, hostArch)
+	fmt.Fprintf(out, "==> copying %s:%s -> %s\n", sandbox, RemoteArchive, hostArch)
 	if err := r.Cp(sandbox+":"+RemoteArchive, hostArch); err != nil {
 		return err
 	}
-	fmt.Printf("==> state saved: %s\n", hostArch)
+	fmt.Fprintf(out, "==> state saved: %s\n", hostArch)
 	return nil
 }
 
 // Import copies the host profile archive into the VM and unpacks it.
-func Import(r *sbxutil.Runner, sandbox, profileID string) error {
+func Import(r *sbxutil.Runner, sandbox, profileID string, w io.Writer) error {
 	hostArch, err := xdg.ProfileArchive(profileID)
 	if err != nil {
 		return err
@@ -72,15 +81,16 @@ func Import(r *sbxutil.Runner, sandbox, profileID string) error {
 		return fmt.Errorf("empty state archive: %s", hostArch)
 	}
 
-	fmt.Printf("==> copying %s -> %s:%s\n", hostArch, sandbox, RemoteArchive)
+	out := dest(w)
+	fmt.Fprintf(out, "==> copying %s -> %s:%s\n", hostArch, sandbox, RemoteArchive)
 	if err := r.Cp(hostArch, sandbox+":"+RemoteArchive); err != nil {
 		return err
 	}
-	fmt.Printf("==> unpacking state in %s via %s\n", sandbox, Helper)
+	fmt.Fprintf(out, "==> unpacking state in %s via %s\n", sandbox, Helper)
 	if err := r.ExecVisible(sandbox, Helper, "unpack", RemoteArchive); err != nil {
 		return fmt.Errorf("unpack failed (is agent-workspace kit installed?): %w", err)
 	}
-	fmt.Printf("==> state restored into %s\n", sandbox)
+	fmt.Fprintf(out, "==> state restored into %s\n", sandbox)
 	return nil
 }
 
@@ -101,7 +111,7 @@ func HasArchive(profileID string) (bool, error) {
 }
 
 // DiscardArchive removes the host profile archive (and empty parent dir) if present.
-func DiscardArchive(profileID string) error {
+func DiscardArchive(profileID string, w io.Writer) error {
 	hostArch, err := xdg.ProfileArchive(profileID)
 	if err != nil {
 		return err
@@ -110,6 +120,6 @@ func DiscardArchive(profileID string) error {
 		return err
 	}
 	_ = os.Remove(filepath.Dir(hostArch)) // best-effort remove profiles/<id>/
-	fmt.Printf("==> discarded archive for profile %s\n", profileID)
+	fmt.Fprintf(dest(w), "==> discarded archive for profile %s\n", profileID)
 	return nil
 }

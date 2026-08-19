@@ -12,12 +12,12 @@ import (
 
 func newRecipesCreateCmd() *cobra.Command {
 	var (
-		recipeName  string
-		sbxAgent    string
-		resources   string
-		kits        []string
-		noAgentsMD  bool
-		force       bool
+		recipeName string
+		sbxAgent   string
+		resources  string
+		kits       []string
+		noAgentsMD bool
+		force      bool
 	)
 
 	cmd := &cobra.Command{
@@ -45,6 +45,7 @@ Kit schema is owned by sbx — see AGENTS.md links and sbx-kit recipes skill.`,
 				Resources:   resources,
 				WriteAgents: !noAgentsMD,
 				Force:       force,
+				Out:         UI().Out,
 			})
 		},
 	}

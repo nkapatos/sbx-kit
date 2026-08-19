@@ -16,6 +16,7 @@ type Build struct {
 	Dockerfile  string
 	BuildArgs   []string // e.g. BASE_IMAGE=...
 	ImageTag    string
+	BakeBase    string // set when using shared bake.env
 }
 
 // ResolveBuild finds images/<name> (or an absolute/relative dir) and
@@ -41,7 +42,6 @@ func ResolveBuild(root, nameOrPath, imageTag string) (*Build, error) {
 		if _, err := os.Stat(df); err != nil {
 			return nil, fmt.Errorf("shared bake missing: %s", df)
 		}
-		fmt.Printf("==> shared bake: BASE_IMAGE=%s\n", baseImage)
 		return &Build{
 			Name:        name,
 			TemplateDir: dir,
@@ -49,6 +49,7 @@ func ResolveBuild(root, nameOrPath, imageTag string) (*Build, error) {
 			Dockerfile:  df,
 			BuildArgs:   []string{"BASE_IMAGE=" + baseImage},
 			ImageTag:    imageTag,
+			BakeBase:    baseImage,
 		}, nil
 	}
 

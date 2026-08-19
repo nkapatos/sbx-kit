@@ -56,6 +56,7 @@ func newProjectReadmeCmd() *cobra.Command {
 				RecipeID:   recipe,
 				ProjectDir: projectDir,
 				Manifest:   manifest,
+				Out:        UI().Out,
 			})
 		},
 	}

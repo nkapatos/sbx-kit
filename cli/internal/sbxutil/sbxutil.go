@@ -3,6 +3,7 @@ package sbxutil
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,6 +20,8 @@ type Runner struct {
 	Command func(name string, args ...string) *exec.Cmd
 	// SkipCompatCheck disables the sbx version gate (tests).
 	SkipCompatCheck bool
+	// Out receives "==> sbx …" progress lines. Nil uses os.Stdout.
+	Out io.Writer
 }
 
 func Default() *Runner {
@@ -121,7 +124,7 @@ func (r *Runner) RunInteractive(args ...string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("==> sbx %s\n", strings.Join(args, " "))
+	fmt.Fprintf(r.out(), "==> sbx %s\n", strings.Join(args, " "))
 	cmd := r.Command(bin, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -130,13 +133,20 @@ func (r *Runner) RunInteractive(args ...string) error {
 	return cmd.Run()
 }
 
+func (r *Runner) out() io.Writer {
+	if r != nil && r.Out != nil {
+		return r.Out
+	}
+	return os.Stdout
+}
+
 // RunEnv is like RunInteractive but with extra env.
 func (r *Runner) RunEnv(env []string, args ...string) error {
 	bin, err := r.require()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("==> sbx %s\n", strings.Join(args, " "))
+	fmt.Fprintf(r.out(), "==> sbx %s\n", strings.Join(args, " "))
 	cmd := r.Command(bin, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

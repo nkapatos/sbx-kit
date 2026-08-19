@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +19,7 @@ type LoadOpts struct {
 	Engine     string // docker | container
 	NameOrPath string
 	ImageTag   string
+	Out        io.Writer
 }
 
 // Load builds a template image and imports it via `sbx template load`.
@@ -33,6 +35,9 @@ func Load(o LoadOpts) error {
 	if err != nil {
 		return err
 	}
+	if b.BakeBase != "" {
+		fmt.Fprintf(dest(o.Out), "==> shared bake: BASE_IMAGE=%s\n", b.BakeBase)
+	}
 	if IsParentOnly(b.TemplateDir) {
 		return errParentNotImported(engine, b.Name)
 	}
@@ -47,7 +52,7 @@ func Load(o LoadOpts) error {
 		return err
 	}
 
-	if err := buildParentIfNeeded(engine, o.Root, b); err != nil {
+	if err := buildParentIfNeeded(engine, o.Root, b, o.Out); err != nil {
 		return err
 	}
 
@@ -61,24 +66,31 @@ func Load(o LoadOpts) error {
 
 	switch engine {
 	case "docker":
-		if err := loadDocker(b, dockerTar); err != nil {
+		if err := loadDocker(b, dockerTar, o.Out); err != nil {
 			return err
 		}
 	case "container":
 		ociTar := filepath.Join(tmpDir, "sbx-"+b.Name+".oci.tar")
-		if err := loadContainer(b, ociTar, dockerTar); err != nil {
+		if err := loadContainer(b, ociTar, dockerTar, o.Out); err != nil {
 			return err
 		}
 	}
 
-	return importIntoSbx(b.ImageTag, dockerTar)
+	return importIntoSbx(b.ImageTag, dockerTar, o.Out)
 }
 
 func errParentNotImported(engine, name string) error {
 	return fmt.Errorf("%s is a parent image (Docker FROM base), not imported into sbx.\n  Minimum sandbox image: sbx-kit recipes image load --engine %s kit-shell\n  Baked agent example:   sbx-kit recipes image load --engine %s kit-cursor\nThe parent is docker-built automatically when you load those.", name, engine, engine)
 }
 
-func buildParentIfNeeded(engine, root string, child *Build) error {
+func dest(w io.Writer) io.Writer {
+	if w == nil {
+		return os.Stdout
+	}
+	return w
+}
+
+func buildParentIfNeeded(engine, root string, child *Build, w io.Writer) error {
 	parent, err := ParentTemplateName(child.Dockerfile)
 	if err != nil {
 		return err
@@ -90,16 +102,16 @@ func buildParentIfNeeded(engine, root string, child *Build) error {
 	if err != nil {
 		return fmt.Errorf("parent image %s: %w", parent, err)
 	}
-	fmt.Printf("==> parent %s (Docker FROM; not imported into sbx)\n", pb.ImageTag)
-	return buildImage(engine, pb)
+	fmt.Fprintf(dest(w), "==> parent %s (Docker FROM; not imported into sbx)\n", pb.ImageTag)
+	return buildImage(engine, pb, w)
 }
 
-func buildImage(engine string, b *Build) error {
+func buildImage(engine string, b *Build, w io.Writer) error {
 	switch engine {
 	case "docker":
-		return dockerBuild(b)
+		return dockerBuild(b, w)
 	case "container":
-		return containerBuild(b)
+		return containerBuild(b, w)
 	default:
 		return fmt.Errorf("unknown engine %q", engine)
 	}
@@ -109,6 +121,7 @@ func buildImage(engine string, b *Build) error {
 type PullOpts struct {
 	Engine   string // docker (default)
 	ImageTag string
+	Out      io.Writer
 }
 
 // Pull fetches a registry image with docker and imports it via `sbx template load`.
@@ -151,36 +164,38 @@ func Pull(o PullOpts) error {
 	safe := strings.NewReplacer("/", "_", ":", "_").Replace(imageTag)
 	dockerTar := filepath.Join(tmpDir, "sbx-"+safe+".docker.tar")
 
-	fmt.Printf("==> [1/2] docker pull %s\n", imageTag)
+	out := dest(o.Out)
+	fmt.Fprintf(out, "==> [1/2] docker pull %s\n", imageTag)
 	if err := runLogged("docker", "pull", imageTag); err != nil {
 		return err
 	}
 
-	fmt.Printf("==> [2/2] docker image save -> %s\n", dockerTar)
+	fmt.Fprintf(out, "==> [2/2] docker image save -> %s\n", dockerTar)
 	if err := runLogged("docker", "image", "save", imageTag, "-o", dockerTar); err != nil {
 		return err
 	}
 
-	return importIntoSbx(imageTag, dockerTar)
+	return importIntoSbx(imageTag, dockerTar, o.Out)
 }
 
-func importIntoSbx(imageTag, dockerTar string) error {
-	fmt.Println("==> sbx template load")
+func importIntoSbx(imageTag, dockerTar string, w io.Writer) error {
+	out := dest(w)
+	fmt.Fprintln(out, "==> sbx template load")
 	if err := runLogged("sbx", "template", "load", dockerTar); err != nil {
 		return err
 	}
 
-	fmt.Println("==> Verifying sbx can see the template:")
+	fmt.Fprintln(out, "==> Verifying sbx can see the template:")
 	_ = runLogged("sbx", "template", "ls")
 
-	fmt.Println()
-	fmt.Println("Done. Confirm with sbx template ls (engine store).")
-	fmt.Printf("Typical next step:\n  sbx-kit box run kit-shell --yes   # or: kit-cursor / kit-pi\n")
-	fmt.Printf("(image tag: %s)\n", imageTag)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "Done. Confirm with sbx template ls (engine store).")
+	fmt.Fprintf(out, "Typical next step:\n  sbx-kit box run kit-shell --yes   # or: kit-cursor / kit-pi\n")
+	fmt.Fprintf(out, "(image tag: %s)\n", imageTag)
 	return nil
 }
 
-func dockerBuild(b *Build) error {
+func dockerBuild(b *Build, w io.Writer) error {
 	if _, err := exec.LookPath("docker"); err != nil {
 		return fmt.Errorf("docker CLI not found on PATH (Docker Desktop / Colima, or use --engine container)")
 	}
@@ -192,11 +207,11 @@ func dockerBuild(b *Build) error {
 		args = append(args, "--build-arg", a)
 	}
 	args = append(args, b.Context)
-	fmt.Printf("==> docker build -t %s\n", b.ImageTag)
+	fmt.Fprintf(dest(w), "==> docker build -t %s\n", b.ImageTag)
 	return runLogged("docker", args...)
 }
 
-func containerBuild(b *Build) error {
+func containerBuild(b *Build, w io.Writer) error {
 	if _, err := exec.LookPath("container"); err != nil {
 		return fmt.Errorf("Apple container CLI not found on PATH")
 	}
@@ -205,22 +220,22 @@ func containerBuild(b *Build) error {
 		args = append(args, "--build-arg", a)
 	}
 	args = append(args, b.Context)
-	fmt.Printf("==> container build -t %s\n", b.ImageTag)
+	fmt.Fprintf(dest(w), "==> container build -t %s\n", b.ImageTag)
 	return runLogged("container", args...)
 }
 
-func loadDocker(b *Build, dockerTar string) error {
-	if err := dockerBuild(b); err != nil {
+func loadDocker(b *Build, dockerTar string, w io.Writer) error {
+	if err := dockerBuild(b, w); err != nil {
 		return err
 	}
-	fmt.Printf("==> docker image save -> %s\n", dockerTar)
+	fmt.Fprintf(dest(w), "==> docker image save -> %s\n", dockerTar)
 	if err := runLogged("docker", "image", "save", b.ImageTag, "-o", dockerTar); err != nil {
 		return err
 	}
-	return smokeAgentBinary(b)
+	return smokeAgentBinary(b, w)
 }
 
-func loadContainer(b *Build, ociTar, dockerTar string) error {
+func loadContainer(b *Build, ociTar, dockerTar string, w io.Writer) error {
 	if _, err := exec.LookPath("skopeo"); err != nil {
 		return fmt.Errorf("skopeo not found on PATH (brew install skopeo; needed for OCI → docker-archive)")
 	}
@@ -228,19 +243,19 @@ func loadContainer(b *Build, ociTar, dockerTar string) error {
 	if err != nil {
 		return err
 	}
-	if err := containerBuild(b); err != nil {
+	if err := containerBuild(b, w); err != nil {
 		return err
 	}
 
 	// Smoke runs via docker CLI when available; Apple container path skips host probe.
-	_ = smokeAgentBinary(b)
+	_ = smokeAgentBinary(b, w)
 
-	fmt.Printf("==> container image save (OCI) -> %s\n", ociTar)
+	fmt.Fprintf(dest(w), "==> container image save (OCI) -> %s\n", ociTar)
 	if err := runLogged("container", "image", "save", b.ImageTag, "-o", ociTar); err != nil {
 		return err
 	}
 
-	fmt.Printf("==> skopeo: OCI -> docker-archive -> %s\n", dockerTar)
+	fmt.Fprintf(dest(w), "==> skopeo: OCI -> docker-archive -> %s\n", dockerTar)
 	return runLogged("skopeo", "copy",
 		"--override-os", "linux",
 		"--override-arch", arch,
@@ -251,7 +266,7 @@ func loadContainer(b *Build, ociTar, dockerTar string) error {
 
 // smokeAgentBinary verifies layered agent images expose their CLI on PATH before
 // import. Catches "agent binary not found" failures early.
-func smokeAgentBinary(b *Build) error {
+func smokeAgentBinary(b *Build, w io.Writer) error {
 	bin := ""
 	switch b.Name {
 	case "kit-cursor":
@@ -260,10 +275,10 @@ func smokeAgentBinary(b *Build) error {
 		return nil
 	}
 	if _, err := exec.LookPath("docker"); err != nil {
-		fmt.Printf("==> skip smoke (%s): docker CLI not available\n", bin)
+		fmt.Fprintf(dest(w), "==> skip smoke (%s): docker CLI not available\n", bin)
 		return nil
 	}
-	fmt.Printf("==> smoke: docker run --rm --entrypoint which %s %s\n", b.ImageTag, bin)
+	fmt.Fprintf(dest(w), "==> smoke: docker run --rm --entrypoint which %s %s\n", b.ImageTag, bin)
 	if err := runLogged("docker", "run", "--rm", "--entrypoint", "which", b.ImageTag, bin); err != nil {
 		return fmt.Errorf("image %s is missing %q on PATH (rebuild parent kit-core then this template): %w", b.ImageTag, bin, err)
 	}
